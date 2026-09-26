@@ -259,13 +259,14 @@ def telegram_settimanale(ctx):
 
 
 def telegram_alert(alert):
-    r = ["<b>🚨 Alert mercato TCG</b>", ""]
+    n_nuovi = sum(1 for a in alert if not a.get("segnalato_dal"))
+    r = [f"<b>🚨 Alert mercato TCG</b> - {n_nuovi} nuovi, {len(alert) - n_nuovi} ancora attivi", ""]
     for a in alert:
         if a["genere"] == "movimento":
             icona = "🔺" if a["variazione_7g"] > 0 else "🔻"
-            r.append(f"{icona} <b>{html.escape(a['gioco'])}</b> - <a href=\"{html.escape(a['link'])}\">"
-                     f"{html.escape(a['nome'][:50])}</a>: {_perc(a['variazione_7g'])} in 7 giorni, "
-                     f"ora {_eur(a['prezzo'])} (confermato 2 giorni)")
+            riga = (f"{icona} <b>{html.escape(a['gioco'])}</b> - <a href=\"{html.escape(a['link'])}\">"
+                    f"{html.escape(a['nome'][:50])}</a>: {_perc(a['variazione_7g'])} in 7 giorni, "
+                    f"ora {_eur(a['prezzo'])} (confermato 2 giorni)")
         else:
             riga = (f"💡 <b>{html.escape(a['gioco'])}</b> - <a href=\"{html.escape(a['link'])}\">"
                     f"{html.escape(a['nome'][:50])}</a>: minimo {_eur(a['prezzo_minimo'])} contro tendenza "
@@ -273,7 +274,12 @@ def telegram_alert(alert):
             v = a.get("verifica_lingua")
             riga += (f" · in {a['lingua_it']} da {_eur(v['da'])}" if v and v.get("da")
                      else f" · verifica la copia in {a['lingua_it']}")
-            r.append(riga)
+        if a.get("segnalato_dal"):
+            d = a["segnalato_dal"]
+            riga += f" · <i>ancora attivo, segnalato dal {d[8:10]}/{d[5:7]}</i>"
+        else:
+            riga += " · <b>nuovo</b>"
+        r.append(riga)
     return "\n".join(r)
 
 
