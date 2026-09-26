@@ -63,28 +63,38 @@ def giornaliero():
             occasioni.append({**o, "genere": "occasione", "gioco": g["nome"], "lingua_it": lingua,
                               "lingua": g["lingua"]})
 
-    # prima i movimenti, poi le occasioni più scontate; niente doppioni per 7 giorni
+    # Stato: per ogni prodotto, il primo e l'ultimo giorno in cui era tra gli alert
+    for k, v in list(stato.items()):
+        if isinstance(v, str):
+            stato[k] = {"primo": v, "ultimo": v}
     occasioni.sort(key=lambda o: -o["sconto"])
-    nuovi, n_occ = [], 0
-    for a in movimenti + occasioni:
-        if a["genere"] == "occasione" and n_occ >= C.MAX_OCCASIONI_AL_GIORNO:
-            continue
-        chiave_alert = f"{a['genere']}:{a['id']}"
-        ultimo = stato.get(chiave_alert)
-        if ultimo and (oggi - dt.date.fromisoformat(ultimo)).days < 7:
+    candidati = movimenti + occasioni
+    for a in candidati:
+        k = f"{a['genere']}:{a['id']}"
+        s = stato.get(k)
+        continuo = s and (oggi - dt.date.fromisoformat(s["ultimo"])).days <= 2
+        a["segnalato_dal"] = s["primo"] if continuo and s["primo"] != oggi.isoformat() else None
+        stato[k] = {"primo": s["primo"] if continuo else oggi.isoformat(), "ultimo": oggi.isoformat()}
+
+    # Ordine: prima i movimenti, poi le occasioni; dentro ogni gruppo prima le novità
+    candidati.sort(key=lambda a: (a["genere"] != "movimento", a["segnalato_dal"] is not None))
+    inviati, n_occ = [], 0
+    for a in candidati:
+        if not C.RIPETI_ALERT_ATTIVI and a["segnalato_dal"]:
             continue
         if a["genere"] == "occasione":
+            if n_occ >= C.MAX_OCCASIONI_AL_GIORNO:
+                continue
             verify.verifica([a], a["lingua"])
             n_occ += 1
-        nuovi.append(a)
-        stato[chiave_alert] = oggi.isoformat()
-        if len(nuovi) >= C.MAX_ALERT_AL_GIORNO:
+        inviati.append(a)
+        if len(inviati) >= C.MAX_ALERT_AL_GIORNO:
             break
-    stato = {k: v for k, v in stato.items() if (oggi - dt.date.fromisoformat(v)).days < 30}
+    stato = {k: v for k, v in stato.items() if (oggi - dt.date.fromisoformat(v["ultimo"])).days < 30}
     storage.scrivi_json("stato_alert.json", stato)
-    if nuovi:
-        telegram.messaggio(report.telegram_alert(nuovi))
-    print(f"Alert inviati: {len(nuovi)}")
+    if inviati:
+        telegram.messaggio(report.telegram_alert(inviati))
+    print(f"Alert inviati: {len(inviati)}")
 
 
 def settimanale():
