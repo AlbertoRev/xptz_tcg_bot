@@ -258,28 +258,39 @@ def telegram_settimanale(ctx):
     return "\n".join(r)
 
 
-def telegram_alert(alert):
-    n_nuovi = sum(1 for a in alert if not a.get("segnalato_dal"))
-    r = [f"<b>🚨 Alert mercato TCG</b> - {n_nuovi} nuovi, {len(alert) - n_nuovi} ancora attivi", ""]
-    for a in alert:
-        if a["genere"] == "movimento":
-            icona = "🔺" if a["variazione_7g"] > 0 else "🔻"
-            riga = (f"{icona} <b>{html.escape(a['gioco'])}</b> - <a href=\"{html.escape(a['link'])}\">"
-                    f"{html.escape(a['nome'][:50])}</a>: {_perc(a['variazione_7g'])} in 7 giorni, "
-                    f"ora {_eur(a['prezzo'])} (confermato 2 giorni)")
-        else:
-            riga = (f"💡 <b>{html.escape(a['gioco'])}</b> - <a href=\"{html.escape(a['link'])}\">"
-                    f"{html.escape(a['nome'][:50])}</a>: minimo {_eur(a['prezzo_minimo'])} contro tendenza "
-                    f"{_eur(a['prezzo_tendenza'])} (-{a['sconto']:.0f}%)")
-            v = a.get("verifica_lingua")
-            riga += (f" · in {a['lingua_it']} da {_eur(v['da'])}" if v and v.get("da")
-                     else f" · verifica la copia in {a['lingua_it']}")
-        if a.get("segnalato_dal"):
-            d = a["segnalato_dal"]
-            riga += f" · <i>ancora attivo, segnalato dal {d[8:10]}/{d[5:7]}</i>"
-        else:
-            riga += " · <b>nuovo</b>"
-        r.append(riga)
+def telegram_alert(alert, conteggi=None):
+    r = ["<b>🚨 Alert mercato TCG</b>"]
+    giochi = list(dict.fromkeys(a["gioco"] for a in alert))
+    for gioco in giochi:
+        lista = [a for a in alert if a["gioco"] == gioco]
+        n_nuovi = sum(1 for a in lista if not a.get("segnalato_dal"))
+        r += ["", f"<b>{html.escape(gioco)}</b> - {len(lista)} alert ({n_nuovi} nuovi, "
+                  f"{len(lista) - n_nuovi} ancora attivi)"]
+        for a in lista:
+            link = f"<a href=\"{html.escape(a['link'])}\">{html.escape(a['nome'][:50])}</a>"
+            if a["genere"] == "movimento":
+                icona = "🔺" if a["variazione_7g"] > 0 else "🔻"
+                riga = (f"{icona} {link}: {_perc(a['variazione_7g'])} in 7 giorni, ora {_eur(a['prezzo'])} "
+                        f"(confermato 2 giorni)")
+            else:
+                icona = "💡" if a["genere"] == "occasione" else "👀"
+                riga = (f"{icona} {link}: minimo {_eur(a['prezzo_minimo'])} contro tendenza "
+                        f"{_eur(a['prezzo_tendenza'])} (-{a['sconto']:.0f}%)")
+                v = a.get("verifica_lingua")
+                riga += (f" · in {a['lingua_it']} da {_eur(v['da'])}" if v and v.get("da")
+                         else f" · verifica la copia in {a['lingua_it']}")
+            if a.get("segnalato_dal"):
+                d = a["segnalato_dal"]
+                riga += f" · <i>ancora attivo dal {d[8:10]}/{d[5:7]}</i>"
+            else:
+                riga += " · <b>nuovo</b>"
+            r.append(riga)
+    if conteggi:
+        r += ["", "<i>Trovati oggi (movimenti / occasioni / da osservare):</i>"]
+        for gioco, (m, o, d) in conteggi.items():
+            r.append(f"<i>{html.escape(gioco)}: {m} / {o} / {d}</i>")
+    r += ["", "🔺🔻 movimento forte · 💡 occasione (minimo sotto il 70% della tendenza) · "
+              "👀 da osservare (tra 70% e 85%)"]
     return "\n".join(r)
 
 
