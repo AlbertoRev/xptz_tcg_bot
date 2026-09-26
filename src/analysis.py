@@ -98,12 +98,15 @@ def classifiche(df, slug, link):
     return out
 
 
-def occasioni(df, slug, link, singole=False, limite=10):
+def occasioni(df, slug, link, singole=False, limite=10, rapporto_da=None, rapporto_a=None):
+    """Prodotti con prezzo minimo tra rapporto_da e rapporto_a volte il prezzo di tendenza."""
+    rapporto_da = C.SOGLIA_OCCASIONE_MIN if rapporto_da is None else rapporto_da
+    rapporto_a = C.SOGLIA_OCCASIONE if rapporto_a is None else rapporto_a
     minimo = df["tipo"].map(C.MIN_PREZZO_OCCASIONE)
     ammessa = (df["tipo"] == "sigillato") | ((df["tipo"] == "singola") & df["avg7"].notna() & singole)
     rapporto = df["low"] / df["trend"]
-    m = (df["trend"] >= minimo) & df["low"].notna() & (rapporto <= C.SOGLIA_OCCASIONE) & \
-        (rapporto >= C.SOGLIA_OCCASIONE_MIN) & ammessa
+    m = (df["trend"] >= minimo) & df["low"].notna() & (rapporto >= rapporto_da) & \
+        (rapporto <= rapporto_a) & ammessa
     sel = df[m].assign(rapporto=lambda x: x["low"] / x["trend"]).nsmallest(limite, "rapporto")
     return [{
         "id": int(i), "nome": r["nome"], "tipo": r["tipo"],
