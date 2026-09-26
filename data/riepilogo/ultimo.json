@@ -1,0 +1,1160 @@
+{
+  "data": "2026-09-26",
+  "nota": "Tutti i numeri sono calcolati dal codice. Variazioni in percentuale. Prezzi in euro, prezzo di tendenza Cardmarket (tutte le lingue).",
+  "giochi": {
+    "pokemon": {
+      "nome": "Pokémon",
+      "livello": "principale",
+      "lingua_investimento": "italiano",
+      "giorni_storico": 1,
+      "classifiche": {
+        "sigillato": {
+          "7": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          },
+          "30": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          },
+          "90": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          },
+          "180": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          }
+        },
+        "singola": {
+          "7": {
+            "fonte": "stima",
+            "rialzi": [
+              {
+                "nome": "Maintenance",
+                "prezzo": 9.33,
+                "variazioni": {
+                  "7": 299.2,
+                  "30": 143.6,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Articuno [Aurora Veil | Ice Beam]",
+                "prezzo": 773.44,
+                "variazioni": {
+                  "7": 298.6,
+                  "30": 305.8,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Ash's Pikachu [Agility | Thunder]",
+                "prezzo": 256.13,
+                "variazioni": {
+                  "7": 297.4,
+                  "30": 209.9,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Jumpluff [Buffer | Energy Crush]",
+                "prezzo": 90.12,
+                "variazioni": {
+                  "7": 297.2,
+                  "30": 130.1,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Sobble [Water Gun]",
+                "prezzo": 53.84,
+                "variazioni": {
+                  "7": 293.1,
+                  "30": 395.8,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              }
+            ],
+            "ribassi": [
+              {
+                "nome": "Torchic [Peck | Flare]",
+                "prezzo": 22.46,
+                "variazioni": {
+                  "7": -88.6,
+                  "30": 39.9,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Plusle [Pickup Power | Rear Spark]",
+                "prezzo": 80.21,
+                "variazioni": {
+                  "7": -85.3,
+                  "30": 72.9,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Charmander δ Delta Species [Scratch | Bite]",
+                "prezzo": 28.53,
+                "variazioni": {
+                  "7": -83.1,
+                  "30": -0.1,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Staryu [Slap]",
+                "prezzo": 9.51,
+                "variazioni": {
+                  "7": -82.1,
+                  "30": 209.8,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Magneton [Overvolt Discharge | Electric Ball]",
+                "prezzo": 328.63,
+                "variazioni": {
+                  "7": -80.6,
+                  "30": -16.5,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              }
+            ]
+          },
+          "30": {
+            "fonte": "stima",
+            "rialzi": [
+              {
+                "nome": "Machoke [Mega Kick | Steady Punch]",
+                "prezzo": 115.17,
+                "variazioni": {
+                  "7": 269.5,
+                  "30": 292.9,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Piloswine Lv.34 [Rouse | Overrun]",
+                "prezzo": 42.2,
+                "variazioni": {
+                  "7": 37.6,
+                  "30": 291.5,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Ninetales [Mislead | Ethereal Flame]",
+                "prezzo": 31.44,
+                "variazioni": {
+                  "7": -2.2,
+                  "30": 291.0,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Shauna",
+                "prezzo": 34.48,
+                "variazioni": {
+                  "7": 0.0,
+                  "30": 290.9,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Online Code Card (EX Power Trio Tins: Charizard-EX Tin)",
+                "prezzo": 11.85,
+                "variazioni": {
+                  "7": 0.0,
+                  "30": 288.5,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              }
+            ],
+            "ribassi": [
+              {
+                "nome": "Misty's Tears",
+                "prezzo": 8.65,
+                "variazioni": {
+                  "7": -10.9,
+                  "30": -93.1,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Jolteon EX [Swift | Flash Ray]",
+                "prezzo": 6.45,
+                "variazioni": {
+                  "7": -39.6,
+                  "30": -92.2,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Deoxys ex [Form Change | Energy Burst]",
+                "prezzo": 13.34,
+                "variazioni": {
+                  "7": -52.0,
+                  "30": -90.3,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Team Rocket's Mimikyu [Gemstone Mimicry]",
+                "prezzo": 9.77,
+                "variazioni": {
+                  "7": -50.8,
+                  "30": -88.1,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Suicune [Sheer Cold]",
+                "prezzo": 6.45,
+                "variazioni": {
+                  "7": -45.6,
+                  "30": -87.8,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              }
+            ]
+          },
+          "90": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          },
+          "180": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          }
+        }
+      },
+      "occasioni": [
+        {
+          "nome": "Celestial Storm Booster",
+          "tipo": "sigillato",
+          "prezzo_minimo": 15.99,
+          "prezzo_tendenza": 39.92,
+          "sconto": 59.9
+        },
+        {
+          "nome": "Pokémon GO Pin Collection—Bulbasaur",
+          "tipo": "sigillato",
+          "prezzo_minimo": 29.99,
+          "prezzo_tendenza": 74.49,
+          "sconto": 59.7
+        },
+        {
+          "nome": "VMAX Rising Booster Box",
+          "tipo": "sigillato",
+          "prezzo_minimo": 110.0,
+          "prezzo_tendenza": 270.12,
+          "sconto": 59.3
+        },
+        {
+          "nome": "EX Unseen Forces: Silvery Ocean Theme Deck",
+          "tipo": "sigillato",
+          "prezzo_minimo": 200.0,
+          "prezzo_tendenza": 488.34,
+          "sconto": 59.0
+        },
+        {
+          "nome": "Phantasmal Flames 24 Sleeved Booster Case",
+          "tipo": "sigillato",
+          "prezzo_minimo": 169.99,
+          "prezzo_tendenza": 414.59,
+          "sconto": 59.0
+        },
+        {
+          "nome": "XY Trainer Kit",
+          "tipo": "sigillato",
+          "prezzo_minimo": 33.0,
+          "prezzo_tendenza": 80.37,
+          "sconto": 58.9
+        },
+        {
+          "nome": "Paradox Rift 6 Booster Box Case",
+          "tipo": "sigillato",
+          "prezzo_minimo": 500.0,
+          "prezzo_tendenza": 1217.28,
+          "sconto": 58.9
+        },
+        {
+          "nome": "POP Series 1 Booster",
+          "tipo": "sigillato",
+          "prezzo_minimo": 38.99,
+          "prezzo_tendenza": 94.67,
+          "sconto": 58.8
+        },
+        {
+          "nome": "Twilight Masquerade 10 Elite Trainer Box Case",
+          "tipo": "sigillato",
+          "prezzo_minimo": 520.0,
+          "prezzo_tendenza": 1262.07,
+          "sconto": 58.8
+        },
+        {
+          "nome": "Pokémon GO: Special Collection—Team Mystic",
+          "tipo": "sigillato",
+          "prezzo_minimo": 30.0,
+          "prezzo_tendenza": 71.99,
+          "sconto": 58.3
+        }
+      ],
+      "nuovi_prodotti": [
+        {
+          "nome": "Magikarp Special Set",
+          "categoria": "Pokémon Box Set",
+          "aggiunto": "2026-09-24",
+          "prezzo": null
+        },
+        {
+          "nome": "Dream Painting Collection Pikachu Figure Set",
+          "categoria": "Pokémon Box Set",
+          "aggiunto": "2026-09-22",
+          "prezzo": 30.0
+        }
+      ],
+      "notizie": [
+        {
+          "titolo": "GCC Pokémon Pocket : Busta Deluxe Mega è in arrivo prossimamente - Pokemon.com",
+          "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxQQ19jTXh4X2lZZkFvQjZQRFRETEl1dlFCUTAwRGR3T2FpYU9FbnpvWlR3ZFhlR2VGWVppeTl4aHBrbDh3bkZVemxqTlVvQTdQT2c1aU1aSWd6LUYwbElsR3RkWkU4Q3pQbXNDUmZVTjZEU0xTUWR5M05STWdNTFE0X2pnUG5kQVZIcC1pQmlwZ01DRERRQXhLdmxjR2E?oc=5",
+          "data": "22/09"
+        },
+        {
+          "titolo": "GCC Pokémon Pocket: annunciata la nuova espansione Busta Deluxe Mega - Pokémon Millennium",
+          "link": "https://news.google.com/rss/articles/CBMitwFBVV95cUxPZTFlai1pcE1SWHhGOFRBYW5XYjhIMVB0V2FPd0VuUlIwTVlXTkJrU0VmNkJ5RGUwRVBNY2dxVlZBTFVGRG1MRm5Db29QWlowdTFOT0R0cFlhQlViUnZra3BZQlk3YVdWTHFfNDg3eW5RcTJhdGhySmRqZTRWRzlzZXVCcVFPY3FKcFVBME9keURib0pwQmVuZm1yQXBrYV90Um1VdzhhUzJBVHFMeHFaclZibjhscHM?oc=5",
+          "data": "24/09"
+        },
+        {
+          "titolo": "Pokemon TCG Pocket Busta Deluxe Mega: data d'uscita e carte confermate dell'espansione - Everyeye.it",
+          "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxOc1p2aG92RWdVc18xUVk5MXdJeUpNS1BpVFN6bW5OeVZ2MTJWNXZZNVFFaF9HT2d1UklobVpHYThYTnRDaU1HTlBpdDV1QVJrQ29zVEJuYVA2OHZFQVJ5OU0wWHh1RkoyMDd5dDlMMTFoS0taVUtITmJMYnF5SlRpUU1ON2FNYUc0a3hFMWpGb19qblRlUEZRNURDMVZsTThzR2hFSHFYMTRuZTljdUcxT0VJOTFCSTlqSlNITg?oc=5",
+          "data": "24/09"
+        },
+        {
+          "titolo": "GCC Pokémon - Dominio Delta arriva il 6 novembre: vi sveliamo in anteprima esclusiva quattro carte della nuova espansione! - IGN Italia",
+          "link": "https://news.google.com/rss/articles/CBMi_gFBVV95cUxNQXN4TmFwdUVGdEJfbVl2V3l0NGNqWmFtQjBpQmVGTDA5ZlB1YnVxOWtodGVvRnRxRUhHX1BpSnp2VTBBS0VOZnpHaGRTVHgtMFpPZzJWNTR5UHVTY3N6UC1iVWFRWjJkaEE3Nmk1cWpObUVac3R1RHJ1aml0dmpldVd3cGMtNzFheWlyQ3BMUmQ2VW1wVVBmQmdobFZMcUd2Ym1WeEZBdmREUnROVktFaXdjQndodXZnTmdWOUZlVjk4cGRMcEI4VjBHQnlyZjlCT3ZRQk11SkV4X3VhN1lWNE5IdXVGWktVS0h4cnluY2JuRDViRm42ZHo3Zk9UUQ?oc=5",
+          "data": "22/09"
+        },
+        {
+          "titolo": "Pokémon Megaevoluzione Dominio Delta: tutto sulla nuova espansione - Il Fatto Quotidiano",
+          "link": "https://news.google.com/rss/articles/CBMirAFBVV95cUxQUVRBZ1hRVHAxV0dicV9sWlF0d0JlZVBrRmhPcF9zSjZlMHE0RkZPZk9DSUxVdnpURVFMRndTUkFWem1HNVlfbF9xdHlMNm1kOUZOTnpwaTRjUnVWbkJQaDZudmRXOWpnWG1BNjFfamJRaFV1NGxlbTZGdS04VExtb2lxaFBHSndXc0tVN3pkaTMwMGdEUEpmTkt1MTFwOU1SYWZwWnZFM2oxREZU?oc=5",
+          "data": "22/09"
+        },
+        {
+          "titolo": "Vi mostriamo in anteprima esclusiva tre nuove carte di Megaevoluzione - Dominio Delta: Sprigatito, Floragato e Meowscarada-ex - libero.it",
+          "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxOdWNlS2FydThuX1VGTXAxVjBaYmdjeEtzYjhVRlNZZnVEcUJRZE5FTWVSd3M3ZmdFdGR6cnp1T2xfdWN1bWIyd3NOeUpWSjc3Sk1KX3Y3LXNaMGFRSXVaSS1pSVJTeHdXd2hCOFBSWWxySmowRkpBSDB2Vzc5YS1EaGkyclVYSjZaYnNpTVNyODkxaHdDWDNBZ3IxNWlENThMYTFKUzFFUUsyY2FxV1NUMVFsal9BU2R6SjhkbE44OHQ4UdIBxwFBVV95cUxNUF90TjJSTzMwYnZzcFJOSTFXcDBwU3BQWXh5UjFQelVYdF9jazFDUVJXRG9QUmlxZmRVVXk5aDFqak9oNDNfWUlMdk50VG13YmVHQUdUX1ZXX1lsc2hMLWhNeUF4WDc0YUJKNmVYTEp4TEJXRjFQOGFERWhMdHFxQmVWaGFvQnlDbGdNcTYxSlVUU3RZS0hUNWFqMERqVDg5TFJ5SkRZaXVuR3g4bXFFYUxQYWdQRDJWd25fRjVlZXNYTmlocXNj?oc=5",
+          "data": "22/09"
+        }
+      ]
+    },
+    "onepiece": {
+      "nome": "One Piece",
+      "livello": "principale",
+      "lingua_investimento": "inglese",
+      "giorni_storico": 1,
+      "classifiche": {
+        "sigillato": {
+          "7": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          },
+          "30": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          },
+          "90": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          },
+          "180": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          }
+        },
+        "singola": {
+          "7": {
+            "fonte": "stima",
+            "rialzi": [
+              {
+                "nome": "Donquixote Doflamingo (OP01-073)",
+                "prezzo": 18.56,
+                "variazioni": {
+                  "7": 275.5,
+                  "30": 305.2,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Tony Tony.Chopper (OP15-107)",
+                "prezzo": 19.67,
+                "variazioni": {
+                  "7": 264.5,
+                  "30": 237.4,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Happiness Punch (OP04-017)",
+                "prezzo": 13.5,
+                "variazioni": {
+                  "7": 263.1,
+                  "30": 258.1,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Boa Hancock (ST17-004)",
+                "prezzo": 192.26,
+                "variazioni": {
+                  "7": 246.6,
+                  "30": 381.4,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Tony Tony.Chopper (OP07-103)",
+                "prezzo": 15.65,
+                "variazioni": {
+                  "7": 243.1,
+                  "30": 283.6,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              }
+            ],
+            "ribassi": [
+              {
+                "nome": "Gorgon Sisters (OP14-105)",
+                "prezzo": 6.03,
+                "variazioni": {
+                  "7": -52.0,
+                  "30": -35.4,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Arlong (P-048)",
+                "prezzo": 5.39,
+                "variazioni": {
+                  "7": -49.4,
+                  "30": -63.1,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Usopp (OP01-004)",
+                "prezzo": 158.03,
+                "variazioni": {
+                  "7": -47.8,
+                  "30": -66.7,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Prisoner of Impel Down (OP16-042)",
+                "prezzo": 29.75,
+                "variazioni": {
+                  "7": -47.8,
+                  "30": -70.3,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Kaido (OP01-061)",
+                "prezzo": 275.75,
+                "variazioni": {
+                  "7": -47.8,
+                  "30": 19.5,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              }
+            ]
+          },
+          "30": {
+            "fonte": "stima",
+            "rialzi": [
+              {
+                "nome": "Trafalgar Law (P-038)",
+                "prezzo": 190.49,
+                "variazioni": {
+                  "7": 217.7,
+                  "30": 289.2,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Tony Tony.Chopper (OP07-103)",
+                "prezzo": 15.65,
+                "variazioni": {
+                  "7": 243.1,
+                  "30": 283.6,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Monkey.D.Luffy (OP05-060)",
+                "prezzo": 1714.2,
+                "variazioni": {
+                  "7": 197.9,
+                  "30": 282.3,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Monkey.D.Luffy (OP07-109)",
+                "prezzo": 2129.85,
+                "variazioni": {
+                  "7": 0.0,
+                  "30": 275.0,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "DON!! (Thousand Sunny)",
+                "prezzo": 30.0,
+                "variazioni": {
+                  "7": 0.0,
+                  "30": 275.0,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              }
+            ],
+            "ribassi": [
+              {
+                "nome": "Perona (OP10-092)",
+                "prezzo": 5.95,
+                "variazioni": {
+                  "7": 0.0,
+                  "30": -97.3,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Marshall.D.Teach (P-100)",
+                "prezzo": 10.48,
+                "variazioni": {
+                  "7": 0.0,
+                  "30": -88.3,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Yamato (OP04-112)",
+                "prezzo": 15.0,
+                "variazioni": {
+                  "7": 0.0,
+                  "30": -85.7,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Eustass\"\"Captain\"\"Kid (ST10-013)",
+                "prezzo": 285.0,
+                "variazioni": {
+                  "7": 0.0,
+                  "30": -82.9,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Basil Hawkins (ST02-010)",
+                "prezzo": 86.42,
+                "variazioni": {
+                  "7": 0.0,
+                  "30": -79.7,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              }
+            ]
+          },
+          "90": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          },
+          "180": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          }
+        }
+      },
+      "occasioni": [
+        {
+          "nome": "Full Set - A Fist of Divine Speed (OP11)",
+          "tipo": "sigillato",
+          "prezzo_minimo": 20.0,
+          "prezzo_tendenza": 47.08,
+          "sconto": 57.5
+        },
+        {
+          "nome": "Starter Deck: Animal Kingdom Pirates",
+          "tipo": "sigillato",
+          "prezzo_minimo": 14.0,
+          "prezzo_tendenza": 32.9,
+          "sconto": 57.4
+        },
+        {
+          "nome": "Sound Loader Volume 3 \"\"Luffy Edition\"\" (SL-03)",
+          "tipo": "sigillato",
+          "prezzo_minimo": 150.0,
+          "prezzo_tendenza": 349.9,
+          "sconto": 57.1
+        },
+        {
+          "nome": "Common / Uncommon / Rare Set - Awakening of the New Era (OP05)",
+          "tipo": "sigillato",
+          "prezzo_minimo": 13.5,
+          "prezzo_tendenza": 31.49,
+          "sconto": 57.1
+        },
+        {
+          "nome": "Double Pack Set Vol.2",
+          "tipo": "sigillato",
+          "prezzo_minimo": 160.0,
+          "prezzo_tendenza": 369.24,
+          "sconto": 56.7
+        },
+        {
+          "nome": "Carrying on his Will Booster Box (Non-English)",
+          "tipo": "sigillato",
+          "prezzo_minimo": 49.99,
+          "prezzo_tendenza": 112.02,
+          "sconto": 55.4
+        },
+        {
+          "nome": "Emperors in the New World Booster Box (Non-English)",
+          "tipo": "sigillato",
+          "prezzo_minimo": 49.99,
+          "prezzo_tendenza": 111.79,
+          "sconto": 55.3
+        },
+        {
+          "nome": "Starter Deck: Straw Hat Crew",
+          "tipo": "sigillato",
+          "prezzo_minimo": 15.0,
+          "prezzo_tendenza": 33.44,
+          "sconto": 55.1
+        },
+        {
+          "nome": "Full Set - Royal Blood (OP10)",
+          "tipo": "sigillato",
+          "prezzo_minimo": 19.99,
+          "prezzo_tendenza": 44.24,
+          "sconto": 54.8
+        },
+        {
+          "nome": "Double Pack Set Vol.10",
+          "tipo": "sigillato",
+          "prezzo_minimo": 16.95,
+          "prezzo_tendenza": 37.3,
+          "sconto": 54.6
+        }
+      ],
+      "nuovi_prodotti": [
+        {
+          "nome": "Common Set - The World's Strongest Warriors (OP17)",
+          "categoria": "One Piece Lots",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        },
+        {
+          "nome": "Uncommon Set - The World's Strongest Warriors (OP17)",
+          "categoria": "One Piece Lots",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        },
+        {
+          "nome": "Rare Set - The World's Strongest Warriors (OP17)",
+          "categoria": "One Piece Lots",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        },
+        {
+          "nome": "Super Rare Set - The World's Strongest Warriors (OP17)",
+          "categoria": "One Piece Lots",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        },
+        {
+          "nome": "Full Set - The World's Strongest Warriors (OP17)",
+          "categoria": "One Piece Lots",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        },
+        {
+          "nome": "Common / Uncommon / Rare Set - The World's Strongest Warriors (OP17)",
+          "categoria": "One Piece Lots",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        },
+        {
+          "nome": "The World's Strongest Warriors Sleeved Booster",
+          "categoria": "One Piece Booster",
+          "aggiunto": "2026-09-23",
+          "prezzo": 16.0
+        },
+        {
+          "nome": "Event Pack Vol.9",
+          "categoria": "One Piece Booster",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        },
+        {
+          "nome": "Premium Card Collection -Ace & Sabo & Luffy-",
+          "categoria": "One Piece Promo Products",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        },
+        {
+          "nome": "Premium Card Collection -Ace & Sabo & Luffy- Special Card Set Vol.2 (Asia Region Legal)",
+          "categoria": "One Piece Promo Products",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        },
+        {
+          "nome": "Promotion Pack - Saikyo Jump September 2022",
+          "categoria": "One Piece Booster",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        },
+        {
+          "nome": "Regional Participation Pack 26-27 Vol.2",
+          "categoria": "One Piece Booster",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        },
+        {
+          "nome": "CS 26-27 Celebration Pack",
+          "categoria": "One Piece Booster",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        },
+        {
+          "nome": "CS 26-27 Event Pack Finalist Ver.",
+          "categoria": "One Piece Booster",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        },
+        {
+          "nome": "CS 26-27 Event Pack",
+          "categoria": "One Piece Booster",
+          "aggiunto": "2026-09-23",
+          "prezzo": null
+        }
+      ],
+      "notizie": [
+        {
+          "titolo": "20+ of the best early Prime Day deals on trading cards: Pokémon TCG, Magic: The Gathering, One Piece, and more - mashable.com",
+          "link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxQMDI0OGl5VW52aHhtSXoxWjNRdnV3NkRZRW9ZV1N4WHhLMDhMcWE4YWwwZ3o4ZVRxMi1vMllSUVBna0huSG9tM05pM0owX0YzcG1VUV85VWNJY2gwendfVEpNRU5FNFI3TVl6TG1DT1RWblNJc01yZWxvNWY4a2MtTFdaeUZVTVlGX1VNYUZn?oc=5",
+          "data": "25/09"
+        },
+        {
+          "titolo": "Price Trends: One Piece Cards Climbing in Price - 09/22/2026 - seller.tcgplayer.com",
+          "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxNbDZpdmFreURnVU9sSDE3V3NLQzZpWi1RUWhlRUl2NDhyVjI0M3BwdlNFV3RNRE9Wa05teHotWVNOdU5SOUhZZkh0TXgxQ29aVDBReFRHcXktOEdnNE15UnRJRUp6d1VnSDNHLWhUalJ4cWNpU0I0bzE1SHZEMkpZanJMMDctUTRmaktRSDBiREkzczZCbmc?oc=5",
+          "data": "22/09"
+        },
+        {
+          "titolo": "[Pokémon TCG] Lugia Price Guide & Market Analysis | 30th CELEBRATION - SNKRDUNK",
+          "link": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxQR09iNlR3NkVORk9PREhMMUxneEhPMHpPVGo2RTA3dlk4RGpQeHo2dXRSdTNucGFoSWR3eERsa2JhdWd4em4zdEFrMzA1UE5tQ1BPQzlqZ0xvWkFucllCQmt6S1JwQjFtZEg4REgxNWl1Vms3bzc3N0xreXB3Z01mZng0azJTWlY5TTNGR1lvQV9FWUs3ajJFeVV4ZkpMRnV0TnAxcTRUY04xZmc?oc=5",
+          "data": "24/09"
+        },
+        {
+          "titolo": "Pokémon Officially Targets Scalpers With Sweeping New Change - collider.com",
+          "link": "https://news.google.com/rss/articles/CBMiekFVX3lxTFBjQlpaU3otcTd1YWxBMEtpa0J2ZmYxd2pZaHdGQ0k2ZFlrcWg0WlZ0dXYwVXlLcDJCclAyRWU4eVE3ZlhnZS1XMU92c2hycjRFRktERnNIQzU2TjlOTHF5MGFDYkFVbWdIUEJscE5temUycjA5WlhzT2Nn?oc=5",
+          "data": "21/09"
+        },
+        {
+          "titolo": "Debut Patches are everywhere, and the cards they’re going into are selling for big money - The Athletic - nytimes.com",
+          "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxQRmx5T1YteTZ6SHk0YUNjN21HYk5EQ0ZoN1dQQzRubkRBVmpld0pkb1N1RnhtZkpWdEpWd3NpZXZiemMzZ2ZiR1o0S2RqNHFRTWNqa09xdGZBV2VLSE1vS2VGSklkNFBZZGhOQXRFRHVPSXY1RmRqd2g3VTlfdWg2WmphUHRWbVlvSW5pcjFjQUktM2c?oc=5",
+          "data": "25/09"
+        },
+        {
+          "titolo": "Hot Holiday Toys 2026 - News12 | Hudson Valley",
+          "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxOMm9GTEN3R1hZUjRVU1ZuQXNsOFg0VjJoZTJvQmt5bi1TR0o1cHNFVDZaOE1qWkNacjV5b0x6T051bUdXWmdqX1VtRGRQTHpGQ0RmYzN3NHFReGVvdC15eHU1YTk2VHFJcDJleGZJMUx0WGZMbDRET1NKVFJONndUN0Z6UE1pT20xc21sOVlubGs?oc=5",
+          "data": "23/09"
+        }
+      ]
+    },
+    "dragonball": {
+      "nome": "Dragon Ball",
+      "livello": "osservazione",
+      "lingua_investimento": "inglese",
+      "giorni_storico": 1,
+      "classifiche": {
+        "sigillato": {
+          "7": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          },
+          "30": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          },
+          "90": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          },
+          "180": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          }
+        },
+        "singola": {
+          "7": {
+            "fonte": "stima",
+            "rialzi": [
+              {
+                "nome": "Familial Bonds",
+                "prezzo": 18.01,
+                "variazioni": {
+                  "7": 298.0,
+                  "30": 496.4,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Son Goku, Forever in Our Memories",
+                "prezzo": 30.29,
+                "variazioni": {
+                  "7": 287.9,
+                  "30": 1640.8,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Son Goku // Full-Size Power Son Goku",
+                "prezzo": 5.85,
+                "variazioni": {
+                  "7": 261.1,
+                  "30": 306.2,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "SS4 Son Goku, Cross-Dimensional Fighting Spirit",
+                "prezzo": 10.29,
+                "variazioni": {
+                  "7": 261.1,
+                  "30": 18.5,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Universe 7, Powers Combined",
+                "prezzo": 7.43,
+                "variazioni": {
+                  "7": 257.0,
+                  "30": 271.5,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              }
+            ],
+            "ribassi": [
+              {
+                "nome": "Son Goku, Full Strength Kamehameha",
+                "prezzo": 12.59,
+                "variazioni": {
+                  "7": -99.2,
+                  "30": 143.5,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "SS Son Goku, Majin Showdown",
+                "prezzo": 7.58,
+                "variazioni": {
+                  "7": -98.8,
+                  "30": 52.2,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Cabba, the Revoker",
+                "prezzo": 19.49,
+                "variazioni": {
+                  "7": -76.4,
+                  "30": 76.9,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Uneasing Awakened Rage",
+                "prezzo": 8.31,
+                "variazioni": {
+                  "7": -75.1,
+                  "30": -1.7,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Baby Janemba, Corrupt Coalescence",
+                "prezzo": 19.79,
+                "variazioni": {
+                  "7": -68.7,
+                  "30": -67.9,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              }
+            ]
+          },
+          "30": {
+            "fonte": "stima",
+            "rialzi": [
+              {
+                "nome": "Nappa, Demolition Man",
+                "prezzo": 7.8,
+                "variazioni": {
+                  "7": 0.0,
+                  "30": 298.0,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Son Goku, Nimbus Master",
+                "prezzo": 7.24,
+                "variazioni": {
+                  "7": 12.0,
+                  "30": 295.6,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "SS4 Son Goku, Otherworldly Infiltrator",
+                "prezzo": 14.44,
+                "variazioni": {
+                  "7": 0.0,
+                  "30": 288.2,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "SS3 Tag Team Trunks",
+                "prezzo": 6.02,
+                "variazioni": {
+                  "7": 138.5,
+                  "30": 285.9,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Vegeta, Frenzied Strike",
+                "prezzo": 19.46,
+                "variazioni": {
+                  "7": 49.0,
+                  "30": 281.6,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              }
+            ],
+            "ribassi": [
+              {
+                "nome": "Majin Buu, Incarnation of Demonic Evil",
+                "prezzo": 10.72,
+                "variazioni": {
+                  "7": -64.0,
+                  "30": -87.8,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "The Radiant Saiyans",
+                "prezzo": 7.65,
+                "variazioni": {
+                  "7": -49.7,
+                  "30": -87.2,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Dragon Balls, Negative Energy Overflow",
+                "prezzo": 9.73,
+                "variazioni": {
+                  "7": -62.0,
+                  "30": -80.9,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "SS4 Gogeta, Peerless Fusion",
+                "prezzo": 18.12,
+                "variazioni": {
+                  "7": -55.1,
+                  "30": -77.6,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Pan, Time Patrol Maiden",
+                "prezzo": 26.34,
+                "variazioni": {
+                  "7": -45.1,
+                  "30": -77.0,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              }
+            ]
+          },
+          "90": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          },
+          "180": {
+            "fonte": "n.d.",
+            "rialzi": [],
+            "ribassi": []
+          }
+        }
+      },
+      "occasioni": [],
+      "nuovi_prodotti": [],
+      "notizie": [
+        {
+          "titolo": "Dragon Ball Super Officially Returns 3 Days Early With Exclusive World Premiere - Comic Book Resources",
+          "link": "https://news.google.com/rss/articles/CBMic0FVX3lxTE9xZFFNTU81LU4tSDAtYXVfZXVSQUxrVnRacXJ1WHhkWkpKNmZqSE81dzJIVUpBcjNxRmpmRjVrVl9SeHpRaEZKTjYwbm02bGlvc3lZc2tNMDlrTUViSFRDMHk0VWZFSVliLV81QVBjOWxVd0k?oc=5",
+          "data": "24/09"
+        }
+      ]
+    }
+  },
+  "notizie_extra": {
+    "naruto": []
+  }
+}
