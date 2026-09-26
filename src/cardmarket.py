@@ -1,4 +1,5 @@
 """Scarica catalogo prodotti e price guide pubblici di Cardmarket (file ufficiali, gratuiti)."""
+import re
 import time
 from urllib.parse import quote
 
@@ -36,7 +37,7 @@ def trova_id_giochi(giochi, max_id=30):
             continue
         testo = " ".join(p.get("name", "") for p in dati.get("products", [])).lower()
         for chiave, g in giochi.items():
-            punti = sum(testo.count(w.lower()) for w in g["riconosci"])
+            punti = sum(len(re.findall(r"\b" + re.escape(w.lower()) + r"\b", testo)) for w in g["riconosci"])
             if punti > migliori[chiave][0]:
                 migliori[chiave] = (punti, gid)
     return {k: v[1] for k, v in migliori.items() if v[0] >= 20}
