@@ -42,18 +42,23 @@ SOGLIA_ALERT_MOVIMENTO = 0.20      # +/-20% in 7 giorni
 SOGLIA_CONFERMA = 0.15             # il giorno prima doveva essere almeno +/-15%
 SOGLIA_OCCASIONE = 0.70            # prezzo minimo <= 70% del prezzo di tendenza
 SOGLIA_OCCASIONE_MIN = 0.40        # sotto il 40% è quasi sempre un'altra lingua o un prodotto rovinato
-MIN_PREZZO_OCCASIONE = {"singola": 5, "sigillato": 5}
+MIN_PREZZO_OCCASIONE = {"singola": 20, "sigillato": 5}
 # Per le singole il prezzo minimo è spesso di copie rovinate o in altre lingue:
 # le occasioni sulle singole sono attive solo con la verifica per lingua (CMAPI_KEY).
 OCCASIONI_SINGOLE_SENZA_VERIFICA = False
-MAX_OCCASIONI_AL_GIORNO = 15        # di cui occasioni sul sigillato
 # True = un prodotto ancora in allerta viene rimandato ogni giorno, con la data della prima segnalazione.
 # False = ogni prodotto viene segnalato una volta sola finché resta in allerta.
 RIPETI_ALERT_ATTIVI = True
-MAX_ALERT_AL_GIORNO = 15            # totale alert al giorno (i movimenti di prezzo hanno la precedenza)
+# Alert al giorno per ciascun gioco (Pokémon e One Piece hanno ognuno il proprio limite).
+# Ordine di priorità: movimenti di prezzo, poi occasioni, poi prodotti da osservare.
+MAX_ALERT_PER_GIOCO = 10
+# True = se le occasioni vere non bastano a raggiungere il limite, il bot completa con
+# prodotti "da osservare": prezzo minimo tra il 70% e l'85% della tendenza (segnale più debole).
+RIEMPI_CON_DA_OSSERVARE = True
+SOGLIA_DA_OSSERVARE = 0.85
 
 # Quanti prodotti per classifica (rialzi e ribassi)
-RIGHE_PER_CLASSIFICA = 10
+RIGHE_PER_CLASSIFICA = 5
 
 # Variazioni oltre questo valore sono trattate come probabili errori di dato
 VARIAZIONE_MAX_CREDIBILE = 3.0     # +300%
