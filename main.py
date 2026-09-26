@@ -48,53 +48,65 @@ def raccogli():
 def giornaliero():
     dati = raccogli()
     stato = storage.leggi_json("stato_alert.json", {})
+    for k, v in list(stato.items()):          # formato vecchio: solo la data
+        if isinstance(v, str):
+            stato[k] = {"primo": v, "ultimo": v}
     oggi = dt.date.today()
     singole = verify.attivo() or C.OCCASIONI_SINGOLE_SENZA_VERIFICA
-    movimenti, occasioni = [], []
+    n = C.MAX_ALERT_PER_GIOCO
+    inviati, conteggi = [], {}
+
     for chiave, (giorno, prezzi, cat) in dati.items():
         g = C.GIOCHI[chiave]
         if g["livello"] != "principale":
             continue
         slug, lingua = g["slug_cardmarket"], LINGUE_IT.get(g["lingua"], g["lingua"])
+        base = {"gioco": g["nome"], "lingua_it": lingua, "lingua": g["lingua"]}
         df = analysis.tabella(chiave, giorno, prezzi, cat)
-        for a in analysis.alert_movimenti(chiave, giorno, df, slug, cardmarket.link_ricerca):
-            movimenti.append({**a, "genere": "movimento", "gioco": g["nome"], "lingua_it": lingua})
-        for o in analysis.occasioni(df, slug, cardmarket.link_ricerca, singole):
-            occasioni.append({**o, "genere": "occasione", "gioco": g["nome"], "lingua_it": lingua,
-                              "lingua": g["lingua"]})
 
-    # Stato: per ogni prodotto, il primo e l'ultimo giorno in cui era tra gli alert
-    for k, v in list(stato.items()):
-        if isinstance(v, str):
-            stato[k] = {"primo": v, "ultimo": v}
-    occasioni.sort(key=lambda o: -o["sconto"])
-    candidati = movimenti + occasioni
-    for a in candidati:
-        k = f"{a['genere']}:{a['id']}"
-        s = stato.get(k)
-        continuo = s and (oggi - dt.date.fromisoformat(s["ultimo"])).days <= 2
-        a["segnalato_dal"] = s["primo"] if continuo and s["primo"] != oggi.isoformat() else None
-        stato[k] = {"primo": s["primo"] if continuo else oggi.isoformat(), "ultimo": oggi.isoformat()}
+        movimenti = [{**a, **base, "genere": "movimento"}
+                     for a in analysis.alert_movimenti(chiave, giorno, df, slug, cardmarket.link_ricerca)]
+        occasioni = [{**o, **base, "genere": "occasione"}
+                     for o in analysis.occasioni(df, slug, cardmarket.link_ricerca, singole, limite=500)]
+        da_osservare = []
+        if C.RIEMPI_CON_DA_OSSERVARE:
+            gia = {o["id"] for o in occasioni}
+            da_osservare = [{**o, **base, "genere": "da_osservare"}
+                            for o in analysis.occasioni(df, slug, cardmarket.link_ricerca, singole, limite=500,
+                                                        rapporto_da=C.SOGLIA_OCCASIONE,
+                                                        rapporto_a=C.SOGLIA_DA_OSSERVARE)
+                            if o["id"] not in gia]
+        conteggi[g["nome"]] = (len(movimenti), len(occasioni), len(da_osservare))
 
-    # Ordine: prima i movimenti, poi le occasioni; dentro ogni gruppo prima le novità
-    candidati.sort(key=lambda a: (a["genere"] != "movimento", a["segnalato_dal"] is not None))
-    inviati, n_occ = [], 0
-    for a in candidati:
-        if not C.RIPETI_ALERT_ATTIVI and a["segnalato_dal"]:
-            continue
-        if a["genere"] == "occasione":
-            if n_occ >= C.MAX_OCCASIONI_AL_GIORNO:
+        # data della prima segnalazione per i prodotti ancora in allerta
+        candidati = movimenti + occasioni + da_osservare
+        for a in candidati:
+            k = f"{'occasione' if a['genere'] == 'da_osservare' else a['genere']}:{a['id']}"
+            s = stato.get(k)
+            continuo = s and (oggi - dt.date.fromisoformat(s["ultimo"])).days <= 2
+            a["segnalato_dal"] = s["primo"] if continuo and s["primo"] != oggi.isoformat() else None
+            a["_chiave"] = k
+
+        # priorità: movimenti, occasioni, da osservare; dentro ogni gruppo prima le novità
+        ordine = {"movimento": 0, "occasione": 1, "da_osservare": 2}
+        candidati.sort(key=lambda a: (ordine[a["genere"]], a["segnalato_dal"] is not None))
+        scelti = []
+        for a in candidati:
+            if not C.RIPETI_ALERT_ATTIVI and a["segnalato_dal"]:
                 continue
-            verify.verifica([a], a["lingua"])
-            n_occ += 1
-        inviati.append(a)
-        if len(inviati) >= C.MAX_ALERT_AL_GIORNO:
-            break
+            if a["genere"] != "movimento":
+                verify.verifica([a], a["lingua"])
+            stato[a["_chiave"]] = {"primo": a["segnalato_dal"] or oggi.isoformat(), "ultimo": oggi.isoformat()}
+            scelti.append(a)
+            if len(scelti) >= n:
+                break
+        inviati += scelti
+
     stato = {k: v for k, v in stato.items() if (oggi - dt.date.fromisoformat(v["ultimo"])).days < 30}
     storage.scrivi_json("stato_alert.json", stato)
     if inviati:
-        telegram.messaggio(report.telegram_alert(inviati))
-    print(f"Alert inviati: {len(inviati)}")
+        telegram.messaggio(report.telegram_alert(inviati, conteggi))
+    print(f"Alert inviati: {len(inviati)} - candidati per gioco (movimenti, occasioni, da osservare): {conteggi}")
 
 
 def settimanale():
