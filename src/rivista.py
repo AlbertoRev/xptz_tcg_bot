@@ -7,7 +7,7 @@ generica rimane nel PDF: ogni elemento ornamentale appartiene al mondo Pokémon.
 import math
 import random
 from pathlib import Path
-from PIL import Image as PILImage, ImageDraw, ImageFilter
+from PIL import Image as PILImage, ImageDraw, ImageFilter, ImageOps, ImageChops
 from xml.sax.saxutils import escape
 
 from reportlab.graphics.shapes import Drawing, Line, Rect, String
@@ -521,52 +521,72 @@ def _art_piano(ctx, numero):
     return next((p for p in pages if p.get("page")==numero), {})
 
 def _topographic_map_path():
-    """Genera una carta fisica raster ad alta risoluzione, riutilizzata nel numero."""
-    realistic=ASSET_DIR/"hoenn_realistic.png"
-    if realistic.exists(): return realistic
+    """Carta fisica di Hoenn con rilievo, hillshade e batimetria; nessuna geometria pixel."""
     out=ASSET_DIR/"hoenn_topographic.png"
-    if out.exists(): return out
     ASSET_DIR.mkdir(parents=True,exist_ok=True)
-    Wm,Hm=1200,760
-    sea=PILImage.new("RGB",(Wm,Hm),(154,195,204))
-    # batimetria/texture acqua
-    noise=PILImage.effect_noise((300,190),18).resize((Wm,Hm),PILImage.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(5))
-    tint=PILImage.new("RGB",(Wm,Hm),(120,170,182)); sea=PILImage.blend(sea,tint,.12)
-    sea=PILImage.blend(sea,noise.convert("RGB"),.085)
-    mask=PILImage.new("L",(Wm,Hm),0); d=ImageDraw.Draw(mask)
-    coast=[(75,350),(105,235),(215,160),(360,170),(455,110),(565,150),(650,105),(755,160),(835,235),(985,245),(1045,335),(980,415),(1040,500),(910,565),(785,545),(700,625),(575,585),(470,625),(365,555),(250,590),(135,505)]
-    d.polygon(coast,fill=255)
-    for box in ((1010,210,1080,270),(1080,340,1125,385),(890,650,955,700),(690,655,745,700),(405,660,455,695)): d.ellipse(box,fill=255)
-    mask=mask.filter(ImageFilter.GaussianBlur(8))
-    elev=PILImage.effect_noise((300,190),42).resize((Wm,Hm),PILImage.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(10))
-    low=PILImage.new("RGB",(Wm,Hm),(157,174,112)); high=PILImage.new("RGB",(Wm,Hm),(105,126,83))
-    terrain=PILImage.blend(low,high,.28); terrain=PILImage.blend(terrain,elev.convert("RGB"),.18)
+    Wm,Hm=1600,1000
+
+    # mare con profondità e variazioni naturali
+    sea_noise=PILImage.effect_noise((400,250),28).resize((Wm,Hm),PILImage.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(8))
+    sea=ImageOps.colorize(sea_noise,(63,124,151),(174,216,220)).convert("RGB")
+
+    # sagoma Hoenn organica
+    mask=PILImage.new("L",(Wm,Hm),0); md=ImageDraw.Draw(mask)
+    coast=[(90,475),(115,330),(220,225),(385,210),(500,145),(610,190),(710,125),(835,190),(920,285),(1110,285),(1225,375),(1160,470),(1235,575),(1075,665),(920,640),(815,760),(665,700),(535,765),(405,680),(270,715),(145,610)]
+    md.polygon(coast,fill=255)
+    for box in ((1190,230,1300,330),(1315,420,1385,490),(1050,790,1145,870),(790,805,870,875),(470,810,540,860)):
+        md.ellipse(box,fill=255)
+    mask=mask.filter(ImageFilter.GaussianBlur(5))
+
+    # elevazione multiscala
+    n1=PILImage.effect_noise((400,250),50).resize((Wm,Hm),PILImage.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(13))
+    n2=PILImage.effect_noise((200,125),32).resize((Wm,Hm),PILImage.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(25))
+    elev=ImageChops.blend(n1,n2,.42)
+    # catena montuosa centrale
+    ridge=PILImage.new("L",(Wm,Hm),0); rd=ImageDraw.Draw(ridge)
+    for cx,cy,rx,ry,v in ((680,420,230,165,150),(780,385,175,135,125),(575,475,150,110,105),(905,420,115,95,80)):
+        rd.ellipse((cx-rx,cy-ry,cx+rx,cy+ry),fill=v)
+    ridge=ridge.filter(ImageFilter.GaussianBlur(48))
+    elev=ImageChops.add(elev,ridge,scale=1.35,offset=-25)
+    elev=ImageOps.autocontrast(elev)
+
+    # tavolozza naturale per quota
+    terrain=ImageOps.colorize(elev,(52,86,58),(211,198,153),mid=(111,145,83)).convert("RGB")
+    # hillshade semplice da differenza di elevazione traslata
+    shifted=ImageChops.offset(elev,7,7)
+    shade=ImageChops.subtract(elev,shifted,scale=1.0,offset=128).filter(ImageFilter.GaussianBlur(2))
+    shade_rgb=ImageOps.colorize(shade,(55,61,53),(245,239,214)).convert("RGB")
+    terrain=PILImage.blend(terrain,shade_rgb,.24)
     sea.paste(terrain,(0,0),mask)
+
     dr=ImageDraw.Draw(sea,"RGBA")
-    # catena montuosa centrale con ombreggiatura naturale
-    for cx,cy,rx,ry in ((555,330,150,115),(620,315,105,85),(470,360,95,70)):
-        dr.ellipse((cx-rx,cy-ry,cx+rx,cy+ry),fill=(95,91,72,45))
-        dr.ellipse((cx-rx*.65,cy-ry*.65,cx+rx*.65,cy+ry*.65),outline=(105,96,75,95),width=3)
-        dr.ellipse((cx-rx*.40,cy-ry*.40,cx+rx*.40,cy+ry*.40),outline=(115,104,81,90),width=2)
-    # foreste
-    for cx,cy,rx,ry in ((280,315,115,80),(330,220,85,65),(760,325,120,78),(835,430,95,60)):
-        dr.ellipse((cx-rx,cy-ry,cx+rx,cy+ry),fill=(52,103,65,48))
-    # strade e rotte sottili
-    routes=[[(155,390),(310,410),(510,360),(735,420),(965,350)],[(310,410),(335,255),(555,245),(770,215),(1010,235)]]
+    # foreste semitrasparenti e zone vulcaniche
+    for cx,cy,rx,ry in ((330,390,150,100),(395,280,100,75),(955,430,155,100),(1020,550,125,82)):
+        dr.ellipse((cx-rx,cy-ry,cx+rx,cy+ry),fill=(30,86,50,45))
+    for r,alpha in ((145,34),(100,42),(62,52)):
+        dr.ellipse((680-r,420-r*.72,680+r,420+r*.72),outline=(92,76,58,alpha),width=5)
+
+    # fiumi
+    for pts in ([(660,300),(635,385),(570,475),(500,575)],[(855,310),(890,400),(980,485),(1080,535)]):
+        dr.line(pts,fill=(66,139,172,180),width=6,joint="curve")
+
+    # rotte sottili, realistiche e subordinate al terreno
+    routes=[[(190,520),(390,535),(640,470),(900,535),(1150,455)],[(390,535),(420,325),(680,300),(925,270),(1195,285)]]
     for pts in routes:
-        dr.line(pts,fill=(214,196,158,170),width=4,joint="curve"); dr.line(pts,fill=(150,132,103,115),width=1,joint="curve")
-    for x0,y0 in [(155,390),(310,410),(335,255),(510,360),(555,245),(735,420),(770,215),(965,350),(1010,235)]:
-        dr.ellipse((x0-9,y0-9,x0+9,y0+9),fill=(245,239,216,255),outline=(69,91,74,255),width=3)
-    dr.line([(540,245),(520,330),(465,405),(400,475)],fill=(80,145,168,190),width=5)
-    dr.line([(705,250),(740,330),(820,390),(900,430)],fill=(80,145,168,170),width=4)
-    labels=[(130,420,"Petalburg"),(295,430,"Mauville"),(300,235,"Rustboro"),(500,390,"Mt. Chimney"),(735,445,"Lilycove"),(925,365,"Mossdeep")]
-    for lx,ly,tx in labels:
-        dr.rounded_rectangle((lx-5,ly-17,lx+8+len(tx)*7,ly+5),6,fill=(244,240,218,185))
-        dr.text((lx,ly-14),tx,fill=(48,65,58,230))
-    dr.polygon([(1110,80),(1122,115),(1098,115)],fill=(47,67,62,230)); dr.text((1107,50),"N",fill=(47,67,62,255))
-    dr.line((55,700,210,700),fill=(48,65,58,220),width=4); dr.line((55,692,55,708),fill=(48,65,58,220),width=3); dr.line((210,692,210,708),fill=(48,65,58,220),width=3)
-    dr.text((92,710),"100 km",fill=(48,65,58,230))
-    dr.text((42,35),"HOENN · CARTA FISICA",fill=(42,65,61,255))
+        dr.line(pts,fill=(78,70,58,100),width=6,joint="curve")
+        dr.line(pts,fill=(225,207,166,205),width=3,joint="curve")
+
+    # località discrete
+    cities=[(190,520,"Petalburg"),(390,535,"Mauville"),(420,325,"Rustboro"),(640,470,"Mt. Chimney"),(900,535,"Lilycove"),(1150,455,"Mossdeep")]
+    for x0,y0,name in cities:
+        dr.ellipse((x0-8,y0-8,x0+8,y0+8),fill=(242,235,211,255),outline=(48,71,61,255),width=3)
+        dr.rounded_rectangle((x0+13,y0-15,x0+20+len(name)*7,y0+8),5,fill=(245,241,222,190))
+        dr.text((x0+18,y0-12),name,fill=(43,61,54,235))
+
+    # cartografia
+    dr.text((45,38),"HOENN · CARTA FISICA",fill=(37,57,53,255))
+    dr.polygon([(1490,55),(1503,92),(1477,92)],fill=(38,58,54,230)); dr.text((1486,28),"N",fill=(38,58,54,255))
+    dr.line((55,930,245,930),fill=(42,61,56,220),width=4); dr.text((105,943),"100 km",fill=(42,61,56,230))
     sea.save(out,"PNG")
     return out
 
