@@ -73,6 +73,8 @@ def _seleziona(candidati, limite, stato, oggi):
         scelti.append(a)
         if len(scelti) >= limite:
             break
+    # nel messaggio i nuovi compaiono per primi, poi quelli ancora attivi (ognuno per tipo di segnale)
+    scelti.sort(key=lambda a: (a["segnalato_dal"] is not None, ORDINE[a["genere"]]))
     return scelti
 
 
@@ -127,12 +129,7 @@ MESI_IT = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio
 
 
 def _apertura(g):
-    """Titolo di copertina scelto con regole fisse."""
-    caldi = [p for p in g["previsioni"] if p["stato"] == "caldo"]
-    if caldi:
-        p = caldi[0]
-        return {"titolo": f"{p['nome']}: è la novità più calda della settimana",
-                "sottotitolo": f"{p['motivo'].capitalize()}. Prezzo attuale {report._eur(p['prezzo'])}."}
+    """Titolo di copertina scelto con regole fisse: prima i movimenti da storico reale (mai stime)."""
     for tipo in ("sigillato", "singola"):
         for per in sorted(C.PERIODI, reverse=True):
             c = g["classifiche"][tipo][str(per)]
@@ -141,6 +138,11 @@ def _apertura(g):
                 r = reali[0]
                 return {"titolo": f"{r['nome']} vola: {report._perc(r['variazioni'][str(per)])} in {per} giorni",
                         "sottotitolo": f"Prezzo di tendenza {report._eur(r['prezzo'])}, incertezza {r['incertezza']}."}
+    caldi = [p for p in g["previsioni"] if p["stato"] == "caldo"]
+    if caldi:
+        p = caldi[0]
+        return {"titolo": f"{p['nome']}: è la novità più calda della settimana",
+                "sottotitolo": f"{p['motivo'].capitalize()}. Prezzo attuale {report._eur(p['prezzo'])}."}
     if g["radar"]:
         u = g["radar"][0]
         return {"titolo": u["titolo"], "sottotitolo": f"Fonte: {u['fonte']}."}
