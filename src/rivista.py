@@ -931,9 +931,9 @@ def crea(percorso, ctx):
     for nota in ctx["note_metodo"]:
         E.append(Paragraph(f'<font color="#FF8C42" name="{SOTTO}">»</font>  {_t(nota)}', st["p"]))
         E.append(Spacer(1, 4))
-    # Passa la funzione 'applica_sfondo_e_decorazioni' a sia onFirstPage che onLaterPages:
+   # Passa la funzione 'applica_sfondo_e_decorazioni' a sia onFirstPage che onLaterPages:
 doc.build(
-    E, 
+    story, 
     onFirstPage=applica_sfondo_e_decorazioni, 
     onLaterPages=applica_sfondo_e_decorazioni
 )
