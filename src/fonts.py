@@ -1,18 +1,24 @@
-"""Tipografia editoriale pulita, senza estetica pixel/cartoon."""
+"""Tipografia editoriale contemporanea per POKEPUTZU WEEKLY."""
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-import os
+import os, glob
 
-SYSTEM="/usr/share/fonts/truetype/dejavu"
-def _reg(alias, filename, fallback):
-    path=os.path.join(SYSTEM,filename)
-    if os.path.exists(path):
+def _find(patterns):
+    for pattern in patterns:
+        hits=glob.glob(pattern,recursive=True)
+        if hits: return hits[0]
+    return None
+
+def _reg(alias, patterns, fallback):
+    path=_find(patterns)
+    if path and os.path.exists(path):
         pdfmetrics.registerFont(TTFont(alias,path))
         return alias
     return fallback
 
 def carica():
-    regular=_reg("PokeBody","DejaVuSans.ttf","Helvetica")
-    bold=_reg("PokeBold","DejaVuSans-Bold.ttf","Helvetica-Bold")
-    condensed=_reg("PokeTitle","DejaVuSansCondensed-Bold.ttf","Helvetica-Bold")
-    return {"Testata":condensed,"Titolo":condensed,"Corpo":regular,"CorpoB":bold,"Simboli":regular}
+    regular=_reg("PokeBody",["/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf","/usr/share/fonts/**/*NotoSans-Regular.ttf"],"Helvetica")
+    medium=_reg("PokeMedium",["/usr/share/fonts/truetype/noto/NotoSans-Medium.ttf","/usr/share/fonts/**/*NotoSans-Medium.ttf"],"Helvetica")
+    bold=_reg("PokeBold",["/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf","/usr/share/fonts/**/*NotoSans-Bold.ttf"],"Helvetica-Bold")
+    title=_reg("PokeTitle",["/usr/share/fonts/truetype/noto/NotoSans-Black.ttf","/usr/share/fonts/**/*NotoSans-Black.ttf","/usr/share/fonts/**/*NotoSans-ExtraBold.ttf"],bold)
+    return {"Testata":title,"Titolo":title,"Corpo":regular,"CorpoB":medium,"Simboli":regular}
