@@ -61,7 +61,10 @@ TRAINER_POOL = [
     "barry", "bianca",
 ]
 
-THEMES = ["Tesori di Hoenn", "Rotte di Hoenn", "Mare di Hoenn", "Leggende di Hoenn"]\n\n\ndef _seed(numero: int, data: str) -> int:
+THEMES = ["Tesori di Hoenn", "Rotte di Hoenn", "Mare di Hoenn", "Leggende di Hoenn"]
+
+
+def _seed(numero: int, data: str) -> int:
     raw = f"il-collezionista|{data}|{numero}".encode("utf-8")
     return int(hashlib.sha256(raw).hexdigest()[:16], 16)
 
