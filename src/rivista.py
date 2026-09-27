@@ -457,73 +457,46 @@ def _grafico(righe, periodo, titolo):
 
 # ---------- pagine ----------
 def _copertina(c, ctx):
-    g = ctx["principale"]
-    c.saveState()
-    _mondo_giorno(c, ctx)
-    # testata dentro la fascia GBA
-    c.setFillColor(BIANCO)
-    c.setFont(TITOLO, 27)
-    c.drawString(MARGINE, H - 13 * mm, "POKEPUTZU WEEKLY")
-    c.setFont(TESTO_B, 8)
-    c.setFillColor(colors.HexColor("#DCEBCB"))
-    c.drawRightString(W - MARGINE, H - 12 * mm, f"N. {ctx['numero']} · {ctx['data_lunga'].upper()}")
+    g=ctx["principale"]; c.saveState(); _mondo_giorno(c,ctx)
+    # Masthead più vicino a un magazine: forte, pulito, senza effetto "UI box".
+    c.setFillColor(BIANCO); c.setFont(TITOLO,25); c.drawString(MARGINE,H-12.7*mm,"POKEPUTZU WEEKLY")
+    c.setFillColor(colors.HexColor("#DCE7D9")); c.setFont(TESTO_B,7.5)
+    c.drawRightString(W-MARGINE,H-11.8*mm,f"N. {ctx['numero']}  ·  {ctx['data_lunga'].upper()}")
 
-    # cartuccia / scheda principale
-    x0, y0, pw, ph = MARGINE, H - 132 * mm, 112 * mm, 91 * mm
-    c.setFillColor(colors.HexColor("#173C35"))
-    c.roundRect(x0, y0, pw, ph, 3 * mm, stroke=0, fill=1)
-    c.setFillColor(colors.HexColor("#EFF3D8"))
-    c.roundRect(x0 + 3 * mm, y0 + 3 * mm, pw - 6 * mm, ph - 6 * mm, 2 * mm, stroke=0, fill=1)
-    c.setFillColor(colors.HexColor("#568D55"))
-    c.rect(x0 + 3 * mm, y0 + ph - 18 * mm, pw - 6 * mm, 15 * mm, stroke=0, fill=1)
-    c.setFillColor(BIANCO)
-    c.setFont(SOTTO, 8)
-    c.drawString(x0 + 7 * mm, y0 + ph - 12 * mm, "IN PRIMO PIANO")
-    titolo = Paragraph(_t(ctx["apertura"]["titolo"]), ParagraphStyle("ct2", fontName=TITOLO, fontSize=15, leading=17.5, textColor=INCHIOSTRO))
-    sotto = Paragraph(_t(ctx["apertura"]["sottotitolo"]), ParagraphStyle("cs2", fontName=TESTO, fontSize=8.6, leading=10.5, textColor=GRIGIO))
-    area_t=KeepInFrame(pw-14*mm,40*mm,[titolo],mode="shrink")
-    area_t.canv=c; _,ht=area_t.wrap(pw-14*mm,40*mm); area_t.drawOn(c,x0+7*mm,y0+ph-24*mm-ht)
-    area_s=KeepInFrame(pw-14*mm,18*mm,[sotto],mode="shrink")
-    area_s.canv=c; _,hs=area_s.wrap(pw-14*mm,18*mm); area_s.drawOn(c,x0+7*mm,y0+7*mm)
-    # colonna visuale dedicata: mappa e Pokémon non possono sovrapporsi ai dati
-    _art_map(c,W-79*mm,H-96*mm,64*mm,52*mm,ctx["numero"])
+    # Cover story: pannello leggero, non una cartuccia.
+    x0,y0,pw,ph=MARGINE,H-132*mm,119*mm,84*mm
+    _panel(c,x0,y0,pw,ph,4*mm,.90,"#90A59A")
+    c.setFillColor(colors.HexColor("#5F8B73")); c.roundRect(x0,y0+ph-13*mm,42*mm,13*mm,4*mm,stroke=0,fill=1)
+    c.setFillColor(BIANCO); c.setFont(TESTO_B,7.2); c.drawString(x0+6*mm,y0+ph-8.4*mm,"IN PRIMO PIANO")
+    titolo=Paragraph(_t(ctx["apertura"]["titolo"]),ParagraphStyle("cover_title",fontName=TITOLO,fontSize=17.5,leading=18.2,textColor=INCHIOSTRO))
+    kt=KeepInFrame(pw-14*mm,45*mm,[titolo],mode="shrink"); kt.canv=c; kt.wrap(pw-14*mm,45*mm); kt.drawOn(c,x0+7*mm,y0+28*mm)
+    sotto=Paragraph(_t(ctx["apertura"]["sottotitolo"]),ParagraphStyle("cover_sub",fontName=TESTO,fontSize=8.2,leading=10,textColor=GRIGIO))
+    ks=KeepInFrame(pw-14*mm,18*mm,[sotto],mode="shrink"); ks.canv=c; ks.wrap(pw-14*mm,18*mm); ks.drawOn(c,x0+7*mm,y0+7*mm)
+
+    # Artwork protagonista più grande, libero sul fondo-mappa.
     hero=(_art_piano(ctx,1).get("hero_asset") or _mondo_asset(ctx,"pokemon",0))
-    if hero:
-        _immagine_asset(c,hero,W-40*mm,H-139*mm,58*mm)
+    if hero: _immagine_asset(c,hero,W-35*mm,H-119*mm,72*mm)
 
-    # KPI come menu di stato, non adesivi
-    ky = y0 - 30 * mm
-    kw = (112 * mm - 6 * mm) / 4
-    for i, (numero, etichetta) in enumerate(ctx["kpi"]):
-        x = MARGINE + i * (kw + 2 * mm)
-        c.setFillColor(colors.HexColor("#173C35"))
-        c.roundRect(x, ky, kw, 23 * mm, 2 * mm, stroke=0, fill=1)
-        c.setFillColor(colors.HexColor("#DCEBCB"))
-        c.setFont(TITOLO, 17)
-        c.drawCentredString(x + kw/2, ky + 12 * mm, str(numero))
-        lab=Paragraph(_t(etichetta.upper()),ParagraphStyle("kpi_lab",fontName=TESTO_B,fontSize=5.8,leading=6.2,textColor=colors.HexColor("#DCEBCB"),alignment=TA_CENTER))
-        fit=KeepInFrame(kw-3*mm,6.5*mm,[lab],mode="shrink"); fit.canv=c; fit.wrap(kw-3*mm,6.5*mm); fit.drawOn(c,x+1.5*mm,ky+2.2*mm)
+    # KPI: quattro pillole editoriali chiare, non blocchi scuri.
+    ky=y0-29*mm; kw=(119*mm-9*mm)/4
+    for i,(numero,etichetta) in enumerate(ctx["kpi"]):
+        x=MARGINE+i*(kw+3*mm); _panel(c,x,ky,kw,22*mm,3*mm,.88,"#A4B4AA")
+        c.setFillColor(colors.HexColor("#315E51")); c.setFont(TITOLO,15.5); c.drawCentredString(x+kw/2,ky+11.5*mm,str(numero))
+        lab=Paragraph(_t(etichetta.upper()),ParagraphStyle("kpi2",fontName=TESTO_B,fontSize=5.5,leading=5.9,textColor=GRIGIO,alignment=TA_CENTER))
+        fit=KeepInFrame(kw-4*mm,6.5*mm,[lab],mode="shrink"); fit.canv=c; fit.wrap(kw-4*mm,6.5*mm); fit.drawOn(c,x+2*mm,ky+2.1*mm)
 
-    # indice stile Pokédex/menu
-    sy = ky - 67 * mm
-    c.setFillColor(colors.HexColor("#173C35"))
-    c.roundRect(MARGINE, sy, 112 * mm, 60 * mm, 3 * mm, stroke=0, fill=1)
-    c.setFillColor(colors.HexColor("#EFF3D8"))
-    c.roundRect(MARGINE + 3 * mm, sy + 3 * mm, 106 * mm, 54 * mm, 2 * mm, stroke=0, fill=1)
-    c.setFillColor(colors.HexColor("#355F4E"))
-    c.setFont(SOTTO, 9)
-    c.drawString(MARGINE + 7 * mm, sy + 45 * mm, "INDICE / HOENN DATA")
-    yy = sy + 37 * mm
-    for k, (titolo_r, descrizione) in enumerate(ctx["sommario"], 1):
-        c.setFillColor(INCHIOSTRO); c.setFont(TESTO_B, 8.2)
-        c.drawString(MARGINE + 8 * mm, yy, f"{k:02d}  {titolo_r[:27]}")
-        yy -= 6.3 * mm
+    # Indice come colonna editoriale traslucida.
+    sy=ky-68*mm; _panel(c,MARGINE,sy,119*mm,59*mm,4*mm,.88,"#A4B4AA")
+    c.setFillColor(colors.HexColor("#315E51")); c.setFont(TITOLO,9.5); c.drawString(MARGINE+7*mm,sy+47*mm,"NEL NUMERO")
+    yy=sy+38*mm
+    for k,(titolo_r,_) in enumerate(ctx["sommario"],1):
+        p=Paragraph(f'<b>{k:02d}</b>  {_t(titolo_r)}',ParagraphStyle(f"idx{k}",fontName=TESTO,fontSize=7.9,leading=8.5,textColor=INCHIOSTRO))
+        box=KeepInFrame(105*mm,7*mm,[p],mode="shrink"); box.canv=c; box.wrap(105*mm,7*mm); box.drawOn(c,MARGINE+7*mm,yy-2*mm)
+        yy-=7.1*mm
 
-    c.setFillColor(colors.HexColor("#173C35"))
-    c.rect(0, 0, W, 12 * mm, stroke=0, fill=1)
-    c.setFillColor(colors.HexColor("#DCEBCB"))
-    c.setFont(TESTO_B, 7)
-    c.drawString(MARGINE, 4.5 * mm, f"CARDMARKET DATA · {g['giorni_storico']} GIORNI DI STORICO · INFORMATIVO")
+    c.setFillColor(colors.HexColor("#315E51")); c.rect(0,0,W,10*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#E2E9DF")); c.setFont(TESTO_B,6.5)
+    c.drawString(MARGINE,3.6*mm,f"CARDMARKET DATA  ·  {g['giorni_storico']} GIORNI DI STORICO  ·  INFORMATIVO")
     c.restoreState()
 
 
