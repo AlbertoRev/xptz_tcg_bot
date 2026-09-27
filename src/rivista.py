@@ -343,6 +343,19 @@ class Fumetto(Flowable):
         c.roundRect(x + 2 * mm, y + 2 * mm, self.larg_box - 4 * mm, h - 4 * mm, 1 * mm, stroke=0, fill=1)
         self.par.drawOn(c, x + 5 * mm, y + (h - self.alt_testo) / 2)
 
+class PokemonHero(Flowable):
+    """Illustrazione Pokémon grande dentro il normale flusso: non può coprire testo o tabelle."""
+    def __init__(self,ctx,indice=0,altezza=52*mm):
+        super().__init__(); self.ctx=ctx or {}; self.indice=indice; self.altezza=altezza
+    def wrap(self,*_): return LARGHEZZA,self.altezza
+    def draw(self):
+        c=self.canv
+        c.setFillColor(colors.HexColor("#DCE7CF")); c.roundRect(0,2*mm,LARGHEZZA,self.altezza-4*mm,4*mm,stroke=0,fill=1)
+        c.setFillColor(colors.Color(.25,.55,.58,alpha=.10)); c.circle(LARGHEZZA*.76,self.altezza*.50,25*mm,stroke=0,fill=1)
+        asset=_mondo_asset(self.ctx,"pokemon",self.indice)
+        if asset: _immagine_asset(c,asset,LARGHEZZA*.76,self.altezza*.50,46*mm)
+        _art_map(c,8*mm,8*mm,58*mm,self.altezza-16*mm,self.indice+1)
+
 class Decoro(Flowable):
     """Separatore essenziale: una riga di inventario, senza stelline o ornamenti cartoon."""
 
@@ -834,7 +847,7 @@ def crea(percorso, ctx):
                                f'<link href="{escape(n["link"])}" color="#2B2D42">'
                                f'<font name="{TESTO_B}">{_t(n["titolo"])}</font></link>', st["p"]))
             E.append(Spacer(1, 6))
-    E += [Spacer(1, 6), Decoro(ctx, seme=ctx["numero"] + 5)]
+    E += [Spacer(1, 8), PokemonHero(ctx, indice=5, altezza=50*mm)]
 
     # 7. Quarta di copertina: come leggere la rivista
     E += [NextPageTemplate("retro"), PageBreak(), Rubrica("Metodo", "Come leggere la rivista", colors.HexColor("#568D55")), Spacer(1, 3)]
