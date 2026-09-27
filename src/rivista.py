@@ -308,17 +308,17 @@ def _trainer_vector(c,x,y,s=1):
 
 # ---------- flowable ----------
 class Rubrica(Flowable):
-    """Intestazione editoriale con testo sempre contenuto nel riquadro."""
+    """Titolo di sezione editoriale, arioso e sempre contenuto."""
     def __init__(self, occhiello, titolo, colore=ROSSO):
         super().__init__(); self.occhiello=occhiello.upper(); self.titolo=titolo; self.colore=colore
-    def wrap(self,*_): return LARGHEZZA,19*mm
+    def wrap(self,*_): return LARGHEZZA,20*mm
     def draw(self):
         c=self.canv
-        c.setFillColor(colors.HexColor("#173C35")); c.roundRect(0,2*mm,LARGHEZZA,15*mm,2*mm,stroke=0,fill=1)
-        c.setFillColor(colors.HexColor("#79A86E")); c.rect(0,14.5*mm,LARGHEZZA,2.5*mm,stroke=0,fill=1)
-        c.setFillColor(colors.HexColor("#DCEBCB")); c.setFont(TESTO_B,6.6); c.drawString(5*mm,11.1*mm,self.occhiello[:42])
-        p=Paragraph(_t(self.titolo),ParagraphStyle("rubrica_fit",fontName=TITOLO,fontSize=15.5,leading=16.5,textColor=BIANCO))
-        k=KeepInFrame(LARGHEZZA-10*mm,8*mm,[p],mode="shrink"); k.canv=c; k.wrap(LARGHEZZA-10*mm,8*mm); k.drawOn(c,5*mm,3.1*mm)
+        _panel(c,0,1.5*mm,LARGHEZZA,17*mm,2.5*mm,.88,"#A9B8AE")
+        c.setFillColor(colors.HexColor("#5F8B73")); c.roundRect(0,1.5*mm,3.2*mm,17*mm,1.6*mm,stroke=0,fill=1)
+        c.setFillColor(colors.HexColor("#5A7167")); c.setFont(TESTO_B,6.4); c.drawString(8*mm,13.1*mm,self.occhiello[:40])
+        p=Paragraph(_t(self.titolo),ParagraphStyle("rubrica_fit2",fontName=TITOLO,fontSize=15.2,leading=15.8,textColor=INCHIOSTRO))
+        k=KeepInFrame(LARGHEZZA-16*mm,9*mm,[p],mode="shrink"); k.canv=c; k.wrap(LARGHEZZA-16*mm,9*mm); k.drawOn(c,8*mm,3.0*mm)
 
 class Fumetto(Flowable):
     """Box dialogo GBA con ritratto allenatore."""
@@ -386,7 +386,7 @@ def _tag(testo, colore, larghezza=21 * mm):
     return t
 
 
-def _tabella(dati, larghezze, colore=colors.HexColor("#2F5D50"), allinea_destra_da=1):
+def _tabella(dati, larghezze, colore=colors.HexColor("#587C6B"), allinea_destra_da=1):
     t = Table(dati, colWidths=larghezze, repeatRows=1)
     stile = [
         ("FONTNAME", (0, 0), (-1, 0), SOTTO), ("FONTSIZE", (0, 0), (-1, 0), 9),
@@ -401,7 +401,7 @@ def _tabella(dati, larghezze, colore=colors.HexColor("#2F5D50"), allinea_destra_
     if allinea_destra_da is not None:
         stile.append(("ALIGN", (allinea_destra_da, 1), (-1, -1), "RIGHT"))
     for i in range(1, len(dati)):
-        stile.append(("BACKGROUND", (0, i), (-1, i), colors.HexColor("#F5F3E3") if i % 2 else colors.HexColor("#E6EDD4")))
+        stile.append(("BACKGROUND", (0, i), (-1, i), colors.Color(.98,.975,.94,alpha=.90) if i % 2 else colors.Color(.92,.94,.88,alpha=.90)))
     t.setStyle(TableStyle(stile))
     return t
 
@@ -644,41 +644,14 @@ def _art_overlay(c, ctx, page):
 def _pagina_interna(c, doc, ctx):
     c.saveState()
     page=doc.page
-    # Ogni rubrica ha un ambiente Hoenn distinto, molto tenue per mantenere leggibili i dati.
-    temi={
-        2:("#E7E6C8","#C7D79A","route"), 3:("#D8E8E1","#9BC9C5","sea"),
-        4:("#EEE1C8","#D2B477","volcano"), 5:("#DDE7D2","#A9C58E","forest"),
-        6:("#E5E1D1","#B9C7B2","city")
-    }
-    bg,accent,kind=temi.get(page,("#E8E5D5","#B7C7A5","route"))
-    c.setFillColor(colors.HexColor(bg)); c.rect(0,0,W,H,stroke=0,fill=1)
-    # texture ambientale, non una griglia neutra
-    c.setFillColor(colors.HexColor(accent))
-    if kind=="sea":
-        for k in range(12):
-            yy=18*mm+k*18*mm
-            c.setStrokeColor(colors.Color(.20,.45,.48,alpha=.13)); c.setLineWidth(1)
-            c.arc(-10*mm,yy,W*.55,yy+8*mm,0,180); c.arc(W*.45,yy,W+10*mm,yy+8*mm,0,180)
-    elif kind=="volcano":
-        for k in range(7):
-            xx=10*mm+k*34*mm
-            p=c.beginPath(); p.moveTo(xx,10*mm); p.lineTo(xx+20*mm,42*mm); p.lineTo(xx+40*mm,10*mm); p.close()
-            c.setFillColor(colors.Color(.45,.32,.20,alpha=.07)); c.drawPath(p,stroke=0,fill=1)
-    elif kind=="forest":
-        for k in range(18):
-            xx=(8+k*13)*mm; yy=(18+(k%4)*49)*mm
-            c.setFillColor(colors.Color(.18,.42,.23,alpha=.07)); c.circle(xx,yy,10*mm,stroke=0,fill=1)
-    elif kind=="city":
-        for k in range(8):
-            c.setFillColor(colors.Color(.25,.35,.30,alpha=.055)); c.rect((8+k*27)*mm,12*mm,(16+(k%3)*5)*mm,(38+(k%4)*13)*mm,stroke=0,fill=1)
-    else:
-        p=c.beginPath(); p.moveTo(0,30*mm); p.curveTo(W*.25,55*mm,W*.55,18*mm,W,48*mm); p.lineTo(W,0); p.lineTo(0,0); p.close()
-        c.setFillColor(colors.Color(.30,.50,.25,alpha=.08)); c.drawPath(p,stroke=0,fill=1)
+    # Hoenn è l'ambiente comune di tutte le rubriche; varia solo l'intensità del velo.
+    _sfondo_mappa(c,.095,"#F2F0E7")
+    accent="#8FA984"
 
     # barra titolo
-    c.setFillColor(colors.HexColor("#173C35")); c.rect(0,H-18*mm,W,18*mm,stroke=0,fill=1)
-    c.setFillColor(colors.HexColor(accent)); c.rect(0,H-20*mm,W,2*mm,stroke=0,fill=1)
-    c.setFillColor(BIANCO); c.setFont(SOTTO,11); c.drawString(MARGINE,H-11.5*mm,"POKEPUTZU WEEKLY")
+    c.setFillColor(colors.HexColor("#315E51")); c.rect(0,H-16*mm,W,16*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor(accent)); c.rect(0,H-17.5*mm,W,1.5*mm,stroke=0,fill=1)
+    c.setFillColor(BIANCO); c.setFont(SOTTO,11); c.drawString(MARGINE,H-10.5*mm,"POKEPUTZU WEEKLY")
     c.setFont(TESTO_B,7.5); c.setFillColor(colors.HexColor("#DCEBCB"))
     c.drawRightString(W-MARGINE,H-11*mm,f"N.{ctx['numero']} · {ctx['data_lunga']} · P.{page}")
 
