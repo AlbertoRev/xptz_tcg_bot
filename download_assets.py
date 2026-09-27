@@ -1,4 +1,9 @@
-"""Prepara il set grafico Pokémon della settimana.
+"
+WIKIDEX_API="https://www.wikidex.net/api.php"
+BALL_ART={"poke-ball":"Poké Ball (Ilustración).png","ultra-ball":"Ultra Ball (Ilustración).png","timer-ball":"Turno Ball (Ilustración).png","nest-ball":"Nido Ball (Ilustración).png","quick-ball":"Veloz Ball (Ilustración).png","dusk-ball":"Ocaso Ball (Ilustración).png","heal-ball":"Sana Ball (Ilustración).png","luxury-ball":"Lujo Ball (Ilustración).png","great-ball":"Super Ball (Ilustración).png","net-ball":"Malla Ball (Ilustración).png"}
+ITEM_ART={"bicycle":"Bici acrobática artwork.png","rare-candy":"Caramelo raro (Ilustración).png","exp-share":"Artwork de Repartir Experiencia.png","fresh-water":"Artwork agua fresca.png","old-rod":"Ilustración del tubo pokécubos.png","good-rod":"Kit de Pokécubos ROZA.png"}
+TRAINER_WIKIDEX=[("may","Aura ROZA (Ilustración).png"),("brendan","Bruno ROZA (Ilustración).png"),("steven","Máximo (Architraje) Masters EX.png")]
+""Prepara il set grafico Pokémon della settimana.
 
 Il bot scarica soltanto gli asset scelti per quel numero della rivista, così ogni
 settimana la grafica cambia senza dover salvare le immagini nel repository.
