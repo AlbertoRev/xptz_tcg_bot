@@ -363,8 +363,6 @@ class Decoro(Flowable):
                 _immagine_asset(c, nome, x, self.altezza / 2, larghezza)
 
 
-def _tag(
-
 def _tag(testo, colore, larghezza=21 * mm):
     t = Table([[Paragraph(_t(testo.upper()), _stile_tag(colore))]], colWidths=[larghezza])
     t.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), colore), ("TOPPADDING", (0, 0), (-1, -1), 1.8),
@@ -510,8 +508,6 @@ def _copertina(c, ctx):
     c.drawString(MARGINE, 4.5 * mm, f"CARDMARKET DATA · {g['giorni_storico']} GIORNI DI STORICO · INFORMATIVO")
     c.restoreState()
 
-
-def _art_piano(ctx, numero):
 
 def _art_piano(ctx, numero):
     pages=((ctx or {}).get("art_direction") or {}).get("pages") or []
