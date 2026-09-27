@@ -330,16 +330,16 @@ class Fumetto(Flowable):
         self.indice = indice
 
     def wrap(self, aw, ah):
-        self.larg_box = LARGHEZZA - 29 * mm
+        self.larg_box = LARGHEZZA - 40 * mm
         _, self.alt_testo = self.par.wrap(self.larg_box - 10 * mm, ah)
-        self.altezza = max(self.alt_testo + 10 * mm, 27 * mm)
+        self.altezza = max(self.alt_testo + 10 * mm, 39 * mm)
         return LARGHEZZA, self.altezza
 
     def draw(self):
         c = self.canv
         trainer=_mondo_asset(self.ctx,"allenatori",self.indice)
-        if trainer: _immagine_asset(c,trainer,12*mm,self.altezza/2,24*mm)
-        x, y, h = 27 * mm, 2 * mm, self.altezza - 4 * mm
+        if trainer: _immagine_asset(c,trainer,16*mm,self.altezza/2,36*mm)
+        x, y, h = 38 * mm, 2 * mm, self.altezza - 4 * mm
         c.setFillColor(colors.HexColor("#173C35"))
         c.roundRect(x, y, self.larg_box, h, 2 * mm, stroke=0, fill=1)
         c.setFillColor(colors.HexColor("#E7F0D0"))
@@ -348,22 +348,25 @@ class Fumetto(Flowable):
         box.canv=c; box.wrap(self.larg_box-10*mm,h-6*mm); box.drawOn(c,x+5*mm,y+3*mm)
 
 class PokemonHero(Flowable):
-    """Illustrazione Pokémon grande dentro il normale flusso: non può coprire testo o tabelle."""
-    def __init__(self,ctx,indice=0,altezza=52*mm):
+    """Feature illustrata: artwork grandi in uno spazio realmente riservato."""
+    def __init__(self,ctx,indice=0,altezza=58*mm):
         super().__init__(); self.ctx=ctx or {}; self.indice=indice; self.altezza=altezza
     def wrap(self,*_): return LARGHEZZA,self.altezza
     def draw(self):
-        c=self.canv
-        c.setFillColor(colors.HexColor("#DCE7CF")); c.roundRect(0,2*mm,LARGHEZZA,self.altezza-4*mm,4*mm,stroke=0,fill=1)
-        c.saveState(); c.setFillColor(colors.Color(.25,.55,.58,alpha=.10)); c.circle(LARGHEZZA*.76,self.altezza*.50,25*mm,stroke=0,fill=1); c.restoreState()
+        c=self.canv; _panel(c,0,2*mm,LARGHEZZA,self.altezza-4*mm,4*mm,.78,"#A8B8AE")
         asset=_mondo_asset(self.ctx,"pokemon",self.indice)
-        if asset: _immagine_asset(c,asset,LARGHEZZA*.76,self.altezza*.50,46*mm)
-        _art_map(c,6*mm,7*mm,82*mm,self.altezza-14*mm,self.indice+1)
+        if asset: _immagine_asset(c,asset,LARGHEZZA*.70,self.altezza*.50,55*mm)
+        ball=_mondo_asset(self.ctx,"pokeball",self.indice)
+        item=_mondo_asset(self.ctx,"oggetti",self.indice)
+        trainer=_mondo_asset(self.ctx,"allenatori",self.indice)
+        if ball: _immagine_asset(c,ball,LARGHEZZA*.16,self.altezza*.64,28*mm)
+        if item: _immagine_asset(c,item,LARGHEZZA*.30,self.altezza*.34,30*mm)
+        if trainer: _immagine_asset(c,trainer,LARGHEZZA*.88,self.altezza*.52,43*mm)
 
 class Decoro(Flowable):
     """Separatore essenziale: una riga di inventario, senza stelline o ornamenti cartoon."""
 
-    def __init__(self, ctx=None, seme=1, altezza=28 * mm):
+    def __init__(self, ctx=None, seme=1, altezza=42 * mm):
         super().__init__()
         self.ctx, self.seme, self.altezza = ctx or {}, seme, altezza
 
@@ -372,8 +375,8 @@ class Decoro(Flowable):
 
     def draw(self):
         c=self.canv
-        c.setFillColor(colors.HexColor("#DCE7CF")); c.roundRect(0,2*mm,LARGHEZZA,self.altezza-4*mm,3*mm,stroke=0,fill=1)
-        specs=(("pokeball",.30,23*mm),("oggetti",.50,23*mm),("allenatori",.72,34*mm))
+        _panel(c,0,2*mm,LARGHEZZA,self.altezza-4*mm,4*mm,.76,"#A8B8AE")
+        specs=(("pokeball",.27,29*mm),("oggetti",.50,31*mm),("allenatori",.75,43*mm))
         for k,(gruppo,px,size) in enumerate(specs):
             asset=_mondo_asset(self.ctx,gruppo,self.seme+k)
             if asset: _immagine_asset(c,asset,LARGHEZZA*px,self.altezza/2,size)
