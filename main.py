@@ -13,7 +13,7 @@ from pathlib import Path
 
 import config as C
 from download_assets import scarica_immagini_pokemon
-from src import analysis, art_director, cardmarket, news, report, rivista, storage, telegram, verify
+from src import analysis, art_director, cardmarket, news, pdf_qa, report, rivista, storage, telegram, verify
 
 LINGUE_IT = {"italian": "italiano", "english": "inglese", "japanese": "giapponese"}
 
