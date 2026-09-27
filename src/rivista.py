@@ -228,83 +228,47 @@ def _arcobaleno(c, cx, cy, r, spessore):
 
 # ---------- scenari a tutta pagina ----------
 def _mondo_giorno(c, ctx=None):
-    c.linearGradient(0, H, 0, 0, (colors.HexColor("#8EDCFB"), colors.HexColor("#FFF1C1")), extend=False)
-    # sole
-    sx, sy = W - 38 * mm, H - 40 * mm
-    c.setFillColor(colors.HexColor("#FFE58A"))
-    for k in range(12):
-        a = math.radians(k * 30)
-        p = c.beginPath()
-        p.moveTo(sx + 21 * mm * math.cos(a - 0.12), sy + 21 * mm * math.sin(a - 0.12))
-        p.lineTo(sx + 31 * mm * math.cos(a), sy + 31 * mm * math.sin(a))
-        p.lineTo(sx + 21 * mm * math.cos(a + 0.12), sy + 21 * mm * math.sin(a + 0.12))
-        p.close()
-        c.drawPath(p, stroke=0, fill=1)
-    c.setFillColor(SOLE)
-    c.circle(sx, sy, 18 * mm, stroke=0, fill=1)
-    # arcobaleno dietro le colline
-    _arcobaleno(c, W * 0.42, 40 * mm, 118 * mm, 5.5 * mm)
-    # nuvole
-    for x, y, s in ((25 * mm, H - 70 * mm, 1.0), (W - 85 * mm, H - 88 * mm, 0.8), (W / 2, H - 20 * mm, 0.7)):
-        _nuvola(c, x, y, s)
-    # colline
-    _collina(c, 0, W, 62 * mm, 7 * mm, colors.HexColor("#A8DE84"), 0.5, 22 * mm)
-    _collina(c, 0, W, 44 * mm, 9 * mm, PRATO, 2.0, 28 * mm)
-    _collina(c, 0, W, 24 * mm, 6 * mm, colors.HexColor("#4FA23A"), 4.0, 18 * mm)
-    # sentiero
-    c.setFillColor(colors.HexColor("#F3D9A4"))
-    p = c.beginPath()
-    p.moveTo(W / 2 - 22 * mm, 0)
-    p.curveTo(W / 2 - 5 * mm, 18 * mm, W / 2 + 20 * mm, 28 * mm, W / 2 + 6 * mm, 46 * mm)
-    p.lineTo(W / 2 + 12 * mm, 46 * mm)
-    p.curveTo(W / 2 + 30 * mm, 28 * mm, W / 2 + 12 * mm, 16 * mm, W / 2 + 22 * mm, 0)
-    p.close()
-    c.drawPath(p, stroke=0, fill=1)
-    rnd = random.Random(7)
-    for _ in range(40):
-        _ciuffo(c, rnd.uniform(0, W), rnd.uniform(2 * mm, 20 * mm), colors.HexColor("#3A8A2E"), 0.9)
-    for _ in range(18):
-        _fiore(c, rnd.uniform(0, W), rnd.uniform(3 * mm, 18 * mm), rnd.choice([ROSSO, VIOLA, BIANCO, ARANCIO]))
-    # Pokémon e strumenti lungo i margini: restano fuori dai pannelli del contenuto.
-    _immagine_asset(c, _mondo_asset(ctx, "pokemon", 0), 19 * mm, 49 * mm, 34 * mm, angolo=-8)
-    _immagine_asset(c, _mondo_asset(ctx, "pokemon", 1), W - 19 * mm, 48 * mm, 32 * mm, angolo=7)
-    _immagine_asset(c, _mondo_asset(ctx, "oggetti", 0), 12 * mm, H - 120 * mm, 13 * mm, angolo=-12)
-    _immagine_asset(c, _mondo_asset(ctx, "pokeball", 0), W - 12 * mm, H - 122 * mm, 14 * mm, angolo=11)
-    for _ in range(14):
-        _scintilla(c, rnd.uniform(0, W), rnd.uniform(70 * mm, H), rnd.uniform(1.5, 3.5) * mm, BIANCO)
-
+    """Sfondo principale ispirato alla schermata mappa di Pokémon Emerald/GBA."""
+    c.setFillColor(colors.HexColor("#DDE7C6"))
+    c.rect(0, 0, W, H, stroke=0, fill=1)
+    # griglia pixel discreta
+    c.setStrokeColor(colors.Color(0.18, 0.35, 0.25, alpha=0.10))
+    c.setLineWidth(0.35)
+    passo = 5 * mm
+    x = 0
+    while x <= W:
+        c.line(x, 0, x, H); x += passo
+    y = 0
+    while y <= H:
+        c.line(0, y, W, y); y += passo
+    # fascia superiore stile interfaccia GBA
+    c.setFillColor(colors.HexColor("#1F5B4A"))
+    c.rect(0, H - 19 * mm, W, 19 * mm, stroke=0, fill=1)
+    c.setFillColor(colors.HexColor("#79B86B"))
+    c.rect(0, H - 21 * mm, W, 2 * mm, stroke=0, fill=1)
+    # pannello-mappa di sfondo
+    _art_map(c, W - 79 * mm, H - 103 * mm, 64 * mm, 53 * mm, 17)
+    # hero grande: un solo protagonista, niente decorazioni casuali
+    hero = (_art_piano(ctx, 1).get("hero_asset") if ctx else None) or _mondo_asset(ctx, "pokemon", 0)
+    _immagine_asset(c, hero, W - 42 * mm, H - 139 * mm, 72 * mm)
 
 def _mondo_tramonto(c, ctx=None):
-    c.linearGradient(0, H, 0, 0, (colors.HexColor("#4A2A85"), colors.HexColor("#C4568A"),
-                                  colors.HexColor("#FF8C42"), colors.HexColor("#FFD27A")),
-                     positions=(0, 0.45, 0.75, 1), extend=False)
-    rnd = random.Random(11)
-    # prime stelle in alto
-    for _ in range(60):
-        c.setFillColor(colors.Color(1, 1, 1, alpha=rnd.uniform(0.3, 0.9)))
-        c.circle(rnd.uniform(0, W), rnd.uniform(H - 70 * mm, H), rnd.uniform(0.3, 1.0), stroke=0, fill=1)
-    for _ in range(6):   # solo sopra la scritta, per non coprirla
-        _scintilla(c, rnd.uniform(0, W), rnd.uniform(H - 18 * mm, H - 4 * mm), rnd.uniform(1.5, 2.8) * mm, SOLE)
-    # sole che tramonta, con alone
-    sx, sy = W * 0.62, 50 * mm
-    for r, a in ((46, 0.12), (36, 0.18), (28, 0.25)):
-        c.setFillColor(colors.Color(1, 0.85, 0.35, alpha=a))
-        c.circle(sx, sy, r * mm, stroke=0, fill=1)
-    c.setFillColor(SOLE)
-    c.circle(sx, sy, 21 * mm, stroke=0, fill=1)
-    # nuvole rosate
-    for x, y, s in ((18 * mm, 92 * mm, 0.9), (W - 60 * mm, 100 * mm, 0.7)):
-        _nuvola(c, x, y, s, colors.HexColor("#FFC6D3"))
-    # colline in controluce
-    _collina(c, 0, W, 46 * mm, 8 * mm, colors.HexColor("#7A3F7E"), 1.0, 24 * mm)
-    _collina(c, 0, W, 32 * mm, 9 * mm, colors.HexColor("#4E2F6B"), 3.0, 28 * mm)
-    _collina(c, 0, W, 16 * mm, 6 * mm, colors.HexColor("#33244F"), 5.0, 18 * mm)
-    for _ in range(30):
-        _ciuffo(c, rnd.uniform(0, W), rnd.uniform(1 * mm, 12 * mm), colors.HexColor("#271B3D"), 0.9)
-    _immagine_asset(c, _mondo_asset(ctx, "pokemon", 2), 24 * mm, 66 * mm, 35 * mm, angolo=-8)
-    _immagine_asset(c, _mondo_asset(ctx, "pokeball", 1), W - 20 * mm, 76 * mm, 14 * mm, angolo=10)
-    _immagine_asset(c, _mondo_asset(ctx, "oggetti", 1), 18 * mm, 28 * mm, 12 * mm, angolo=-10)
+    """Quarta di copertina come schermata finale di un gioco GBA."""
+    c.setFillColor(colors.HexColor("#183A34"))
+    c.rect(0, 0, W, H, stroke=0, fill=1)
+    c.setFillColor(colors.HexColor("#2E6757"))
+    c.rect(0, 0, W, 34 * mm, stroke=0, fill=1)
+    c.setStrokeColor(colors.Color(0.75, 0.9, 0.75, alpha=0.14))
+    c.setLineWidth(0.4)
+    for k in range(0, 60):
+        yy = k * 5 * mm
+        c.line(0, yy, W, yy)
+    _art_map(c, MARGINE, 22 * mm, 72 * mm, 48 * mm, 71)
+    hero = (_art_piano(ctx, 7).get("hero_asset") if ctx else None) or _mondo_asset(ctx, "pokemon", 6)
+    _immagine_asset(c, hero, W - 47 * mm, 49 * mm, 70 * mm)
 
+
+# ---------- stili ----------
 
 # ---------- stili ----------
 def _stili():
@@ -329,45 +293,30 @@ def _stile_tag(colore):
 
 # ---------- flowable ----------
 class Rubrica(Flowable):
-    """Intestazione di rubrica: adesivo colorato, titolo cartoon e linea ondulata."""
+    """Intestazione come barra-menu di un RPG portatile."""
 
     def __init__(self, occhiello, titolo, colore=ROSSO):
         super().__init__()
         self.occhiello, self.titolo, self.colore = occhiello.upper(), titolo, colore
 
     def wrap(self, *_):
-        return LARGHEZZA, 21 * mm
+        return LARGHEZZA, 18 * mm
 
     def draw(self):
         c = self.canv
-        larg = pdfmetrics.stringWidth(self.occhiello, SOTTO, 9) + 8 * mm
-        c.saveState()
-        c.translate(0, 15 * mm)
-        c.rotate(-2)
-        c.setFillColor(self.colore)
-        c.roundRect(0, 0, larg, 6 * mm, 3 * mm, stroke=0, fill=1)
-        c.setFillColor(_su(self.colore))
-        c.setFont(SOTTO, 9)
-        c.drawString(4 * mm, 1.8 * mm, self.occhiello)
-        c.restoreState()
-        c.setFillColor(INCHIOSTRO)
-        c.setFont(TITOLO, 21)
-        c.drawString(0, 5.5 * mm, self.titolo)
-        fine = pdfmetrics.stringWidth(self.titolo, TITOLO, 21) + 4 * mm
-        _stella(c, fine + 3 * mm, 8 * mm, 3 * mm, SOLE)
-        c.setStrokeColor(self.colore)
-        c.setLineWidth(2)
-        p = c.beginPath()
-        p.moveTo(0, 2 * mm)
-        x = 0
-        while x < min(fine + 8 * mm, LARGHEZZA):
-            p.lineTo(x, 2 * mm + 1.1 * mm * math.sin(x / (2.2 * mm)))
-            x += 1.5
-        c.drawPath(p, stroke=1, fill=0)
-
+        c.setFillColor(colors.HexColor("#173C35"))
+        c.roundRect(0, 2 * mm, LARGHEZZA, 14 * mm, 2 * mm, stroke=0, fill=1)
+        c.setFillColor(colors.HexColor("#8CCB78"))
+        c.rect(0, 13.5 * mm, LARGHEZZA, 2.5 * mm, stroke=0, fill=1)
+        c.setFillColor(colors.HexColor("#DCEBCB"))
+        c.setFont(SOTTO, 7.5)
+        c.drawString(5 * mm, 10 * mm, self.occhiello)
+        c.setFillColor(BIANCO)
+        c.setFont(TITOLO, 17)
+        c.drawString(5 * mm, 4.2 * mm, self.titolo)
 
 class Fumetto(Flowable):
-    """Allenatore + fumetto: sostituisce la vecchia mascotte generica."""
+    """Box dialogo GBA con ritratto allenatore."""
 
     def __init__(self, testo, st, ctx=None, indice=0):
         super().__init__()
@@ -376,28 +325,26 @@ class Fumetto(Flowable):
         self.indice = indice
 
     def wrap(self, aw, ah):
-        self.larg_nuvola = LARGHEZZA - 36 * mm
-        _, self.alt_testo = self.par.wrap(self.larg_nuvola - 10 * mm, ah)
-        self.altezza = max(self.alt_testo + 10 * mm, 30 * mm)
+        self.larg_box = LARGHEZZA - 29 * mm
+        _, self.alt_testo = self.par.wrap(self.larg_box - 10 * mm, ah)
+        self.altezza = max(self.alt_testo + 10 * mm, 27 * mm)
         return LARGHEZZA, self.altezza
 
     def draw(self):
         c = self.canv
         trainer = _mondo_asset(self.ctx, "allenatori", self.indice)
-        if trainer:
-            _immagine_asset(c, trainer, 14 * mm, self.altezza / 2, 25 * mm)
-        else:
-            _immagine_asset(c, _mondo_asset(self.ctx, "pokemon", self.indice), 14 * mm, self.altezza / 2, 25 * mm)
-        x, y = 31 * mm, 2 * mm
-        h = self.altezza - 4 * mm
-        _nuvoletta(c, x, y, self.larg_nuvola, h, 25 * mm, self.altezza / 2)
+        _immagine_asset(c, trainer, 12 * mm, self.altezza / 2, 23 * mm)
+        x, y, h = 27 * mm, 2 * mm, self.altezza - 4 * mm
+        c.setFillColor(colors.HexColor("#173C35"))
+        c.roundRect(x, y, self.larg_box, h, 2 * mm, stroke=0, fill=1)
+        c.setFillColor(colors.HexColor("#E7F0D0"))
+        c.roundRect(x + 2 * mm, y + 2 * mm, self.larg_box - 4 * mm, h - 4 * mm, 1 * mm, stroke=0, fill=1)
         self.par.drawOn(c, x + 5 * mm, y + (h - self.alt_testo) / 2)
 
-
 class Decoro(Flowable):
-    """Separatore composto solo da Pokémon, Ball e strumenti."""
+    """Separatore essenziale: una riga di inventario, senza stelline o ornamenti cartoon."""
 
-    def __init__(self, ctx=None, seme=1, altezza=28 * mm):
+    def __init__(self, ctx=None, seme=1, altezza=18 * mm):
         super().__init__()
         self.ctx, self.seme, self.altezza = ctx or {}, seme, altezza
 
@@ -406,21 +353,17 @@ class Decoro(Flowable):
 
     def draw(self):
         c = self.canv
-        rnd = random.Random(self.seme)
-        gruppi = ("pokemon", "pokeball", "oggetti", "pokemon", "allenatori")
-        for k, gruppo in enumerate(gruppi):
+        c.setFillColor(colors.HexColor("#D6E4C5"))
+        c.roundRect(0, 2 * mm, LARGHEZZA, self.altezza - 4 * mm, 2 * mm, stroke=0, fill=1)
+        for k, gruppo in enumerate(("pokeball", "oggetti", "allenatori")):
             nome = _mondo_asset(self.ctx, gruppo, self.seme + k)
-            if not nome:
-                continue
-            x = LARGHEZZA * (0.10 + 0.20 * k)
-            y = self.altezza / 2 + rnd.uniform(-2, 2) * mm
-            larghezza = 19 * mm if gruppo in ("pokemon", "allenatori") else 10.5 * mm
-            angolo = rnd.uniform(-10, 10)
-            _immagine_asset(c, nome, x, y, larghezza, angolo=angolo)
-        for _ in range(8):
-            _scintilla(c, rnd.uniform(0, LARGHEZZA), rnd.uniform(2 * mm, self.altezza - 2 * mm),
-                       rnd.uniform(1.0, 2.0) * mm, rnd.choice(ARCOBALENO))
+            if nome:
+                x = LARGHEZZA * (0.30 + 0.20 * k)
+                larghezza = 13 * mm if gruppo == "allenatori" else 9 * mm
+                _immagine_asset(c, nome, x, self.altezza / 2, larghezza)
 
+
+def _tag(
 
 def _tag(testo, colore, larghezza=21 * mm):
     t = Table([[Paragraph(_t(testo.upper()), _stile_tag(colore))]], colWidths=[larghezza])
@@ -504,122 +447,71 @@ def _copertina(c, ctx):
     g = ctx["principale"]
     c.saveState()
     _mondo_giorno(c, ctx)
-    # Kit grafico della settimana: Ball in testata + Pokémon protagonista + allenatore.
-    _immagine_asset(c, _mondo_asset(ctx, "pokeball", 0), W - 24 * mm, H - 36 * mm, 15 * mm, angolo=12)
-    _immagine_asset(c, ((_art_piano(ctx, 1).get("hero_asset")) or _mondo_asset(ctx, "pokemon", 0)), W - MARGINE - 30 * mm, H - 105 * mm, 55 * mm, angolo=5)
-    _immagine_asset(c, _mondo_asset(ctx, "allenatori", 0), MARGINE + 14 * mm, H - 91 * mm, 27 * mm, angolo=-5)
-    colore_tema = _mondo_colore(ctx, "#EF476F")
-
-    # nastro con numero e data
-    nastro = f"SETTIMANALE DEL MERCATO POKÉMON GCC  ·  N. {ctx['numero']}  ·  {ctx['data_lunga'].upper()}"
-    larg = pdfmetrics.stringWidth(nastro, SOTTO, 9) + 10 * mm
-    c.saveState()
-    c.translate(MARGINE, H - 22 * mm)
-    c.rotate(1.5)
-    c.setFillColor(colore_tema)
-    c.roundRect(0, 0, larg, 7 * mm, 3.5 * mm, stroke=0, fill=1)
+    # testata dentro la fascia GBA
     c.setFillColor(BIANCO)
-    c.setFont(SOTTO, 9)
-    c.drawString(5 * mm, 2.2 * mm, nastro)
-    c.restoreState()
-
-    # testata
-    _testo_cartoon(c, MARGINE, H - 45 * mm, TESTATA, TITOLO, 46, SOLE, ombra=4)
-    c.setFont(SOTTO, 12)
-    c.setFillColor(INCHIOSTRO)
-    c.drawString(MARGINE + 1 * mm, H - 53 * mm, "Il giornalino di chi colleziona e investe in carte Pokémon")
-    c.setFont(SOTTO, 9)
-    c.setFillColor(colore_tema)
-    c.drawString(MARGINE + 1 * mm, H - 59 * mm, f"TEMA DELLA SETTIMANA: {(ctx.get('pokemon_mondo') or {}).get('tema', 'Avventura Pokémon').upper()}")
-
-    # primo piano
-    y_top = H - 60 * mm
-    titolo = Paragraph(_t(ctx["apertura"]["titolo"]),
-                       ParagraphStyle("ct", fontName=TITOLO, fontSize=19, leading=23, textColor=INCHIOSTRO))
-    sotto = Paragraph(_t(ctx["apertura"]["sottotitolo"]),
-                      ParagraphStyle("cs", fontName=TESTO, fontSize=11, leading=14.5, textColor=GRIGIO))
-    lp = LARGHEZZA - 45 * mm
-    _, h1 = titolo.wrap(lp - 12 * mm, 80 * mm)
-    _, h2 = sotto.wrap(lp - 12 * mm, 40 * mm)
-    alt = h1 + h2 + 20 * mm
-    _pannello(c, MARGINE, y_top - alt, lp, alt)
-    c.setFillColor(ROSSO)
-    c.roundRect(MARGINE + 6 * mm, y_top - 10 * mm, 30 * mm, 6 * mm, 3 * mm, stroke=0, fill=1)
-    c.setFillColor(BIANCO)
-    c.setFont(SOTTO, 8.5)
-    c.drawCentredString(MARGINE + 21 * mm, y_top - 8.2 * mm, "IN PRIMO PIANO")
-    titolo.drawOn(c, MARGINE + 6 * mm, y_top - 13 * mm - h1)
-    sotto.drawOn(c, MARGINE + 6 * mm, y_top - 15 * mm - h1 - h2)
-    y = y_top - alt - 8 * mm
-
-    # numeri della settimana: adesivi colorati
-    larg_card = (LARGHEZZA - 3 * 4 * mm) / 4
-    for i, ((numero, etichetta), colore) in enumerate(zip(ctx["kpi"], (BLU, ROSSO, ARANCIO, VIOLA))):
-        x = MARGINE + i * (larg_card + 4 * mm)
-        c.saveState()
-        c.translate(x + larg_card / 2, y - 12 * mm)
-        c.rotate((-2, 1.5, -1, 2)[i])
-        c.setFillColor(colors.Color(0, 0, 0, alpha=0.18))
-        c.roundRect(-larg_card / 2 + 1.5, -12 * mm - 1.5, larg_card, 24 * mm, 4 * mm, stroke=0, fill=1)
-        c.setFillColor(colore)
-        c.setStrokeColor(BIANCO)
-        c.setLineWidth(2.5)
-        c.roundRect(-larg_card / 2, -12 * mm, larg_card, 24 * mm, 4 * mm, stroke=1, fill=1)
-        c.setFillColor(_su(colore))
-        c.setFont(TITOLO, 22)
-        c.drawCentredString(0, -1 * mm, str(numero))
-        c.setFont(SOTTO, 8)
-        c.drawCentredString(0, -8 * mm, etichetta)
-        c.restoreState()
-    y -= 32 * mm
-
-    # sommario
-    alt_s = 13 * mm + len(ctx["sommario"]) * 7 * mm
-    _pannello(c, MARGINE, y - alt_s, LARGHEZZA, alt_s)
-    c.setFillColor(VIOLA)
-    c.setFont(TITOLO, 13)
-    c.drawString(MARGINE + 6 * mm, y - 9 * mm, "IN QUESTO NUMERO")
-    yy = y - 17 * mm
-    for k, (titolo_r, descrizione) in enumerate(ctx["sommario"]):
-        _stella(c, MARGINE + 8 * mm, yy + 1.2 * mm, 2 * mm, ARCOBALENO[k % 6])
-        c.setFillColor(INCHIOSTRO)
-        c.setFont(SOTTO, 11)
-        c.drawString(MARGINE + 12 * mm, yy, titolo_r)
-        c.setFillColor(GRIGIO)
-        c.setFont(TESTO, 9.5)
-        c.drawString(MARGINE + 75 * mm, yy, descrizione)
-        yy -= 7 * mm
-    y -= alt_s + 6 * mm
-
-    # anteprima 200 euro
-    car = g["carrello"]
-    righe = car["proposte"] or [None]
-    alt_c = 13 * mm + len(righe) * 6.5 * mm
-    _pannello(c, MARGINE, y - alt_c, LARGHEZZA, alt_c, colore=SOLE, alpha=1)
-    c.setFillColor(INCHIOSTRO)
-    c.setFont(TITOLO, 14)
-    c.drawString(MARGINE + 6 * mm, y - 9 * mm, "CON 200 € FAREI...")
-    yy = y - 16 * mm
-    for x in righe:
-        if x is None:
-            c.setFont(TESTO_B, 10)
-            c.drawString(MARGINE + 6 * mm, yy, "Niente: questa settimana li terrei da parte.")
-            break
-        c.setFont(SOTTO, 9.5)
-        c.drawString(MARGINE + 6 * mm, yy, x["categoria"].upper())
-        c.setFont(TESTO_B, 10)
-        c.drawString(MARGINE + 42 * mm, yy, x["nome"][:58])
-        c.drawRightString(W - MARGINE - 6 * mm, yy, _eur(x["prezzo"]))
-        yy -= 6.5 * mm
-
-    c.setFillColor(colors.Color(0.1, 0.2, 0.15, alpha=0.55))
-    c.roundRect(MARGINE - 3 * mm, 2.5 * mm, LARGHEZZA + 6 * mm, 7 * mm, 3.5 * mm, stroke=0, fill=1)
-    c.setFillColor(BIANCO)
+    c.setFont(TITOLO, 27)
+    c.drawString(MARGINE, H - 13 * mm, "POKEPUTZU WEEKLY")
     c.setFont(TESTO_B, 8)
-    c.drawString(MARGINE, 5 * mm, f"Dati: Cardmarket e siti di notizie  ·  {g['giorni_storico']} giorni di storico  ·  "
-                                  "rivista informativa, non è consulenza finanziaria")
+    c.setFillColor(colors.HexColor("#DCEBCB"))
+    c.drawRightString(W - MARGINE, H - 12 * mm, f"N. {ctx['numero']} · {ctx['data_lunga'].upper()}")
+
+    # cartuccia / scheda principale
+    x0, y0, pw, ph = MARGINE, H - 132 * mm, 116 * mm, 91 * mm
+    c.setFillColor(colors.HexColor("#173C35"))
+    c.roundRect(x0, y0, pw, ph, 3 * mm, stroke=0, fill=1)
+    c.setFillColor(colors.HexColor("#EFF3D8"))
+    c.roundRect(x0 + 3 * mm, y0 + 3 * mm, pw - 6 * mm, ph - 6 * mm, 2 * mm, stroke=0, fill=1)
+    c.setFillColor(colors.HexColor("#568D55"))
+    c.rect(x0 + 3 * mm, y0 + ph - 18 * mm, pw - 6 * mm, 15 * mm, stroke=0, fill=1)
+    c.setFillColor(BIANCO)
+    c.setFont(SOTTO, 8)
+    c.drawString(x0 + 7 * mm, y0 + ph - 12 * mm, "IN PRIMO PIANO")
+    titolo = Paragraph(_t(ctx["apertura"]["titolo"]), ParagraphStyle("ct2", fontName=TITOLO, fontSize=18, leading=21, textColor=INCHIOSTRO))
+    sotto = Paragraph(_t(ctx["apertura"]["sottotitolo"]), ParagraphStyle("cs2", fontName=TESTO, fontSize=9.5, leading=12, textColor=GRIGIO))
+    _, ht = titolo.wrap(pw - 14 * mm, 42 * mm)
+    titolo.drawOn(c, x0 + 7 * mm, y0 + ph - 25 * mm - ht)
+    _, hs = sotto.wrap(pw - 14 * mm, 28 * mm)
+    sotto.drawOn(c, x0 + 7 * mm, y0 + 8 * mm + hs)
+
+    # KPI come menu di stato, non adesivi
+    ky = y0 - 30 * mm
+    kw = (LARGHEZZA - 6 * mm) / 4
+    for i, (numero, etichetta) in enumerate(ctx["kpi"]):
+        x = MARGINE + i * (kw + 2 * mm)
+        c.setFillColor(colors.HexColor("#173C35"))
+        c.roundRect(x, ky, kw, 23 * mm, 2 * mm, stroke=0, fill=1)
+        c.setFillColor(colors.HexColor("#DCEBCB"))
+        c.setFont(TITOLO, 17)
+        c.drawCentredString(x + kw/2, ky + 12 * mm, str(numero))
+        c.setFont(TESTO_B, 6.5)
+        c.drawCentredString(x + kw/2, ky + 5 * mm, etichetta.upper())
+
+    # indice stile Pokédex/menu
+    sy = ky - 65 * mm
+    c.setFillColor(colors.HexColor("#173C35"))
+    c.roundRect(MARGINE, sy, LARGHEZZA, 58 * mm, 3 * mm, stroke=0, fill=1)
+    c.setFillColor(colors.HexColor("#EFF3D8"))
+    c.roundRect(MARGINE + 3 * mm, sy + 3 * mm, LARGHEZZA - 6 * mm, 52 * mm, 2 * mm, stroke=0, fill=1)
+    c.setFillColor(colors.HexColor("#355F4E"))
+    c.setFont(SOTTO, 9)
+    c.drawString(MARGINE + 7 * mm, sy + 45 * mm, "INDICE / HOENN DATA")
+    yy = sy + 37 * mm
+    for k, (titolo_r, descrizione) in enumerate(ctx["sommario"], 1):
+        c.setFillColor(INCHIOSTRO); c.setFont(TESTO_B, 8.5)
+        c.drawString(MARGINE + 8 * mm, yy, f"{k:02d}  {titolo_r}")
+        c.setFillColor(GRIGIO); c.setFont(TESTO, 7.5)
+        c.drawString(MARGINE + 80 * mm, yy, descrizione[:56])
+        yy -= 6.3 * mm
+
+    c.setFillColor(colors.HexColor("#173C35"))
+    c.rect(0, 0, W, 12 * mm, stroke=0, fill=1)
+    c.setFillColor(colors.HexColor("#DCEBCB"))
+    c.setFont(TESTO_B, 7)
+    c.drawString(MARGINE, 4.5 * mm, f"CARDMARKET DATA · {g['giorni_storico']} GIORNI DI STORICO · INFORMATIVO")
     c.restoreState()
 
+
+def _art_piano(ctx, numero):
 
 def _art_piano(ctx, numero):
     pages=((ctx or {}).get("art_direction") or {}).get("pages") or []
@@ -678,93 +570,63 @@ def _art_overlay(c, ctx, page):
 
 def _pagina_interna(c, doc, ctx):
     c.saveState()
-    colore_tema = _mondo_colore(ctx, "#118AB2")
-    c.setFillColor(CARTA)
+    # carta/griglia da manuale di gioco
+    c.setFillColor(colors.HexColor("#F2F0DC"))
     c.rect(0, 0, W, H, stroke=0, fill=1)
-    # testata azzurra ondulata, con un bordino giallo che segue l'onda
-    for colore, profondita in ((SOLE, 15.5 * mm), (colore_tema, 13 * mm)):
-        p = c.beginPath()
-        p.moveTo(0, H)
-        p.lineTo(W, H)
-        x = W
-        while x >= 0:
-            p.lineTo(x, H - profondita + 1.8 * mm * math.sin(x / (9 * mm)))
-            x -= 3
-        p.lineTo(0, H - profondita + 1.8 * mm * math.sin(0))
-        p.close()
-        c.setFillColor(colore)
-        c.drawPath(p, stroke=0, fill=1)
-    _testo_cartoon(c, MARGINE, H - 9 * mm, TESTATA, TITOLO, 14, SOLE, ombra=1.5)
+    c.setStrokeColor(colors.Color(0.2, 0.35, 0.25, alpha=0.08))
+    c.setLineWidth(0.35)
+    passo = 5 * mm
+    x = 0
+    while x <= W:
+        c.line(x, 0, x, H); x += passo
+    # barra superiore fissa
+    c.setFillColor(colors.HexColor("#173C35"))
+    c.rect(0, H - 17 * mm, W, 17 * mm, stroke=0, fill=1)
+    c.setFillColor(colors.HexColor("#79B86B"))
+    c.rect(0, H - 19 * mm, W, 2 * mm, stroke=0, fill=1)
     c.setFillColor(BIANCO)
-    c.setFont(SOTTO, 9)
-    c.drawRightString(W - MARGINE, H - 8 * mm, f"N. {ctx['numero']}  ·  {ctx['data_lunga']}")
-    # prato in fondo pagina
-    _collina(c, 0, W, 7 * mm, 1.6 * mm, colors.HexColor("#A8DE84"), doc.page, 14 * mm)
-    _collina(c, 0, W, 4 * mm, 1.2 * mm, PRATO, doc.page + 2, 10 * mm)
-    rnd = random.Random(doc.page)
-    for _ in range(14):
-        _fiore(c, rnd.uniform(0, W), rnd.uniform(1.5 * mm, 4 * mm), rnd.choice([ROSSO, SOLE, VIOLA, BIANCO]), 0.7)
-    # Un Pokémon o un allenatore presidia il bordo inferiore.
-    footer_gruppo = "allenatori" if doc.page % 2 == 0 else "pokemon"
-    footer_asset = _mondo_asset(ctx, footer_gruppo, doc.page)
-    footer_x = MARGINE + 12 * mm if doc.page % 2 == 0 else W - MARGINE - 12 * mm
-    _immagine_asset(c, footer_asset, footer_x, 12 * mm, 24 * mm, angolo=(-6 if doc.page % 2 == 0 else 6))
-    _immagine_asset(c, _mondo_asset(ctx, "pokeball", doc.page), W / 2, 6.5 * mm, 11 * mm, angolo=(doc.page % 20) - 10)
-    # numero di pagina in un bollino giallo
-    c.setFillColor(colors.Color(0, 0, 0, alpha=0.18))
-    c.circle(W - MARGINE + 0.8, 11 * mm - 0.8, 5.2 * mm, stroke=0, fill=1)
-    c.setFillColor(SOLE)
-    c.setStrokeColor(BIANCO)
-    c.setLineWidth(2)
-    c.circle(W - MARGINE, 11 * mm, 5.2 * mm, stroke=1, fill=1)
-    c.setFillColor(INCHIOSTRO)
-    c.setFont(TITOLO, 10)
-    c.drawCentredString(W - MARGINE, 9.6 * mm, str(doc.page))
-    # decorazioni nei margini
-    for _ in range(9):
-        lato = rnd.choice((rnd.uniform(3 * mm, MARGINE - 5 * mm), rnd.uniform(W - MARGINE + 5 * mm, W - 3 * mm)))
-        yy = rnd.uniform(25 * mm, H - 30 * mm)
-        colore = rnd.choice(ARCOBALENO)
-        (_stella if rnd.random() < 0.5 else _scintilla)(c, lato, yy, rnd.uniform(1.5, 3) * mm, colore)
-    # Un Pokémon, una Ball e uno strumento cambiano a ogni pagina. Restano nel margine.
-    lato_sx = doc.page % 2 == 0
-    pokemon = _mondo_asset(ctx, "pokemon", doc.page - 1)
-    ball = _mondo_asset(ctx, "pokeball", doc.page - 1)
-    item = _mondo_asset(ctx, "oggetti", doc.page - 1)
-    if lato_sx:
-        _immagine_asset(c, pokemon, 8 * mm, H / 2 + 4 * mm, 19 * mm, angolo=-8)
-        _immagine_asset(c, ball, W - 8 * mm, H - 27 * mm, 12 * mm, angolo=10)
-        _immagine_asset(c, item, W - 9 * mm, H / 2 - 5 * mm, 10 * mm, angolo=8)
-    else:
-        _immagine_asset(c, pokemon, W - 8 * mm, H / 2 + 4 * mm, 19 * mm, angolo=8)
-        _immagine_asset(c, ball, 8 * mm, H - 27 * mm, 12 * mm, angolo=-10)
-        _immagine_asset(c, item, 9 * mm, H / 2 - 5 * mm, 10 * mm, angolo=-8)
-    _art_overlay(c, ctx, doc.page)
+    c.setFont(SOTTO, 10)
+    c.drawString(MARGINE, H - 11 * mm, "POKEPUTZU WEEKLY")
+    c.setFont(TESTO_B, 7.5)
+    c.setFillColor(colors.HexColor("#DCEBCB"))
+    c.drawRightString(W - MARGINE, H - 10.5 * mm, f"N.{ctx['numero']} · {ctx['data_lunga']} · P.{doc.page}")
+
+    plan = _art_piano(ctx, doc.page)
+    # hero grande sul margine destro, dietro al contenuto ma non ripetuto
+    asset = plan.get("hero_asset")
+    if asset:
+        _immagine_asset(c, asset, W - 18 * mm, H - 70 * mm, 42 * mm)
+    # modulo UI/map compatto in alto a destra
+    if doc.page in (2,3,4,5,6):
+        _art_map(c, W - 55 * mm, H - 52 * mm, 39 * mm, 25 * mm, doc.page)
+    # footer essenziale
+    c.setFillColor(colors.HexColor("#173C35"))
+    c.rect(0, 0, W, 9 * mm, stroke=0, fill=1)
+    c.setFillColor(colors.HexColor("#DCEBCB"))
+    c.setFont(TESTO_B, 6.5)
+    c.drawString(MARGINE, 3.2 * mm, (plan.get("layout") or "editorial").upper())
+    c.drawRightString(W - MARGINE, 3.2 * mm, str(doc.page))
     c.restoreState()
 
 
 def _retro(c, ctx):
     c.saveState()
     _mondo_tramonto(c, ctx)
-    colore_tema = _mondo_colore(ctx, "#8338EC")
-    _testo_cartoon(c, W / 2, H - 36 * mm, "ARRIVEDERCI", TITOLO, 40, SOLE, contorno=colore_tema, ombra=4, centrato=True)
-    _testo_cartoon(c, W / 2, H - 50 * mm, "AL PROSSIMO NUMERO!", TITOLO, 24, BIANCO, ombra=3, centrato=True)
     c.setFillColor(BIANCO)
+    c.setFont(TITOLO, 31)
+    c.drawString(MARGINE, H - 31 * mm, "SALVATAGGIO COMPLETATO")
     c.setFont(SOTTO, 12)
-    c.drawCentredString(W / 2, H - 60 * mm, f"Il Collezionista n. {ctx['numero'] + 1} arriva domenica {ctx['prossima']}")
-    _pannello(c, MARGINE, H - 190 * mm, LARGHEZZA, 122 * mm, alpha=0.95)
-    _immagine_asset(c, _mondo_asset(ctx, "pokemon", 3), W - 14 * mm, H - 145 * mm, 27 * mm, angolo=-6)
-    _immagine_asset(c, _mondo_asset(ctx, "allenatori", 1), 42 * mm, 31 * mm, 31 * mm, angolo=5)
-    _immagine_asset(c, _mondo_asset(ctx, "pokeball", 2), W - 25 * mm, 27 * mm, 13 * mm, angolo=8)
-    testo = "La prossima settimana: un nuovo team di Pokémon, strumenti e allenatori."
-    larg = 102 * mm
-    _nuvoletta(c, 68 * mm, 31 * mm, larg, 18 * mm, 57 * mm, 43 * mm)
-    st_retro = ParagraphStyle("retro", fontName=TESTO_B, fontSize=11, leading=13.5, textColor=INCHIOSTRO)
-    p_retro = Paragraph(_t(testo), st_retro)
-    _, h_retro = p_retro.wrap(larg - 10 * mm, 18 * mm)
-    p_retro.drawOn(c, 73 * mm, 31 * mm + (18 * mm - h_retro) / 2)
+    c.setFillColor(colors.HexColor("#B9DBA5"))
+    c.drawString(MARGINE, H - 42 * mm, f"POKEPUTZU WEEKLY N.{ctx['numero']} · PROSSIMO NUMERO {ctx['prossima']}")
+    # pannello metodo
+    c.setFillColor(colors.HexColor("#102D28"))
+    c.roundRect(MARGINE, H - 196 * mm, LARGHEZZA, 135 * mm, 3 * mm, stroke=0, fill=1)
+    c.setFillColor(colors.HexColor("#EFF3D8"))
+    c.roundRect(MARGINE + 3 * mm, H - 193 * mm, LARGHEZZA - 6 * mm, 129 * mm, 2 * mm, stroke=0, fill=1)
     c.restoreState()
 
+
+# ---------- rubriche ----------
 
 # ---------- rubriche ----------
 def _battuta_iniziale(ctx):
