@@ -60,17 +60,21 @@ ASSET_DIR = Path(__file__).resolve().parent.parent / "assets"
 
 
 def _logo(c, x, y, width, compact=False):
-    """Marchio originale POKèPUTZU WEEKLY."""
-    main="POKèPUTZU"; size=max(10,width/5.8); tw=pdfmetrics.stringWidth(main,TITOLO,size)
+    """Marchio originale POKèPUTZU WEEKLY, robusto e leggibile anche in piccolo."""
+    main="POKèPUTZU"; size=max(10,width/6.1); tw=pdfmetrics.stringWidth(main,TITOLO,size)
     if tw>width: size*=width/tw; tw=pdfmetrics.stringWidth(main,TITOLO,size)
-    c.saveState(); c.translate(x,y); c.rotate(-2 if not compact else 0)
-    c.setFillColor(colors.HexColor("#123E78")); c.setFont(TITOLO,size); c.drawString(2.2,-2.2,main)
-    t=c.beginText(0,0); t.setFont(TITOLO,size); t.setTextRenderMode(2); t.setFillColor(SOLE); t.setStrokeColor(BLU); c.setLineWidth(max(1.2,size/13)); t.textOut(main); c.drawText(t)
+    c.saveState(); c.translate(x,y); c.rotate(-2 if not compact else 0); c.setFont(TITOLO,size)
+    # contorno simulato: affidabile in PDF e visivamente più massiccio
+    off=max(.8,size*.045); c.setFillColor(colors.HexColor("#123E78"))
+    for dx,dy in ((-off,0),(off,0),(0,-off),(0,off),(-off,-off),(off,-off),(-off,off),(off,off)):
+        c.drawString(dx,dy,main)
+    c.setFillColor(SOLE); c.drawString(0,0,main)
     if not compact:
-        rw=min(width*.48,48*mm); rh=max(7*mm,size*.34); rx=max(0,tw-rw*.88); ry=-rh*.92
-        c.setFillColor(ROSSO); c.roundRect(rx,ry,rw,rh,rh/2,stroke=0,fill=1); c.setFillColor(BIANCO); c.setFont(TITOLO,max(7,size*.30)); c.drawCentredString(rx+rw/2,ry+rh*.26,"WEEKLY")
+        rw=min(width*.46,48*mm); rh=max(7*mm,size*.32); rx=max(0,tw-rw*.86); ry=-rh*.90
+        c.setFillColor(ROSSO); c.roundRect(rx,ry,rw,rh,rh/2,stroke=0,fill=1)
+        c.setFillColor(BIANCO); c.setFont(TESTO_B,max(7,size*.27)); c.drawCentredString(rx+rw/2,ry+rh*.30,"WEEKLY")
     else:
-        c.setFillColor(ROSSO); c.setFont(TESTO_B,max(5,size*.23)); c.drawRightString(min(width,tw),-3.2*mm,"WEEKLY")
+        c.setFillColor(ROSSO); c.setFont(TESTO_B,max(5,size*.22)); c.drawRightString(min(width,tw),-3.1*mm,"WEEKLY")
     c.restoreState()
 
 def _mondo_asset(ctx, gruppo, indice=0):
