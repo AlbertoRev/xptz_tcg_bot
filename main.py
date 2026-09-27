@@ -256,7 +256,7 @@ def setup():
 
 
 if __name__ == "__main__":
-    comandi = {"setup": setup, "giornaliero": giornaliero, "settimanale": settimanale, "prova_grafica": prova_grafica}
+    comandi = {"setup": setup, "giornaliero": giornaliero, "settimanale": settimanale, "prova_grafica": prova_grafica, "prova_rivista": prova_rivista}
     if len(sys.argv) != 2 or sys.argv[1] not in comandi:
         print(__doc__)
         sys.exit(1)
