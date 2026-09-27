@@ -814,7 +814,7 @@ def crea(percorso, ctx, compact=False):
     focus=ctx.get("apertura",{})
     E += [Rubrica("Focus settimanale",focus.get("titolo","Il punto sul mercato"),ROSSO),
           Paragraph(_t(focus.get("sottotitolo","")),st["p"]),Spacer(1,4),
-          PokemonHero(ctx,indice=1,altezza=38*mm),NextPageTemplate("interna"),PageBreak()]
+          NextPageTemplate("interna"),PageBreak()]
 
     # P3 NOVITÀ — uscite, annunci, notizie.
     E += [Rubrica("Nuove uscite in arrivo","Radar Pokémon TCG",ROSSO),Spacer(1,3)]
