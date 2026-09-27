@@ -245,7 +245,8 @@ def _mondo_tramonto(c, ctx=None):
     c.setFillColor(colors.Color(.25,.58,.60,alpha=.08)); c.circle(W*.82,H*.15,58*mm,stroke=0,fill=1)
     _art_map(c,MARGINE,20*mm,72*mm,48*mm,71)
     hero=(_art_piano(ctx,7).get("hero_asset") if ctx else None) or _mondo_asset(ctx,"pokemon",6)
-    c.setFillColor(colors.Color(1,1,1,alpha=.14)); c.circle(W-43*mm,46*mm,38*mm,stroke=0,fill=1)\n    _immagine_asset(c,hero,W-43*mm,46*mm,76*mm)
+    c.setFillColor(colors.Color(1,1,1,alpha=.14)); c.circle(W-43*mm,46*mm,38*mm,stroke=0,fill=1)
+    _immagine_asset(c,hero,W-43*mm,46*mm,76*mm)
 
 
 # ---------- stili ----------
