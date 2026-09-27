@@ -6,7 +6,7 @@ SCHEMA={"type":"object","properties":{"region":{"type":"string"},"visual_directi
 def _local_plan(issue_number,region,available_pokemon=None):
  layouts=[("cover","hoenn_map_01","pokedex"),("editorial","hoenn_map_02","dialogue"),("radar","hoenn_map_03","battle"),("thermometer","hoenn_map_01","trainer_card"),("market","hoenn_map_02","pokedex"),("deals_news","hoenn_map_03","dialogue"),("back_cover","hoenn_map_01","menu")]
  disponibili=list(available_pokemon or [])
- return {"region":region,"visual_direction":"Magazine Pokémon handheld 2002-2008: mappe, Pokédex, battaglia e pannelli dati; Pokémon protagonista.","palette":["verde smeraldo","blu acqua","crema carta","nero grafite"],"pages":[{"page":i,"layout":a,"hero_pokemon":(disponibili[(i-1)%len(disponibili)] if disponibili else ""), "secondary_pokemon":[],"map":m,"ui":u,"notes":"Pokémon protagonista, dati secondari, decorazione minima."} for i,(a,m,u) in enumerate(layouts,1)]}
+ return {"region":region,"visual_direction":"Magazine illustrato moderno e dinamico: grandi artwork, mappe ambientali, gerarchia editoriale forte, forme diagonali e colore controllato; niente pixel, sprite, scanline o finte UI da videogioco.","palette":["blu editoriale","giallo caldo","rosso corallo","azzurro cielo","bianco caldo"],"pages":[{"page":i,"layout":a,"hero_pokemon":(disponibili[(i-1)%len(disponibili)] if disponibili else ""), "secondary_pokemon":[],"map":m,"ui":u,"notes":"Pokémon protagonista; composizione adattiva alla densità; niente pixel art, sprite o griglie da videogioco."} for i,(a,m,u) in enumerate(layouts,1)]}
 def _normalize(plan,region):
  plan=dict(plan or {}); plan["region"]=region; pages=list(plan.get("pages") or [])[:7]; used=set(); out=[]
  for i,p in enumerate(pages,1):
