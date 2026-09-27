@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 import config as C
+from download_assets import scarica_immagini_pokemon
 from src import analysis, cardmarket, news, report, rivista, storage, telegram, verify
 
 LINGUE_IT = {"italian": "italiano", "english": "inglese", "japanese": "giapponese"}
@@ -203,6 +204,7 @@ def settimanale():
 
     Path("output").mkdir(exist_ok=True)
     percorso_pdf = f"output/Il_Collezionista_n{numero}_{oggi.isoformat()}.pdf"
+    ctx["pokemon_mondo"] = scarica_immagini_pokemon(numero=numero, data=oggi.isoformat())
     rivista.crea(percorso_pdf, ctx)
     storage.scrivi_json("riepilogo/ultimo.json", report.dati_per_claude(ctx))
     telegram.documento(percorso_pdf, f"Il Collezionista n. {numero} - {ctx['data_lunga']}")
