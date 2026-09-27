@@ -1,0 +1,18 @@
+name: Prova grafica POKEPUTZU
+on:
+  workflow_dispatch:
+  push:
+    branches: [pokeputzu_redesign]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - run: python -m py_compile main.py download_assets.py src/*.py
+      - run: python main.py prova_grafica
+      - run: cat data/art_direction_test.json
