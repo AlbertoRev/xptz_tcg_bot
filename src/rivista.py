@@ -6,7 +6,8 @@ generica rimane nel PDF: ogni elemento ornamentale appartiene al mondo Pokémon.
 """
 import math
 import random
-from pathlib import Path\nfrom PIL import Image as PILImage, ImageDraw, ImageFilter
+from pathlib import Path
+from PIL import Image as PILImage, ImageDraw, ImageFilter
 from xml.sax.saxutils import escape
 
 from reportlab.graphics.shapes import Drawing, Line, Rect, String
