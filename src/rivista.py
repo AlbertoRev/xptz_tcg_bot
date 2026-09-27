@@ -360,7 +360,7 @@ class Decoro(Flowable):
             nome = _mondo_asset(self.ctx, gruppo, self.seme + k)
             if nome:
                 x = LARGHEZZA * (0.30 + 0.20 * k)
-                larghezza = 24 * mm if gruppo == "allenatori" else 15 * mm
+                larghezza = 30 * mm if gruppo == "allenatori" else 20 * mm
                 _immagine_asset(c, nome, x, self.altezza / 2, larghezza)
 
 
@@ -649,7 +649,7 @@ def _pagina_interna(c, doc, ctx):
     asset=plan.get("hero_asset")
     # area hero riservata nel margine alto destro, 30 mm: grande ma non entra nel frame testo
     if asset:
-        _immagine_asset(c,asset,W-13*mm,H-31*mm,20*mm)
+        _immagine_asset(c,asset,W-22*mm,H-43*mm,34*mm)
     # piccolo badge PokéNav nel margine, senza invadere il contenuto
     if page in (3,5):
         _art_map(c,W-50*mm,10*mm,34*mm,22*mm,page)
@@ -672,9 +672,9 @@ def _retro(c, ctx):
     c.drawString(MARGINE, H - 42 * mm, f"POKEPUTZU WEEKLY N.{ctx['numero']} · PROSSIMO NUMERO {ctx['prossima']}")
     # pannello metodo
     c.setFillColor(colors.HexColor("#102D28"))
-    c.roundRect(MARGINE, H - 196 * mm, LARGHEZZA, 135 * mm, 3 * mm, stroke=0, fill=1)
+    c.roundRect(MARGINE, H - 172 * mm, LARGHEZZA, 108 * mm, 3 * mm, stroke=0, fill=1)
     c.setFillColor(colors.HexColor("#EFF3D8"))
-    c.roundRect(MARGINE + 3 * mm, H - 193 * mm, LARGHEZZA - 6 * mm, 129 * mm, 2 * mm, stroke=0, fill=1)
+    c.roundRect(MARGINE + 3 * mm, H - 169 * mm, LARGHEZZA - 6 * mm, 102 * mm, 2 * mm, stroke=0, fill=1)
     c.restoreState()
 
 
@@ -761,7 +761,7 @@ def crea(percorso, ctx):
     doc = BaseDocTemplate(percorso, pagesize=A4, title=f"{TESTATA} n. {ctx['numero']}",
                           leftMargin=MARGINE, rightMargin=MARGINE, topMargin=24 * mm, bottomMargin=18 * mm)
     cornice = Frame(MARGINE, 18 * mm, LARGHEZZA, H - 43 * mm, id="testo", leftPadding=0, rightPadding=0)
-    cornice_retro = Frame(MARGINE + 7 * mm, H - 186 * mm, LARGHEZZA - 14 * mm, 114 * mm, id="retro",
+    cornice_retro = Frame(MARGINE + 7 * mm, H - 163 * mm, LARGHEZZA - 14 * mm, 88 * mm, id="retro",
                           leftPadding=0, rightPadding=0)
     doc.addPageTemplates([
         PageTemplate(id="copertina", frames=[Frame(0, 0, W, H, id="vuota")],
@@ -829,16 +829,16 @@ def crea(percorso, ctx):
         for p in C.PERIODI:
             c = cl[str(p)]
             if c["rialzi"]:
-                E += [_tabella_classifica(f"Rialzi a {p} giorni", c["rialzi"], VERDE), Spacer(1, 6)]
+                E += [_tabella_classifica(f"Rialzi a {p} giorni", c["rialzi"], colors.HexColor("#2F7D55")), Spacer(1, 6)]
             if c["ribassi"]:
-                E += [_tabella_classifica(f"Ribassi a {p} giorni", c["ribassi"], ROSSO), Spacer(1, 6)]
+                E += [_tabella_classifica(f"Ribassi a {p} giorni", c["ribassi"], colors.HexColor("#8A4F3D")), Spacer(1, 6)]
             elif c.get("piu_deboli"):
-                E += [_tabella_classifica(f"Più deboli a {p} giorni (nessun calo)", c["piu_deboli"], ARANCIO),
+                E += [_tabella_classifica(f"Più deboli a {p} giorni (nessun calo)", c["piu_deboli"], colors.HexColor("#9A7540")),
                       Spacer(1, 6)]
 
     # 5. Occasioni
     if g["occasioni"]:
-        E += [Spacer(1, 6), CondPageBreak(80 * mm), Rubrica("Affari", "Le occasioni della settimana", colors.HexColor("#8A7545")),
+        E += [PageBreak(), Rubrica("Affari", "Le occasioni della settimana", colors.HexColor("#8A7545")),
               Paragraph(_t("Sigillato con un'offerta molto sotto il prezzo di tendenza."), st["occhiello"]),
               Spacer(1, 4),
               Fumetto("Occhio: l'offerta più bassa può essere in un'altra lingua o rovinata. Apri il link e "
@@ -847,11 +847,11 @@ def crea(percorso, ctx):
         for o in g["occasioni"]:
             dati.append([_link(o["nome"], o["link"], st["cella"], 80), _eur(o["prezzo_minimo"]),
                          _eur(o["prezzo_tendenza"]), _perc(-o["sconto"])])
-        E.append(_tabella(dati, [104 * mm, 24 * mm, 24 * mm, 24 * mm], ARANCIO))
+        E.append(_tabella(dati, [104 * mm, 24 * mm, 24 * mm, 24 * mm], colors.HexColor("#9A7540")))
 
     # 6. Notizie
     if g["notizie"]:
-        E += [Spacer(1, 10), CondPageBreak(45 * mm), Rubrica("Attualità", "Dal mondo Pokémon", colors.HexColor("#356B66")), Spacer(1, 3)]
+        E += [PageBreak(), Rubrica("Attualità", "Dal mondo Pokémon", colors.HexColor("#356B66")), Spacer(1, 3)]
         for k, n in enumerate(g["notizie"]):
             E.append(Paragraph(f'<font color="{HEX[k % 5]}" name="{SOTTO}" size="8">'
                                f'{_t((n.get("fonte") or "").upper())}  ·  {_t(n["data"])}</font><br/>'
@@ -863,6 +863,6 @@ def crea(percorso, ctx):
     # 7. Quarta di copertina: come leggere la rivista
     E += [NextPageTemplate("retro"), PageBreak(), Rubrica("Metodo", "Come leggere la rivista", colors.HexColor("#568D55")), Spacer(1, 3)]
     for nota in ctx["note_metodo"]:
-        E.append(Paragraph(f'<font color="#FF8C42" name="{SOTTO}">»</font>  {_t(nota)}', st["p"]))
+        E.append(Paragraph(f'<font color="#568D55" name="{SOTTO}">›</font>  {_t(nota)}', st["p"]))
         E.append(Spacer(1, 4))
     doc.build(E)
