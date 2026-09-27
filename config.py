@@ -16,14 +16,6 @@ GIOCHI = {
         "riconosci": ["Pikachu", "Charizard", "Mewtwo"],
         "escludi_nomi": ["japanese", "chinese", "korean", "thai", "indonesian"],
     },
-    "onepiece": {
-        "nome": "One Piece",
-        "livello": "principale",
-        "lingua": "english",
-        "slug_cardmarket": "OnePiece",
-        "riconosci": ["Luffy", "Roronoa Zoro", "Nami"],
-        "escludi_nomi": ["japanese", "chinese", "korean", "(french"],
-    },
 }
 
 # Notizie di altri giochi senza prezzi (vuoto = nessuno)
@@ -34,10 +26,10 @@ PERIODI = [7, 30, 90, 180]
 
 # Soglie minime di prezzo (euro) per entrare nel report, così una carta
 # da 0,20 € che passa a 0,40 € non finisce tra i "rialzi del 100%".
-MIN_PREZZO_REPORT = {"singola": 5, "sigillato": 5}
+MIN_PREZZO_REPORT = {"singola": 4, "sigillato": 5}
 
 # Soglie minime per gli alert giornalieri
-MIN_PREZZO_ALERT = {"singola": 20, "sigillato": 5}
+MIN_PREZZO_ALERT = {"singola": 4, "sigillato": 5}
 SOGLIA_ALERT_MOVIMENTO = 0.20      # +/-20% in 7 giorni
 SOGLIA_CONFERMA = 0.15             # il giorno prima doveva essere almeno +/-15%
 SOGLIA_OCCASIONE = 0.70            # prezzo minimo <= 70% del prezzo di tendenza
@@ -49,13 +41,26 @@ OCCASIONI_SINGOLE_SENZA_VERIFICA = False
 # True = un prodotto ancora in allerta viene rimandato ogni giorno, con la data della prima segnalazione.
 # False = ogni prodotto viene segnalato una volta sola finché resta in allerta.
 RIPETI_ALERT_ATTIVI = True
-# Alert al giorno per ciascun gioco (Pokémon e One Piece hanno ognuno il proprio limite).
-# Ordine di priorità: movimenti di prezzo, poi occasioni, poi prodotti da osservare.
-MAX_ALERT_PER_GIOCO = 10
+# Alert al giorno: due messaggi separati, uno per il sigillato e uno per le carte singole.
+# Priorità sigillato: movimenti di prezzo, poi occasioni, poi prodotti da osservare.
+# Priorità singole: movimenti di prezzo confermati, poi slancio delle vendite (stima).
+MAX_ALERT_SIGILLATO = 12
+MAX_ALERT_SINGOLE = 12
+# Slancio singole: media vendite 7 giorni contro media 30 giorni, almeno +/-10%
+SOGLIA_SLANCIO = 0.10
 # True = se le occasioni vere non bastano a raggiungere il limite, il bot completa con
 # prodotti "da osservare": prezzo minimo tra il 70% e l'85% della tendenza (segnale più debole).
 RIEMPI_CON_DA_OSSERVARE = True
 SOGLIA_DA_OSSERVARE = 0.85
+
+# Previsioni nel report settimanale: prodotti sigillati aggiunti su Cardmarket negli ultimi
+# 60 giorni (prevendite e uscite recenti), valutati come caldo / tiepido / freddo.
+PREVISIONI_GIORNI = 60
+PREVISIONI_MAX_RIGHE = 20
+CALDO_VARIAZIONE = 0.10     # prezzo salito almeno del 10% dal primo rilevamento
+CALDO_RAPPORTO = 0.85       # oppure in salita e con poche offerte sotto la tendenza
+FREDDO_VARIAZIONE = -0.10   # prezzo sceso almeno del 10%
+FREDDO_RAPPORTO = 0.70      # oppure molte offerte molto sotto la tendenza
 
 # Quanti prodotti per classifica (rialzi e ribassi)
 RIGHE_PER_CLASSIFICA = 5
