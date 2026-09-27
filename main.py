@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 import config as C
-from src import analysis, cardmarket, news, report, storage, telegram, verify
+from src import analysis, cardmarket, news, report, rivista, storage, telegram, verify
 
 LINGUE_IT = {"italian": "italiano", "english": "inglese", "japanese": "giapponese"}
 
@@ -45,6 +45,37 @@ def raccogli():
     return risultati
 
 
+ORDINE = {"movimento": 0, "occasione": 1, "slancio": 1, "da_osservare": 2}
+
+
+def _seleziona(candidati, limite, stato, oggi):
+    """Sceglie fino a 'limite' alert: prima per tipo di segnale, poi le novità."""
+    visti = set()
+    unici = []
+    for a in candidati:
+        if a["id"] in visti:
+            continue
+        visti.add(a["id"])
+        genere = "occasione" if a["genere"] == "da_osservare" else a["genere"]
+        a["_chiave"] = f"{genere}:{a['id']}"
+        s = stato.get(a["_chiave"])
+        continuo = s and (oggi - dt.date.fromisoformat(s["ultimo"])).days <= 2
+        a["segnalato_dal"] = s["primo"] if continuo and s["primo"] != oggi.isoformat() else None
+        unici.append(a)
+    unici.sort(key=lambda a: (ORDINE[a["genere"]], a["segnalato_dal"] is not None))
+    scelti = []
+    for a in unici:
+        if not C.RIPETI_ALERT_ATTIVI and a["segnalato_dal"]:
+            continue
+        if a["genere"] in ("occasione", "da_osservare"):
+            verify.verifica([a], a["lingua"])
+        stato[a["_chiave"]] = {"primo": a["segnalato_dal"] or oggi.isoformat(), "ultimo": oggi.isoformat()}
+        scelti.append(a)
+        if len(scelti) >= limite:
+            break
+    return scelti
+
+
 def giornaliero():
     dati = raccogli()
     stato = storage.leggi_json("stato_alert.json", {})
@@ -52,94 +83,126 @@ def giornaliero():
         if isinstance(v, str):
             stato[k] = {"primo": v, "ultimo": v}
     oggi = dt.date.today()
-    singole = verify.attivo() or C.OCCASIONI_SINGOLE_SENZA_VERIFICA
-    n = C.MAX_ALERT_PER_GIOCO
-    inviati, conteggi = [], {}
+    singole_occ = verify.attivo() or C.OCCASIONI_SINGOLE_SENZA_VERIFICA
 
     for chiave, (giorno, prezzi, cat) in dati.items():
         g = C.GIOCHI[chiave]
         if g["livello"] != "principale":
             continue
-        slug, lingua = g["slug_cardmarket"], LINGUE_IT.get(g["lingua"], g["lingua"])
-        base = {"gioco": g["nome"], "lingua_it": lingua, "lingua": g["lingua"]}
+        slug = g["slug_cardmarket"]
+        base = {"gioco": g["nome"], "lingua_it": LINGUE_IT.get(g["lingua"], g["lingua"]), "lingua": g["lingua"]}
         df = analysis.tabella(chiave, giorno, prezzi, cat)
+        link = cardmarket.link_ricerca
 
-        movimenti = [{**a, **base, "genere": "movimento"}
-                     for a in analysis.alert_movimenti(chiave, giorno, df, slug, cardmarket.link_ricerca)]
-        occasioni = [{**o, **base, "genere": "occasione"}
-                     for o in analysis.occasioni(df, slug, cardmarket.link_ricerca, singole, limite=500)]
-        da_osservare = []
+        movimenti = [{**a, **base, "genere": "movimento"} for a in analysis.alert_movimenti(chiave, giorno, df, slug, link)]
+
+        # --- sigillato
+        occ = [{**o, **base, "genere": "occasione"}
+               for o in analysis.occasioni(df, slug, link, singole_occ, limite=500) if o["tipo"] == "sigillato"]
+        oss = []
         if C.RIEMPI_CON_DA_OSSERVARE:
-            gia = {o["id"] for o in occasioni}
-            da_osservare = [{**o, **base, "genere": "da_osservare"}
-                            for o in analysis.occasioni(df, slug, cardmarket.link_ricerca, singole, limite=500,
-                                                        rapporto_da=C.SOGLIA_OCCASIONE,
-                                                        rapporto_a=C.SOGLIA_DA_OSSERVARE)
-                            if o["id"] not in gia]
-        conteggi[g["nome"]] = (len(movimenti), len(occasioni), len(da_osservare))
+            oss = [{**o, **base, "genere": "da_osservare"}
+                   for o in analysis.occasioni(df, slug, link, singole_occ, limite=500,
+                                               rapporto_da=C.SOGLIA_OCCASIONE, rapporto_a=C.SOGLIA_DA_OSSERVARE)
+                   if o["tipo"] == "sigillato"]
+        mov_sig = [a for a in movimenti if a["tipo"] == "sigillato"]
+        sig = _seleziona(mov_sig + occ + oss, C.MAX_ALERT_SIGILLATO, stato, oggi)
+        telegram.messaggio(report.telegram_alert(sig, g["nome"], "sigillato", (len(mov_sig), len(occ), len(oss))))
 
-        # data della prima segnalazione per i prodotti ancora in allerta
-        candidati = movimenti + occasioni + da_osservare
-        for a in candidati:
-            k = f"{'occasione' if a['genere'] == 'da_osservare' else a['genere']}:{a['id']}"
-            s = stato.get(k)
-            continuo = s and (oggi - dt.date.fromisoformat(s["ultimo"])).days <= 2
-            a["segnalato_dal"] = s["primo"] if continuo and s["primo"] != oggi.isoformat() else None
-            a["_chiave"] = k
-
-        # priorità: movimenti, occasioni, da osservare; dentro ogni gruppo prima le novità
-        ordine = {"movimento": 0, "occasione": 1, "da_osservare": 2}
-        candidati.sort(key=lambda a: (ordine[a["genere"]], a["segnalato_dal"] is not None))
-        scelti = []
-        for a in candidati:
-            if not C.RIPETI_ALERT_ATTIVI and a["segnalato_dal"]:
-                continue
-            if a["genere"] != "movimento":
-                verify.verifica([a], a["lingua"])
-            stato[a["_chiave"]] = {"primo": a["segnalato_dal"] or oggi.isoformat(), "ultimo": oggi.isoformat()}
-            scelti.append(a)
-            if len(scelti) >= n:
-                break
-        inviati += scelti
+        # --- carte singole
+        mov_sing = [a for a in movimenti if a["tipo"] == "singola"]
+        sla = [{**a, **base, "genere": "slancio"} for a in analysis.slancio_singole(df, slug, link)]
+        sing = _seleziona(mov_sing + sla, C.MAX_ALERT_SINGOLE, stato, oggi)
+        telegram.messaggio(report.telegram_alert(sing, g["nome"], "singola", (len(mov_sing), len(sla))))
+        print(f"{g['nome']}: {len(sig)} alert sigillato, {len(sing)} alert singole")
 
     stato = {k: v for k, v in stato.items() if (oggi - dt.date.fromisoformat(v["ultimo"])).days < 30}
     storage.scrivi_json("stato_alert.json", stato)
-    if inviati:
-        telegram.messaggio(report.telegram_alert(inviati, conteggi))
-    print(f"Alert inviati: {len(inviati)} - candidati per gioco (movimenti, occasioni, da osservare): {conteggi}")
+
+
+MESI_IT = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre",
+           "ottobre", "novembre", "dicembre"]
+
+
+def _apertura(g):
+    """Titolo di copertina scelto con regole fisse."""
+    caldi = [p for p in g["previsioni"] if p["stato"] == "caldo"]
+    if caldi:
+        p = caldi[0]
+        return {"titolo": f"{p['nome']}: è la novità più calda della settimana",
+                "sottotitolo": f"{p['motivo'].capitalize()}. Prezzo attuale {report._eur(p['prezzo'])}."}
+    for tipo in ("sigillato", "singola"):
+        for per in sorted(C.PERIODI, reverse=True):
+            c = g["classifiche"][tipo][str(per)]
+            reali = [r for r in c["rialzi"] if r["fonti"][str(per)] == "storico"]
+            if reali:
+                r = reali[0]
+                return {"titolo": f"{r['nome']} vola: {report._perc(r['variazioni'][str(per)])} in {per} giorni",
+                        "sottotitolo": f"Prezzo di tendenza {report._eur(r['prezzo'])}, incertezza {r['incertezza']}."}
+    if g["radar"]:
+        u = g["radar"][0]
+        return {"titolo": u["titolo"], "sottotitolo": f"Fonte: {u['fonte']}."}
+    return {"titolo": "Settimana tranquilla sul mercato Pokémon",
+            "sottotitolo": "Pochi movimenti rilevanti: il bot sta ancora accumulando storico."}
 
 
 def settimanale():
     dati = raccogli()
     oggi = dt.date.today()
-    ctx = {"data": oggi.isoformat(), "data_it": oggi.strftime("%d/%m/%Y"),
+    numero = storage.leggi_json("numero_rivista.json", {"numero": 0})["numero"] + 1
+    ctx = {"data": oggi.isoformat(), "data_it": oggi.strftime("%d/%m/%Y"), "numero": numero,
+           "data_lunga": f"{oggi.day} {MESI_IT[oggi.month - 1]} {oggi.year}",
            "mensile": oggi.day <= 7, "giochi": {}, "anomalie": 0}
+    radar_grezzo = news.uscite(oggi)
     for chiave, (giorno, prezzi, cat) in dati.items():
         g = C.GIOCHI[chiave]
-        slug = g["slug_cardmarket"]
+        slug, link = g["slug_cardmarket"], cardmarket.link_ricerca
         df = analysis.tabella(chiave, giorno, prezzi, cat)
         ctx["anomalie"] += analysis.anomalie(df)
         singole = verify.attivo() or C.OCCASIONI_SINGOLE_SENZA_VERIFICA
-        occ = analysis.occasioni(df, slug, cardmarket.link_ricerca, singole) if g["livello"] == "principale" else []
+        occ = verify.verifica(analysis.occasioni(df, slug, link, singole), g["lingua"])
+        classifiche = analysis.classifiche(df, slug, link)
+        previsioni = analysis.previsioni(chiave, giorno, prezzi, cat, slug, link)
+        giorni_storico = len(storage.giorni_disponibili(chiave))
+        minimi = df["tipo"].map(C.MIN_PREZZO_REPORT)
         ctx["giochi"][chiave] = {
             "nome": g["nome"], "livello": g["livello"],
             "lingua_it": LINGUE_IT.get(g["lingua"], g["lingua"]),
-            "giorni_storico": len(storage.giorni_disponibili(chiave)),
-            "classifiche": analysis.classifiche(df, slug, cardmarket.link_ricerca),
-            "occasioni": verify.verifica(occ, g["lingua"]),
-            "nuovi": analysis.nuovi_prodotti(cat, prezzi, giorno, slug, cardmarket.link_ricerca)
-            if g["livello"] == "principale" else [],
+            "giorni_storico": giorni_storico,
+            "monitorati": int((df["trend"] >= minimi).sum()),
+            "classifiche": classifiche,
+            "occasioni": occ,
+            "previsioni": previsioni,
+            "radar": news.collega_previsioni([dict(u) for u in radar_grezzo], previsioni),
+            "carrello": analysis.carrello(previsioni, occ, classifiche, giorni_storico),
             "notizie": news.notizie(chiave),
         }
-    ctx["notizie_extra"] = {k: news.notizie(k) for k in C.NOTIZIE_EXTRA}
+    ctx["notizie_extra"] = {}
+
+    g = next(iter(ctx["giochi"].values()))
+    ctx["principale"] = g
+    ctx["apertura"] = _apertura(g)
+    ctx["kpi"] = [(f"{g['monitorati']:,}".replace(",", "."), "prodotti monitorati"),
+                  (sum(1 for p in g["previsioni"] if p["stato"] == "caldo"), "novità calde"),
+                  (len(g["occasioni"]), "occasioni sul sigillato"),
+                  (len(g["radar"]), "uscite nel radar")]
+    ctx["sommario"] = [("La settimana in breve", "i fatti del mercato in pochi punti"),
+                       ("Cosa farei con 200 €", "la proposta d'acquisto della settimana"),
+                       ("Le uscite in arrivo", "il radar delle date dalle notizie"),
+                       ("Il termometro delle novità", "prevendite e uscite: caldo o freddo"),
+                       ("Il borsino", "chi sale e chi scende a 7, 30, 90 e 180 giorni"),
+                       ("Occasioni e attualità", "affari da controllare e notizie")]
+    ctx["sintesi"] = report.sintesi_righe(ctx)
+    ctx["note_metodo"] = report.NOTE_METODO
 
     Path("output").mkdir(exist_ok=True)
-    percorso_pdf = f"output/report_{oggi.isoformat()}.pdf"
-    report.pdf(percorso_pdf, ctx)
+    percorso_pdf = f"output/Il_Collezionista_n{numero}_{oggi.isoformat()}.pdf"
+    rivista.crea(percorso_pdf, ctx)
     storage.scrivi_json("riepilogo/ultimo.json", report.dati_per_claude(ctx))
     telegram.messaggio(report.telegram_settimanale(ctx))
-    telegram.documento(percorso_pdf, f"Report TCG {ctx['data_it']}")
-    print("Report settimanale inviato")
+    telegram.documento(percorso_pdf, f"Il Collezionista n. {numero} - {ctx['data_it']}")
+    storage.scrivi_json("numero_rivista.json", {"numero": numero})
+    print(f"Rivista n. {numero} inviata")
 
 
 def setup():
