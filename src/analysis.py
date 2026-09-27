@@ -151,3 +151,129 @@ def alert_movimenti(gioco, giorno, df, slug, link):
         "id": int(i), "nome": r["nome"], "tipo": r["tipo"], "prezzo": round(float(r["trend"]), 2),
         "variazione_7g": round(float(r["v"]) * 100, 1), "link": link(slug, r["nome"]),
     } for i, r in sel.iterrows()]
+
+
+def slancio_singole(df, slug, link):
+    """Singole con vendite dell'ultima settimana molto diverse dalla media del mese (stima)."""
+    v = df["avg7"] / df["avg30"] - 1
+    m = (df["tipo"] == "singola") & df["avg7"].notna() & (df["avg30"] > 0) & \
+        (df["trend"] >= C.MIN_PREZZO_ALERT["singola"]) & (v.abs() >= C.SOGLIA_SLANCIO) & \
+        (v.abs() <= C.VARIAZIONE_MAX_CREDIBILE)
+    sel = df[m].assign(v=v[m]).sort_values("v", key=abs, ascending=False)
+    return [{
+        "id": int(i), "nome": r["nome"], "tipo": r["tipo"], "prezzo": round(float(r["trend"]), 2),
+        "variazione": round(float(r["v"]) * 100, 1), "link": link(slug, r["nome"]),
+    } for i, r in sel.iterrows()]
+
+
+ORDINE_STATO = {"caldo": 0, "tiepido": 1, "in arrivo": 2, "da valutare": 3, "freddo": 4}
+
+
+def previsioni(gioco, giorno, prezzi, catalogo, slug, link):
+    """Sigillato in prevendita o appena uscito: caldo, tiepido o freddo secondo regole fisse."""
+    inizio = giorno - dt.timedelta(days=C.PREVISIONI_GIORNI)
+    cand = catalogo[(catalogo["tipo"] == "sigillato") & (catalogo["aggiunto"] >= inizio.isoformat())]
+    if cand.empty:
+        return []
+    cand = cand.join(prezzi[["trend", "low"]], how="left")
+    primo = pd.Series(np.nan, index=cand.index)
+    giorni_dati = pd.Series(0, index=cand.index)
+    for g in storage.giorni_disponibili(gioco):
+        if g < inizio or g >= giorno:
+            continue
+        snap, _ = storage.carica_istantanea(gioco, g)
+        t = snap["trend"].reindex(cand.index)
+        nuovo = primo.isna() & t.notna()
+        primo[nuovo] = t[nuovo]
+        giorni_dati += t.notna().astype(int)
+
+    out = []
+    for i, r in cand.iterrows():
+        prezzo, basso = r["trend"], r["low"]
+        var = prezzo / primo[i] - 1 if pd.notna(prezzo) and pd.notna(primo[i]) and primo[i] > 0 else np.nan
+        rapp = basso / prezzo if pd.notna(prezzo) and pd.notna(basso) and prezzo > 0 else np.nan
+        if pd.isna(prezzo):
+            stato, motivo = "in arrivo", "in prevendita o appena listato, nessuna vendita ancora"
+        elif giorni_dati[i] < 7:
+            stato, motivo = "da valutare", f"solo {int(giorni_dati[i])} giorni di prezzi"
+        elif var >= C.CALDO_VARIAZIONE or (var > 0 and pd.notna(rapp) and rapp >= C.CALDO_RAPPORTO):
+            stato = "caldo"
+            motivo = f"prezzo {_segno(var)} dal primo rilevamento" + \
+                     (", poche offerte sotto la tendenza" if pd.notna(rapp) and rapp >= C.CALDO_RAPPORTO else "")
+        elif var <= C.FREDDO_VARIAZIONE or (pd.notna(rapp) and rapp < C.FREDDO_RAPPORTO):
+            stato = "freddo"
+            motivo = f"prezzo {_segno(var)} dal primo rilevamento" + \
+                     (", molte offerte molto sotto la tendenza" if pd.notna(rapp) and rapp < C.FREDDO_RAPPORTO else "")
+        else:
+            stato, motivo = "tiepido", f"prezzo {_segno(var)} dal primo rilevamento, stabile"
+        out.append({
+            "id": int(i), "nome": r["nome"], "categoria": r["categoria"], "aggiunto": r["aggiunto"],
+            "prezzo": None if pd.isna(prezzo) else round(float(prezzo), 2),
+            "variazione": None if pd.isna(var) else round(float(var) * 100, 1),
+            "stato": stato, "motivo": motivo, "link": link(slug, r["nome"]),
+        })
+    # i prodotti in arrivo hanno sempre posto (fino a 10), il resto per stato e prezzo
+    in_arrivo = sorted([x for x in out if x["stato"] == "in arrivo"], key=lambda x: x["aggiunto"], reverse=True)[:10]
+    altri = sorted([x for x in out if x["stato"] != "in arrivo"],
+                   key=lambda x: (ORDINE_STATO[x["stato"]], -(x["prezzo"] or 0)))
+    scelti = altri[:max(0, C.PREVISIONI_MAX_RIGHE - len(in_arrivo))] + in_arrivo
+    return sorted(scelti, key=lambda x: ORDINE_STATO[x["stato"]])
+
+
+def _segno(v):
+    if pd.isna(v):
+        return "n.d."
+    return f"{'+' if v > 0 else ''}{v * 100:.0f}%"
+
+
+def carrello(previsioni, occasioni, classifiche, giorni_storico, budget=200):
+    """'Cosa farei con 200 euro': proposta automatica con regole fisse, al massimo 3 acquisti."""
+    gruppi = []
+    occ = sorted([o for o in occasioni if o["tipo"] == "sigillato" and o["prezzo_minimo"] <= budget],
+                 key=lambda o: -o["sconto"])
+    gruppi.append([{
+        "categoria": "Occasione", "nome": o["nome"], "prezzo": o["prezzo_minimo"], "link": o["link"],
+        "perche": f"offerta a {_euro(o['prezzo_minimo'])} contro un prezzo di tendenza di "
+                  f"{_euro(o['prezzo_tendenza'])} (-{o['sconto']:.0f}%)",
+        "rischio": "l'offerta più bassa può essere in un'altra lingua o in condizioni peggiori",
+    } for o in occ])
+    caldi = sorted([p for p in previsioni if p["stato"] == "caldo" and p["prezzo"] and p["prezzo"] <= budget],
+                   key=lambda p: -(p["variazione"] or 0))
+    gruppi.append([{
+        "categoria": "Novità calda", "nome": p["nome"], "prezzo": p["prezzo"], "link": p["link"],
+        "perche": p["motivo"],
+        "rischio": "i prodotti nuovi possono calare quando arrivano le ristampe",
+    } for p in caldi])
+    solidi = []
+    for p in ("90", "30"):
+        for r in classifiche["sigillato"][p]["rialzi"]:
+            v7 = r["variazioni"].get("7")
+            if r["incertezza"] != "alta" and r["fonti"][p] == "storico" and (v7 is None or v7 >= -5) \
+                    and r["prezzo"] <= budget:
+                solidi.append({
+                    "categoria": "Tendenza solida", "nome": r["nome"], "prezzo": r["prezzo"], "link": r["link"],
+                    "perche": f"in salita del {r['variazioni'][p]:.0f}% a {p} giorni, senza cali nell'ultima settimana",
+                    "rischio": "chi compra dopo un rialzo può trovare il picco",
+                })
+        if solidi:
+            break
+    gruppi.append(solidi)
+
+    proposte, residuo, nomi = [], float(budget), set()
+    for gruppo in gruppi:
+        for x in gruppo:
+            if x["prezzo"] <= residuo and x["nome"] not in nomi:
+                proposte.append(x)
+                nomi.add(x["nome"])
+                residuo -= x["prezzo"]
+                break
+    note = []
+    if giorni_storico < 30:
+        note.append(f"Lo storico copre solo {giorni_storico} giorni: prudenza, i segnali sono ancora deboli.")
+    if not proposte:
+        note.append("Nessun segnale abbastanza forte questa settimana: terrei i 200 € da parte.")
+    return {"proposte": proposte, "speso": round(budget - residuo, 2), "residuo": round(residuo, 2), "note": note}
+
+
+def _euro(v):
+    return f"{v:,.2f} €".replace(",", "X").replace(".", ",").replace("X", ".")
