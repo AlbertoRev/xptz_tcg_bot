@@ -1,631 +1,554 @@
-"""Il Collezionista: il report settimanale impaginato come una rivista colorata.
+"""'Il Collezionista': il report settimanale impaginato come una rivista giocosa e colorata.
 
-Tutte le illustrazioni (paesaggi, carte, stelle, la mascotte Scrigno) sono disegni originali
-fatti con forme geometriche: nessuna immagine esterna.
+Tutte le illustrazioni (paesaggi, carte, stelle, nuvole) sono disegnate dal codice: niente
+immagini esterne. I font arrivano da Google Fonts (licenza libera) e vengono scaricati al
+primo avvio; se il download non riesce si usano i font di sistema.
 """
 import math
+import os
 import random
+from pathlib import Path
 from xml.sax.saxutils import escape
 
+import requests
+from reportlab.graphics.shapes import Drawing, Line, Rect, String
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.pdfbase.pdfmetrics import stringWidth
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (BaseDocTemplate, CondPageBreak, Flowable, Frame, KeepTogether, NextPageTemplate,
                                 PageBreak, PageTemplate, Paragraph, Spacer, Table, TableStyle)
 
 import config as C
-from src import fonts
 from src.report import _eur, _perc, _t
 
-F = fonts.carica()
-TESTATA_F, TITOLO_F, CORPO, CORPO_B, SIMBOLI = F["Testata"], F["Titolo"], F["Corpo"], F["CorpoB"], F["Simboli"]
+# ---------- font ----------
+FONT_WEB = {
+    "LuckiestGuy-Regular.ttf": "apache/luckiestguy/LuckiestGuy-Regular.ttf",
+    "LilitaOne-Regular.ttf": "ofl/lilitaone/LilitaOne-Regular.ttf",
+    "ComicNeue-Regular.ttf": "ofl/comicneue/ComicNeue-Regular.ttf",
+    "ComicNeue-Bold.ttf": "ofl/comicneue/ComicNeue-Bold.ttf",
+}
 
-# ---------- palette: colori pieni, da album di figurine ----------
-INCHIOSTRO = colors.HexColor("#2B2D42")
+
+def _registra_font():
+    cartella = Path("font")
+    cartella.mkdir(exist_ok=True)
+    for nome, percorso in FONT_WEB.items():
+        f = cartella / nome
+        if not f.exists():
+            try:
+                r = requests.get(f"https://raw.githubusercontent.com/google/fonts/main/{percorso}", timeout=60)
+                r.raise_for_status()
+                f.write_bytes(r.content)
+            except requests.RequestException:
+                pass
+    nomi = {"titolo": ("Titolo", "LuckiestGuy-Regular.ttf"), "sotto": ("Sotto", "LilitaOne-Regular.ttf"),
+            "testo": ("Testo2", "ComicNeue-Regular.ttf"), "testo_b": ("Testo2B", "ComicNeue-Bold.ttf")}
+    riserva = {"titolo": "DejaVuSerif-Bold.ttf", "sotto": "DejaVuSans-Bold.ttf", "testo": "DejaVuSans.ttf",
+               "testo_b": "DejaVuSans-Bold.ttf"}
+    base = "/usr/share/fonts/truetype/dejavu/"
+    out = {}
+    for chiave, (alias, file) in nomi.items():
+        for percorso in (cartella / file, Path(base) / riserva[chiave]):
+            if percorso.exists():
+                pdfmetrics.registerFont(TTFont(alias, str(percorso)))
+                out[chiave] = alias
+                break
+        else:
+            out[chiave] = "Helvetica-Bold" if chiave != "testo" else "Helvetica"
+    return out
+
+
+F = _registra_font()
+TITOLO, SOTTO, TESTO, TESTO_B = F["titolo"], F["sotto"], F["testo"], F["testo_b"]
+
+# ---------- palette giocosa ----------
 CIELO = colors.HexColor("#4CC9F0")
-CIELO_CHIARO = colors.HexColor("#CDEFFB")
 SOLE = colors.HexColor("#FFD23F")
-ROSSO = colors.HexColor("#EF476F")
-VERDE = colors.HexColor("#06D6A0")
-PRATO = colors.HexColor("#7BC950")
-PRATO_SCURO = colors.HexColor("#4E9F3D")
-VIOLA = colors.HexColor("#8338EC")
-ARANCIO = colors.HexColor("#FF8C42")
-BLU = colors.HexColor("#118AB2")
+POMODORO = colors.HexColor("#EE4266")
+ERBA = colors.HexColor("#3BB273")
+VIOLA = colors.HexColor("#8E7DBE")
+ARANCIO = colors.HexColor("#FF9F1C")
+INCHIOSTRO = colors.HexColor("#2B2D42")
 CARTA = colors.HexColor("#FFF8E7")
-RIGA = colors.HexColor("#FFF0C2")
-LEGNO = colors.HexColor("#C8743A")
-LEGNO_CHIARO = colors.HexColor("#E39A5B")
+CREMA = colors.HexColor("#FFF1C9")
+PASTELLO = colors.HexColor("#FFF3DC")
+BLU_NOTTE = colors.HexColor("#1B1F4B")
+GRIGIO = colors.HexColor("#6B6F80")
 BIANCO = colors.white
-COLORE_STATO = {"caldo": ROSSO, "tiepido": ARANCIO, "freddo": BLU, "in arrivo": VIOLA,
-                "da valutare": colors.HexColor("#8D99AE"), "nessun dato": colors.HexColor("#8D99AE")}
+ARCOBALENO = [POMODORO, ARANCIO, SOLE, ERBA, CIELO, VIOLA]
+COLORE_STATO = {"caldo": POMODORO, "tiepido": ARANCIO, "freddo": CIELO, "in arrivo": ERBA,
+                "da valutare": VIOLA, "nessun dato": GRIGIO}
 
 W, H = A4
-MARGINE = 16 * mm
+MARGINE = 17 * mm
 LARGHEZZA = W - 2 * MARGINE
 TESTATA = "IL COLLEZIONISTA"
 
 
-def _alpha(colore, a):
-    return colors.Color(colore.red, colore.green, colore.blue, alpha=a)
-
-
-# =====================================================================
-#  DISEGNI ORIGINALI
-# =====================================================================
-def stella(c, x, y, r, colore, punte=5, bordo=None):
+# ---------- piccoli disegni ----------
+def _stella(c, x, y, r, colore, punte=5, interno=0.45, angolo=90):
     p = c.beginPath()
     for i in range(punte * 2):
-        ang = math.pi / 2 + i * math.pi / punte
-        rr = r if i % 2 == 0 else r * 0.45
-        px, py = x + rr * math.cos(ang), y + rr * math.sin(ang)
-        p.moveTo(px, py) if i == 0 else p.lineTo(px, py)
-    p.close()
-    c.setFillColor(colore)
-    if bordo:
-        c.setStrokeColor(bordo)
-        c.setLineWidth(max(0.8, r * 0.12))
-    c.drawPath(p, stroke=1 if bordo else 0, fill=1)
-
-
-def scintilla(c, x, y, r, colore):
-    p = c.beginPath()
-    p.moveTo(x, y + r)
-    p.curveTo(x + r * 0.12, y + r * 0.12, x + r * 0.12, y + r * 0.12, x + r, y)
-    p.curveTo(x + r * 0.12, y - r * 0.12, x + r * 0.12, y - r * 0.12, x, y - r)
-    p.curveTo(x - r * 0.12, y - r * 0.12, x - r * 0.12, y - r * 0.12, x - r, y)
-    p.curveTo(x - r * 0.12, y + r * 0.12, x - r * 0.12, y + r * 0.12, x, y + r)
-    c.setFillColor(colore)
-    c.drawPath(p, stroke=0, fill=1)
-
-
-def nuvola(c, x, y, s, alpha=0.95):
-    c.setFillColor(_alpha(BIANCO, alpha))
-    for dx, dy, r in ((0, 0, 0.5), (0.45, 0.15, 0.62), (0.95, 0, 0.5), (0.45, -0.12, 0.45)):
-        c.circle(x + dx * s, y + dy * s, r * s, stroke=0, fill=1)
-
-
-def sole(c, x, y, r):
-    c.setStrokeColor(SOLE)
-    c.setLineWidth(r * 0.12)
-    c.setLineCap(1)
-    for i in range(12):
-        a = i * math.pi / 6
-        c.line(x + math.cos(a) * r * 1.25, y + math.sin(a) * r * 1.25,
-               x + math.cos(a) * r * 1.65, y + math.sin(a) * r * 1.65)
-    c.setFillColor(SOLE)
-    c.circle(x, y, r, stroke=0, fill=1)
-    c.setFillColor(_alpha(BIANCO, 0.35))
-    c.circle(x - r * 0.3, y + r * 0.3, r * 0.35, stroke=0, fill=1)
-
-
-def arcobaleno(c, cx, cy, r, spessore):
-    c.setLineCap(0)
-    for i, col in enumerate((ROSSO, ARANCIO, SOLE, PRATO, CIELO, VIOLA)):
-        rr = r - i * spessore
-        c.setStrokeColor(_alpha(col, 0.85))
-        c.setLineWidth(spessore)
-        c.arc(cx - rr, cy - rr, cx + rr, cy + rr, 0, 180)
-
-
-def colline(c, base, altezza, colore, fase=0.0, onde=3):
-    p = c.beginPath()
-    p.moveTo(0, 0)
-    p.lineTo(0, base)
-    passi = 40
-    for i in range(1, passi + 1):
-        x = W * i / passi
-        y = base + altezza * (0.5 + 0.5 * math.sin(fase + onde * math.pi * i / passi))
-        p.lineTo(x, y)
-    p.lineTo(W, 0)
+        rr = r if i % 2 == 0 else r * interno
+        a = math.radians(angolo + i * 180 / punte)
+        (p.moveTo if i == 0 else p.lineTo)(x + rr * math.cos(a), y + rr * math.sin(a))
     p.close()
     c.setFillColor(colore)
     c.drawPath(p, stroke=0, fill=1)
 
 
-def carta(c, x, y, w, ang, colore):
-    """Una carta collezionabile generica, inclinata, con una stella al centro."""
+def _scintilla(c, x, y, r, colore):
+    _stella(c, x, y, r, colore, punte=4, interno=0.28, angolo=90)
+
+
+def _nuvola(c, x, y, s):
+    c.setFillColor(BIANCO)
+    for dx, dy, rr in ((0, 0, 9), (10, 4, 11), (21, 0, 8), (10, -3, 9), (-8, -2, 6)):
+        c.circle(x + dx * s, y + dy * s, rr * s, stroke=0, fill=1)
+
+
+def _carta(c, x, y, w, angolo, bordo, interno):
+    """Carta collezionabile generica, inclinata."""
     h = w * 1.4
     c.saveState()
     c.translate(x, y)
-    c.rotate(ang)
-    c.setFillColor(_alpha(INCHIOSTRO, 0.18))
+    c.rotate(angolo)
+    c.setFillColor(colors.Color(0, 0, 0, alpha=0.15))
     c.roundRect(-w / 2 + 2, -h / 2 - 2, w, h, w * 0.08, stroke=0, fill=1)
-    c.setFillColor(BIANCO)
-    c.setStrokeColor(INCHIOSTRO)
-    c.setLineWidth(1)
-    c.roundRect(-w / 2, -h / 2, w, h, w * 0.08, stroke=1, fill=1)
-    c.setFillColor(colore)
-    c.roundRect(-w / 2 + w * 0.08, -h / 2 + w * 0.08, w * 0.84, h - w * 0.16, w * 0.05, stroke=0, fill=1)
-    c.setFillColor(_alpha(BIANCO, 0.9))
-    c.roundRect(-w * 0.34, h * 0.02, w * 0.68, h * 0.34, w * 0.04, stroke=0, fill=1)
-    stella(c, 0, h * 0.19, w * 0.14, colore)
-    c.setFillColor(_alpha(BIANCO, 0.8))
+    c.setFillColor(bordo)
+    c.roundRect(-w / 2, -h / 2, w, h, w * 0.08, stroke=0, fill=1)
+    c.setFillColor(interno)
+    c.roundRect(-w / 2 + w * 0.08, h * 0.02, w * 0.84, h * 0.42, w * 0.05, stroke=0, fill=1)
+    _stella(c, 0, h * 0.23, w * 0.16, BIANCO)
+    c.setFillColor(colors.Color(1, 1, 1, alpha=0.75))
     for k in range(3):
-        c.roundRect(-w * 0.34, -h * 0.08 - k * h * 0.08, w * (0.68 - k * 0.15), h * 0.035, 1, stroke=0, fill=1)
+        c.roundRect(-w * 0.34, -h * 0.12 - k * h * 0.1, w * 0.68, h * 0.04, h * 0.02, stroke=0, fill=1)
     c.restoreState()
 
 
-def scrigno(c, x, y, s, saluta=False):
-    """Scrigno, la mascotte della rivista: un forziere sorridente pieno di tesori."""
-    w = 1.3 * s
-    lw = max(0.8, s * 0.035)
-    c.saveState()
-    c.setFillColor(_alpha(INCHIOSTRO, 0.15))
-    c.ellipse(x + 0.05 * w, y - 0.06 * s, x + 0.95 * w, y + 0.06 * s, stroke=0, fill=1)
-    c.setStrokeColor(INCHIOSTRO)
-    c.setLineWidth(lw)
-    c.setLineJoin(1)
-    # tesori che spuntano
-    for dx, col in ((0.3, SOLE), (0.5, ROSSO), (0.68, SOLE)):
-        c.setFillColor(col)
-        c.circle(x + dx * w, y + 0.8 * s, 0.1 * s, stroke=1, fill=1)
-    # coperchio aperto
-    c.setFillColor(LEGNO_CHIARO)
+def _collina(c, x0, x1, base, ampiezza, colore, fase, lunghezza):
     p = c.beginPath()
-    p.moveTo(x - 0.02 * w, y + 0.62 * s)
-    p.curveTo(x + 0.05 * w, y + 1.05 * s, x + 0.95 * w, y + 1.05 * s, x + 1.02 * w, y + 0.62 * s)
-    p.lineTo(x + 0.9 * w, y + 0.7 * s)
-    p.curveTo(x + 0.8 * w, y + 0.92 * s, x + 0.2 * w, y + 0.92 * s, x + 0.1 * w, y + 0.7 * s)
+    p.moveTo(x0, 0)
+    passo = 4
+    x = x0
+    while x <= x1:
+        p.lineTo(x, base + ampiezza * math.sin(fase + x / lunghezza))
+        x += passo
+    p.lineTo(x1, 0)
     p.close()
-    c.drawPath(p, stroke=1, fill=1)
-    # corpo
-    c.setFillColor(LEGNO)
-    c.roundRect(x, y, w, 0.64 * s, 0.1 * s, stroke=1, fill=1)
+    c.setFillColor(colore)
+    c.drawPath(p, stroke=0, fill=1)
+
+
+def _ciuffo(c, x, y, colore, s=1):
+    c.setFillColor(colore)
+    for dx, h in ((-3, 7), (0, 10), (3, 7)):
+        p = c.beginPath()
+        p.moveTo(x + dx * s - 1.5 * s, y)
+        p.lineTo(x + dx * s, y + h * s)
+        p.lineTo(x + dx * s + 1.5 * s, y)
+        p.close()
+        c.drawPath(p, stroke=0, fill=1)
+
+
+def _fiore(c, x, y, colore, s=1):
+    c.setFillColor(colore)
+    for k in range(5):
+        a = math.radians(k * 72)
+        c.circle(x + 2.2 * s * math.cos(a), y + 2.2 * s * math.sin(a), 1.8 * s, stroke=0, fill=1)
     c.setFillColor(SOLE)
-    for bx in (0.12, 0.8):
-        c.rect(x + bx * w, y, 0.08 * w, 0.64 * s, stroke=1, fill=1)
-    # occhi e sorriso
-    for ex in (0.36, 0.64):
-        c.setFillColor(BIANCO)
-        c.circle(x + ex * w, y + 0.38 * s, 0.1 * s, stroke=1, fill=1)
-        c.setFillColor(INCHIOSTRO)
-        c.circle(x + ex * w + 0.02 * s, y + 0.37 * s, 0.05 * s, stroke=0, fill=1)
-        c.setFillColor(BIANCO)
-        c.circle(x + ex * w + 0.04 * s, y + 0.4 * s, 0.018 * s, stroke=0, fill=1)
-    c.setFillColor(_alpha(ROSSO, 0.35))
-    c.ellipse(x + 0.2 * w, y + 0.2 * s, x + 0.28 * w, y + 0.26 * s, stroke=0, fill=1)
-    c.ellipse(x + 0.72 * w, y + 0.2 * s, x + 0.8 * w, y + 0.26 * s, stroke=0, fill=1)
-    c.setLineCap(1)
-    c.arc(x + 0.42 * w, y + 0.12 * s, x + 0.58 * w, y + 0.28 * s, 200, 140)
-    if saluta:
-        c.setLineWidth(lw * 2.2)
-        c.setStrokeColor(LEGNO)
-        c.line(x + w, y + 0.35 * s, x + 1.2 * w, y + 0.7 * s)
-        c.setFillColor(LEGNO)
-        c.setStrokeColor(INCHIOSTRO)
-        c.setLineWidth(lw)
-        c.circle(x + 1.22 * w, y + 0.74 * s, 0.09 * s, stroke=1, fill=1)
-    scintilla(c, x + 1.05 * w, y + 1.05 * s, 0.12 * s, SOLE)
-    scintilla(c, x - 0.08 * w, y + 0.95 * s, 0.08 * s, BIANCO)
-    c.restoreState()
+    c.circle(x, y, 1.4 * s, stroke=0, fill=1)
 
 
-def testo_contornato(c, testo, x, y, font, dim, riempimento, contorno, spessore, ombra=True):
-    if ombra:
-        c.setFillColor(_alpha(INCHIOSTRO, 0.35))
-        c.setFont(font, dim)
-        c.drawString(x + dim * 0.06, y - dim * 0.06, testo)
+def _testo_cartoon(c, x, y, testo, font, size, riempimento, contorno=INCHIOSTRO, ombra=3, centrato=False):
+    if centrato:
+        x -= pdfmetrics.stringWidth(testo, font, size) / 2
+    c.saveState()
+    c.setFillColor(contorno)
+    c.setFont(font, size)
+    c.drawString(x + ombra, y - ombra, testo)
     t = c.beginText(x, y)
-    t.setFont(font, dim)
+    t.setFont(font, size)
     t.setTextRenderMode(2)
     c.setFillColor(riempimento)
     c.setStrokeColor(contorno)
-    c.setLineWidth(spessore)
-    c.setLineJoin(1)
+    c.setLineWidth(max(1, size / 18))
     t.textOut(testo)
     t.setTextRenderMode(0)
     c.drawText(t)
+    c.restoreState()
 
 
-def pillola(c, x, y, testo, fondo, dim=8, colore_testo=BIANCO, padding=3 * mm):
-    w = stringWidth(testo, CORPO_B, dim) + 2 * padding
-    h = dim * 1.9
-    c.setFillColor(fondo)
-    c.roundRect(x, y, w, h, h / 2, stroke=0, fill=1)
-    c.setFillColor(colore_testo)
-    c.setFont(CORPO_B, dim)
-    c.drawString(x + padding, y + h * 0.3, testo)
-    return w
+def _pannello(c, x, y, w, h, colore=CARTA, alpha=0.94, raggio=5 * mm, bordo=None):
+    c.saveState()
+    c.setFillColor(colors.Color(0, 0, 0, alpha=0.18))
+    c.roundRect(x + 2, y - 2, w, h, raggio, stroke=0, fill=1)
+    c.setFillColor(colore)
+    c.setFillAlpha(alpha)
+    if bordo:
+        c.setStrokeColor(bordo)
+        c.setLineWidth(2)
+    c.roundRect(x, y, w, h, raggio, stroke=1 if bordo else 0, fill=1)
+    c.restoreState()
 
 
-def _sfumatura(c, colori, y0=0, y1=H):
-    """Sfumatura verticale: colori dall'alto verso il basso."""
-    passi = 90
-    for i in range(passi):
-        t = i / (passi - 1)
-        seg = t * (len(colori) - 1)
-        k = min(int(seg), len(colori) - 2)
-        f = seg - k
-        a, b = colori[k], colori[k + 1]
-        col = colors.Color(a.red + (b.red - a.red) * f, a.green + (b.green - a.green) * f,
-                           a.blue + (b.blue - a.blue) * f)
-        c.setFillColor(col)
-        yy = y1 - (i + 1) * (y1 - y0) / passi
-        c.rect(0, yy, W, (y1 - y0) / passi + 1, stroke=0, fill=1)
+# ---------- scenari a tutta pagina ----------
+def _mondo_giorno(c):
+    c.linearGradient(0, H, 0, 0, (colors.HexColor("#8EDCFB"), colors.HexColor("#FFF1C1")), extend=False)
+    # sole
+    sx, sy = W - 38 * mm, H - 40 * mm
+    c.setFillColor(colors.HexColor("#FFE58A"))
+    for k in range(12):
+        a = math.radians(k * 30)
+        p = c.beginPath()
+        p.moveTo(sx + 21 * mm * math.cos(a - 0.12), sy + 21 * mm * math.sin(a - 0.12))
+        p.lineTo(sx + 31 * mm * math.cos(a), sy + 31 * mm * math.sin(a))
+        p.lineTo(sx + 21 * mm * math.cos(a + 0.12), sy + 21 * mm * math.sin(a + 0.12))
+        p.close()
+        c.drawPath(p, stroke=0, fill=1)
+    c.setFillColor(SOLE)
+    c.circle(sx, sy, 18 * mm, stroke=0, fill=1)
+    # nuvole
+    for x, y, s in ((25 * mm, H - 70 * mm, 1.0), (W - 85 * mm, H - 88 * mm, 0.8), (W / 2, H - 20 * mm, 0.7)):
+        _nuvola(c, x, y, s)
+    # montagne lontane
+    c.setFillColor(colors.HexColor("#B9A9E6"))
+    p = c.beginPath()
+    p.moveTo(0, 60 * mm)
+    for x, y in ((25, 105), (55, 75), (90, 118), (125, 80), (160, 110), (190, 78), (210, 96)):
+        p.lineTo(x * mm, y * mm)
+    p.lineTo(W, 60 * mm)
+    p.close()
+    c.drawPath(p, stroke=0, fill=1)
+    # colline
+    _collina(c, 0, W, 62 * mm, 7 * mm, colors.HexColor("#9ADB8B"), 0.5, 22 * mm)
+    _collina(c, 0, W, 44 * mm, 9 * mm, colors.HexColor("#63C46C"), 2.0, 28 * mm)
+    _collina(c, 0, W, 24 * mm, 6 * mm, colors.HexColor("#3E9E55"), 4.0, 18 * mm)
+    # sentiero
+    c.setFillColor(colors.HexColor("#F3D9A4"))
+    p = c.beginPath()
+    p.moveTo(W / 2 - 22 * mm, 0)
+    p.curveTo(W / 2 - 5 * mm, 18 * mm, W / 2 + 20 * mm, 28 * mm, W / 2 + 6 * mm, 46 * mm)
+    p.lineTo(W / 2 + 12 * mm, 46 * mm)
+    p.curveTo(W / 2 + 30 * mm, 28 * mm, W / 2 + 12 * mm, 16 * mm, W / 2 + 22 * mm, 0)
+    p.close()
+    c.drawPath(p, stroke=0, fill=1)
+    rnd = random.Random(7)
+    for _ in range(40):
+        x = rnd.uniform(0, W)
+        _ciuffo(c, x, rnd.uniform(2 * mm, 20 * mm), colors.HexColor("#2E8B47"), 0.9)
+    for _ in range(18):
+        _fiore(c, rnd.uniform(0, W), rnd.uniform(3 * mm, 18 * mm), rnd.choice([POMODORO, VIOLA, BIANCO, ARANCIO]))
+    # carte in volo e scintille
+    for x, y, a, b, i in ((W - 22 * mm, H - 98 * mm, -12, POMODORO, SOLE), (9 * mm, 118 * mm, 14, CIELO, VIOLA),
+                          (W - 12 * mm, 60 * mm, 8, VIOLA, POMODORO)):
+        _carta(c, x, y, 17 * mm, a, b, i)
+    for _ in range(14):
+        _scintilla(c, rnd.uniform(0, W), rnd.uniform(70 * mm, H), rnd.uniform(1.5, 3.5) * mm, BIANCO)
 
 
-def mondo_di_giorno(c):
-    _sfumatura(c, [colors.HexColor("#3FB6E8"), colors.HexColor("#8FDDF7"), colors.HexColor("#E3F7FD")])
-    arcobaleno(c, W * 0.72, 62 * mm, 105 * mm, 7 * mm)
-    sole(c, W - 30 * mm, H - 30 * mm, 13 * mm)
-    for x, y, s in ((20 * mm, H - 95 * mm, 12 * mm), (W - 75 * mm, H - 62 * mm, 9 * mm),
-                    (W * 0.45, H - 150 * mm, 8 * mm), (W - 45 * mm, H - 175 * mm, 10 * mm)):
-        nuvola(c, x, y, s)
-    colline(c, 52 * mm, 16 * mm, colors.HexColor("#9ADE7B"), fase=0.4, onde=2)
-    colline(c, 36 * mm, 14 * mm, PRATO, fase=2.1, onde=3)
-    colline(c, 18 * mm, 10 * mm, PRATO_SCURO, fase=1.0, onde=4)
-    rng = random.Random(7)
-    for _ in range(26):
-        x, y = rng.uniform(5 * mm, W - 5 * mm), rng.uniform(4 * mm, 30 * mm)
-        c.setFillColor(rng.choice([SOLE, ROSSO, BIANCO, VIOLA]))
-        c.circle(x, y, rng.uniform(0.8, 1.6) * mm, stroke=0, fill=1)
+def _mondo_notte(c):
+    c.linearGradient(0, H, 0, 0, (BLU_NOTTE, colors.HexColor("#6C4AB6")), extend=False)
+    rnd = random.Random(11)
+    for _ in range(120):
+        c.setFillColor(colors.Color(1, 1, 1, alpha=rnd.uniform(0.3, 1)))
+        c.circle(rnd.uniform(0, W), rnd.uniform(60 * mm, H), rnd.uniform(0.3, 1.1), stroke=0, fill=1)
+    for _ in range(10):
+        _scintilla(c, rnd.uniform(0, W), rnd.uniform(90 * mm, H), rnd.uniform(1.5, 3) * mm, SOLE)
+    # luna piena con crateri
+    lx, ly = W - 26 * mm, H - 24 * mm
+    c.setFillColor(colors.Color(1, 0.96, 0.76, alpha=0.25))
+    c.circle(lx, ly, 15 * mm, stroke=0, fill=1)
+    c.setFillColor(colors.HexColor("#FFF4C2"))
+    c.circle(lx, ly, 11 * mm, stroke=0, fill=1)
+    c.setFillColor(colors.HexColor("#F1E3A0"))
+    for dx, dy, r in ((-3, 3, 2.2), (3.5, -2, 1.6), (-1, -4.5, 1.2), (4, 4, 1)):
+        c.circle(lx + dx * mm, ly + dy * mm, r * mm, stroke=0, fill=1)
+    _collina(c, 0, W, 58 * mm, 8 * mm, colors.HexColor("#3B2E7E"), 1.0, 24 * mm)
+    _collina(c, 0, W, 40 * mm, 9 * mm, colors.HexColor("#2A5E5A"), 3.0, 28 * mm)
+    _collina(c, 0, W, 22 * mm, 6 * mm, colors.HexColor("#1F4A3F"), 5.0, 18 * mm)
+    for _ in range(35):
+        _ciuffo(c, rnd.uniform(0, W), rnd.uniform(2 * mm, 18 * mm), colors.HexColor("#173A31"), 0.9)
+    for _ in range(25):
+        c.setFillColor(colors.Color(1, 0.9, 0.3, alpha=rnd.uniform(0.5, 1)))
+        c.circle(rnd.uniform(0, W), rnd.uniform(10 * mm, 70 * mm), rnd.uniform(0.6, 1.4), stroke=0, fill=1)
+    for x, y, a, b, i in ((30 * mm, 82 * mm, -10, VIOLA, CIELO), (W - 32 * mm, 88 * mm, 12, POMODORO, SOLE),
+                          (W / 2, 76 * mm, 4, SOLE, POMODORO)):
+        _carta(c, x, y, 16 * mm, a, b, i)
 
 
-def mondo_di_sera(c):
-    _sfumatura(c, [colors.HexColor("#240046"), colors.HexColor("#7B2CBF"), colors.HexColor("#F72585"),
-                   colors.HexColor("#FFB703")])
-    rng = random.Random(11)
-    for _ in range(70):
-        x, y = rng.uniform(0, W), rng.uniform(H * 0.45, H)
-        c.setFillColor(_alpha(BIANCO, rng.uniform(0.4, 1)))
-        c.circle(x, y, rng.uniform(0.3, 0.9) * mm, stroke=0, fill=1)
-    for _ in range(8):
-        scintilla(c, rng.uniform(10 * mm, W - 10 * mm), rng.uniform(H * 0.6, H - 10 * mm), rng.uniform(2, 4) * mm,
-                  _alpha(SOLE, 0.9))
-    c.setFillColor(colors.HexColor("#FFF3B0"))
-    c.circle(W - 35 * mm, H - 40 * mm, 14 * mm, stroke=0, fill=1)
-    c.setFillColor(_alpha(colors.HexColor("#E9D98B"), 0.9))
-    for dx, dy, r in ((-4, 3, 2.5), (4, -3, 1.8), (1, 6, 1.2)):
-        c.circle(W - 35 * mm + dx * mm, H - 40 * mm + dy * mm, r * mm, stroke=0, fill=1)
-    colline(c, 50 * mm, 14 * mm, colors.HexColor("#5A189A"), fase=0.8, onde=2)
-    colline(c, 32 * mm, 12 * mm, colors.HexColor("#3C096C"), fase=2.4, onde=3)
-    colline(c, 16 * mm, 9 * mm, colors.HexColor("#10002B"), fase=1.3, onde=4)
-    for _ in range(30):
-        c.setFillColor(_alpha(SOLE, rng.uniform(0.5, 1)))
-        c.circle(rng.uniform(0, W), rng.uniform(8 * mm, 60 * mm), rng.uniform(0.5, 1.1) * mm, stroke=0, fill=1)
-
-
-# =====================================================================
-#  STILI E ELEMENTI DI IMPAGINAZIONE
-# =====================================================================
+# ---------- stili ----------
 def _stili():
     return {
-        "p": ParagraphStyle("p", fontName=CORPO, fontSize=10.5, leading=14, textColor=INCHOSTRO_T),
-        "occhiello": ParagraphStyle("o", fontName=CORPO, fontSize=10, leading=13.5, textColor=GRIGIO_T),
-        "cella": ParagraphStyle("c", fontName=CORPO, fontSize=8.6, leading=10.4, textColor=INCHOSTRO_T),
-        "cella_b": ParagraphStyle("cb", fontName=CORPO_B, fontSize=8.6, leading=10.4, textColor=INCHOSTRO_T),
-        "nota": ParagraphStyle("n", fontName=CORPO, fontSize=8.6, leading=11.5, textColor=GRIGIO_T),
-        "sotto": ParagraphStyle("s", fontName=TITOLO_F, fontSize=14, leading=17, textColor=VIOLA, spaceBefore=8,
-                                spaceAfter=4, keepWithNext=1),
-        "box_titolo": ParagraphStyle("bt", fontName=TITOLO_F, fontSize=24, leading=28, textColor=INCHIOSTRO),
-        "box_nome": ParagraphStyle("bn", fontName=CORPO_B, fontSize=11, leading=13.5, textColor=INCHIOSTRO),
-        "prezzo": ParagraphStyle("pz", fontName=TITOLO_F, fontSize=13, leading=15, textColor=ROSSO, alignment=TA_RIGHT),
-        "titolo_chiusura": ParagraphStyle("tc", fontName=TITOLO_F, fontSize=20, leading=24, textColor=VIOLA),
+        "titolo": ParagraphStyle("ti", fontName=TITOLO, fontSize=20, leading=24, textColor=INCHIOSTRO),
+        "occhiello": ParagraphStyle("o", fontName=TESTO, fontSize=10, leading=13.5, textColor=GRIGIO),
+        "p": ParagraphStyle("p", fontName=TESTO, fontSize=10.5, leading=14.5, textColor=INCHIOSTRO),
+        "cella": ParagraphStyle("c", fontName=TESTO, fontSize=8.6, leading=10.4, textColor=INCHIOSTRO),
+        "cella_b": ParagraphStyle("cb", fontName=TESTO_B, fontSize=8.6, leading=10.4, textColor=INCHIOSTRO),
+        "nota": ParagraphStyle("n", fontName=TESTO, fontSize=8.5, leading=11.5, textColor=GRIGIO),
+        "sotto": ParagraphStyle("s", fontName=SOTTO, fontSize=14, leading=17, textColor=INCHIOSTRO,
+                                spaceBefore=8, spaceAfter=4, keepWithNext=1),
+        "box_titolo": ParagraphStyle("bt", fontName=TITOLO, fontSize=24, leading=28, textColor=POMODORO),
+        "box_nome": ParagraphStyle("bn", fontName=SOTTO, fontSize=11.5, leading=14, textColor=INCHIOSTRO),
+        "tag": ParagraphStyle("tg", fontName=SOTTO, fontSize=7.8, leading=9.5, textColor=BIANCO, alignment=TA_CENTER),
     }
 
 
-INCHOSTRO_T = INCHIOSTRO
-GRIGIO_T = colors.HexColor("#5A5F73")
-
-
+# ---------- flowable ----------
 class Rubrica(Flowable):
-    """Intestazione di rubrica: etichetta a pillola, titolo con ombra colorata e stelline."""
+    """Intestazione di rubrica: adesivo colorato, titolo cartoon e linea ondulata."""
 
-    def __init__(self, occhiello, titolo, colore=ROSSO):
+    def __init__(self, occhiello, titolo, colore=POMODORO):
         super().__init__()
-        self.occhiello, self.titolo, self.colore = occhiello, titolo, colore
+        self.occhiello, self.titolo, self.colore = occhiello.upper(), titolo, colore
 
     def wrap(self, *_):
-        return LARGHEZZA, 20 * mm
+        return LARGHEZZA, 21 * mm
 
     def draw(self):
         c = self.canv
-        pillola(c, 0, 13 * mm, self.occhiello.upper(), self.colore, dim=8)
-        c.setFont(TITOLO_F, 23)
-        c.setFillColor(_alpha(self.colore, 0.45))
-        c.drawString(1.2, 2.5 * mm - 1.2, self.titolo)
-        c.setFillColor(INCHIOSTRO)
-        c.drawString(0, 2.5 * mm, self.titolo)
-        fine = stringWidth(self.titolo, TITOLO_F, 23)
-        stella(c, fine + 6 * mm, 6 * mm, 2.6 * mm, SOLE, bordo=INCHIOSTRO)
-        scintilla(c, fine + 11 * mm, 10 * mm, 1.6 * mm, self.colore)
-        c.setStrokeColor(self.colore)
-        c.setLineWidth(1.5)
-        c.setDash(1, 3)
-        c.setLineCap(1)
-        c.line(0, 0.5 * mm, LARGHEZZA, 0.5 * mm)
-        c.setDash()
-
-
-class Pillola(Flowable):
-    def __init__(self, testo, colore, larghezza=22 * mm):
-        super().__init__()
-        self.testo, self.colore, self.larghezza = testo, colore, larghezza
-
-    def wrap(self, *_):
-        return self.larghezza, 5.2 * mm
-
-    def draw(self):
-        c = self.canv
+        larg = pdfmetrics.stringWidth(self.occhiello, SOTTO, 9) + 8 * mm
+        c.saveState()
+        c.translate(0, 15 * mm)
+        c.rotate(-2)
         c.setFillColor(self.colore)
-        c.roundRect(0, 0, self.larghezza, 5.2 * mm, 2.6 * mm, stroke=0, fill=1)
+        c.roundRect(0, 0, larg, 6 * mm, 3 * mm, stroke=0, fill=1)
         c.setFillColor(BIANCO)
-        c.setFont(CORPO_B, 7.8)
-        c.drawCentredString(self.larghezza / 2, 1.6 * mm, self.testo.upper())
-
-
-class Mascotte(Flowable):
-    """Scrigno con un fumetto: riempie gli spazi tra una rubrica e l'altra."""
-
-    def __init__(self, testo, a_destra=False):
-        super().__init__()
-        self.testo, self.a_destra = testo, a_destra
-
-    def wrap(self, *_):
-        return LARGHEZZA, 24 * mm
-
-    def draw(self):
-        c = self.canv
-        s = 15 * mm
-        fumetto_w = min(LARGHEZZA - 40 * mm, stringWidth(self.testo, CORPO_B, 10.5) + 12 * mm)
-        if self.a_destra:
-            xm = LARGHEZZA - 1.3 * s - 4 * mm
-            xf = xm - fumetto_w - 8 * mm
-        else:
-            xm = 4 * mm
-            xf = xm + 1.3 * s + 8 * mm
-        scrigno(c, xm, 2 * mm, s)
-        yf = 9 * mm
-        c.setFillColor(BIANCO)
-        c.setStrokeColor(INCHIOSTRO)
-        c.setLineWidth(1.2)
-        c.roundRect(xf, yf, fumetto_w, 11 * mm, 5 * mm, stroke=1, fill=1)
-        p = c.beginPath()
-        if self.a_destra:
-            p.moveTo(xf + fumetto_w - 2, yf + 3 * mm)
-            p.lineTo(xf + fumetto_w + 6 * mm, yf - 1 * mm)
-            p.lineTo(xf + fumetto_w - 2, yf + 7 * mm)
-        else:
-            p.moveTo(xf + 2, yf + 3 * mm)
-            p.lineTo(xf - 6 * mm, yf - 1 * mm)
-            p.lineTo(xf + 2, yf + 7 * mm)
-        c.drawPath(p, stroke=1, fill=1)
-        c.setStrokeColor(BIANCO)
-        c.setLineWidth(2)
-        x_bordo = xf + fumetto_w - 1 if self.a_destra else xf + 1
-        c.line(x_bordo, yf + 3.4 * mm, x_bordo, yf + 6.6 * mm)
+        c.setFont(SOTTO, 9)
+        c.drawString(4 * mm, 1.8 * mm, self.occhiello)
+        c.restoreState()
         c.setFillColor(INCHIOSTRO)
-        c.setFont(CORPO_B, 10.5)
-        c.drawString(xf + 6 * mm, yf + 3.9 * mm, self.testo)
+        c.setFont(TITOLO, 21)
+        c.drawString(0, 5.5 * mm, self.titolo)
+        fine = pdfmetrics.stringWidth(self.titolo, TITOLO, 21) + 4 * mm
+        _stella(c, fine + 3 * mm, 8 * mm, 3 * mm, SOLE)
+        c.setStrokeColor(self.colore)
+        c.setLineWidth(2)
+        p = c.beginPath()
+        p.moveTo(0, 2 * mm)
+        x = 0
+        while x < min(fine + 8 * mm, LARGHEZZA):
+            p.lineTo(x, 2 * mm + 1.1 * mm * math.sin(x / (2.2 * mm)))
+            x += 1.5
+        c.drawPath(p, stroke=1, fill=0)
 
 
-class Barre(Flowable):
-    """Grafico a barre con lo zero al centro.
+class Decoro(Flowable):
+    """Striscia decorativa per riempire gli spazi: carte in volo, stelle e scintille."""
 
-    Rialzi: barra verde verso destra, scritte a sinistra (nome, poi percentuale accanto alla barra).
-    Ribassi: barra rossa verso sinistra, scritte a destra (percentuale accanto alla barra, poi nome).
-    """
-
-    RIGA = 7.5 * mm
-
-    def __init__(self, righe, periodo, titolo):
+    def __init__(self, seme=1, altezza=24 * mm):
         super().__init__()
-        self.righe = [r for r in righe if r["variazioni"].get(str(periodo)) is not None][:12]
-        self.periodo, self.titolo = periodo, titolo
+        self.seme, self.altezza = seme, altezza
 
     def wrap(self, *_):
-        return LARGHEZZA, 16 * mm + len(self.righe) * self.RIGA
-
-    @staticmethod
-    def _accorcia(nome, spazio, font, dim):
-        if stringWidth(nome, font, dim) <= spazio:
-            return nome
-        while nome and stringWidth(nome + "…", font, dim) > spazio:
-            nome = nome[:-1]
-        return nome.rstrip() + "…"
+        return LARGHEZZA, self.altezza
 
     def draw(self):
         c = self.canv
-        if not self.righe:
-            return
-        valori = [r["variazioni"][str(self.periodo)] for r in self.righe]
-        altezza = 16 * mm + len(self.righe) * self.RIGA
-        c.setFillColor(colors.HexColor("#F3FBFF"))
-        c.setStrokeColor(CIELO)
-        c.setLineWidth(1.2)
-        c.roundRect(0, 0, LARGHEZZA, altezza, 4 * mm, stroke=1, fill=1)
-        c.setFillColor(BLU)
-        c.setFont(TITOLO_F, 12)
-        c.drawString(5 * mm, altezza - 8 * mm, self.titolo)
+        rnd = random.Random(self.seme)
+        palette = ARCOBALENO[:]
+        rnd.shuffle(palette)
+        for k in range(5):
+            x = LARGHEZZA * (0.12 + 0.19 * k)
+            _carta(c, x, self.altezza / 2, 12 * mm, rnd.uniform(-18, 18), palette[k], palette[(k + 2) % 6])
+        for _ in range(12):
+            _stella(c, rnd.uniform(0, LARGHEZZA), rnd.uniform(2 * mm, self.altezza - 2 * mm),
+                    rnd.uniform(1.2, 2.4) * mm, rnd.choice(ARCOBALENO))
 
-        zero = LARGHEZZA / 2
-        max_barra = LARGHEZZA * 0.22
-        massimo = max(abs(v) for v in valori) or 1
-        scala = max_barra / massimo
-        top = altezza - 13 * mm
-        c.setStrokeColor(colors.HexColor("#9BB7C9"))
-        c.setLineWidth(0.8)
-        c.setDash(2, 2)
-        c.line(zero, 3 * mm, zero, top + 2 * mm)
-        c.setDash()
-        dim_p, dim_n = 9.5, 8.6
-        for i, (r, v) in enumerate(zip(self.righe, valori)):
-            y = top - (i + 1) * self.RIGA + 2 * mm
-            lung = max(abs(v) * scala, 1.5)
-            colore = VERDE if v >= 0 else ROSSO
-            valore = _perc(v)
-            larg_p = stringWidth(valore, TITOLO_F, dim_p)
-            c.setFillColor(colore)
-            if v >= 0:
-                # barra a destra dello zero, scritte a sinistra: nome ... percentuale | barra
-                c.roundRect(zero, y, lung, 5 * mm, 2 * mm, stroke=0, fill=1)
-                x_p = zero - 2.5 * mm - larg_p
-                c.setFont(TITOLO_F, dim_p)
-                c.drawString(x_p, y + 1.4 * mm, valore)
-                spazio = x_p - 2.5 * mm - 5 * mm
-                nome = self._accorcia(r["nome"], spazio, CORPO, dim_n)
-                c.setFillColor(INCHIOSTRO)
-                c.setFont(CORPO, dim_n)
-                c.drawRightString(x_p - 2.5 * mm, y + 1.4 * mm, nome)
-            else:
-                # barra a sinistra dello zero, scritte a destra: barra | percentuale ... nome
-                c.roundRect(zero - lung, y, lung, 5 * mm, 2 * mm, stroke=0, fill=1)
-                x_p = zero + 2.5 * mm
-                c.setFont(TITOLO_F, dim_p)
-                c.drawString(x_p, y + 1.4 * mm, valore)
-                x_n = x_p + larg_p + 2.5 * mm
-                spazio = LARGHEZZA - 5 * mm - x_n
-                nome = self._accorcia(r["nome"], spazio, CORPO, dim_n)
-                c.setFillColor(INCHIOSTRO)
-                c.setFont(CORPO, dim_n)
-                c.drawString(x_n, y + 1.4 * mm, nome)
+
+def _tag(testo, colore, st, larghezza=21 * mm):
+    t = Table([[Paragraph(_t(testo.upper()), st["tag"])]], colWidths=[larghezza])
+    t.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), colore), ("TOPPADDING", (0, 0), (-1, -1), 1.8),
+                           ("BOTTOMPADDING", (0, 0), (-1, -1), 2.2), ("LEFTPADDING", (0, 0), (-1, -1), 2),
+                           ("RIGHTPADDING", (0, 0), (-1, -1), 2), ("ROUNDEDCORNERS", [4, 4, 4, 4])]))
+    return t
 
 
 def _tabella(dati, larghezze, colore=CIELO, allinea_destra_da=1):
     t = Table(dati, colWidths=larghezze, repeatRows=1)
     stile = [
-        ("FONTNAME", (0, 0), (-1, 0), CORPO_B), ("FONTSIZE", (0, 0), (-1, 0), 8.8),
+        ("FONTNAME", (0, 0), (-1, 0), SOTTO), ("FONTSIZE", (0, 0), (-1, 0), 9),
         ("TEXTCOLOR", (0, 0), (-1, 0), BIANCO), ("BACKGROUND", (0, 0), (-1, 0), colore),
-        ("FONTNAME", (0, 1), (-1, -1), CORPO), ("FONTSIZE", (0, 1), (-1, -1), 8.6),
+        ("FONTNAME", (0, 1), (-1, -1), TESTO), ("FONTSIZE", (0, 1), (-1, -1), 8.6),
         ("TEXTCOLOR", (0, 1), (-1, -1), INCHIOSTRO),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-        ("ROUNDEDCORNERS", [8, 8, 8, 8]),
+        ("TOPPADDING", (0, 0), (-1, -1), 3.5), ("BOTTOMPADDING", (0, 0), (-1, -1), 3.5),
+        ("ROUNDEDCORNERS", [6, 6, 6, 6]),
         ("BOX", (0, 0), (-1, -1), 1.2, colore),
     ]
     if allinea_destra_da is not None:
         stile.append(("ALIGN", (allinea_destra_da, 1), (-1, -1), "RIGHT"))
     for i in range(1, len(dati)):
-        stile.append(("BACKGROUND", (0, i), (-1, i), RIGA if i % 2 == 0 else BIANCO))
+        stile.append(("BACKGROUND", (0, i), (-1, i), BIANCO if i % 2 else PASTELLO))
     t.setStyle(TableStyle(stile))
     return t
 
 
 def _link(nome, url, stile, n=62):
-    return Paragraph(f'<link href="{escape(url)}" color="#1B6FA8">{_t(nome[:n])}</link>', stile)
+    return Paragraph(f'<link href="{escape(url)}" color="#1C6FB0">{_t(nome[:n])}</link>', stile)
 
 
-def _pallino(colore="#EF476F"):
-    return f'<font name="{SIMBOLI}" color="{colore}">★</font>'
+def _grafico(righe, periodo, titolo):
+    """Barre divergenti: i nomi stanno sempre dal lato opposto alla barra, senza sovrapporsi."""
+    righe = [r for r in righe if r["variazioni"].get(str(periodo)) is not None][:10]
+    if not righe:
+        return None
+    valori = [r["variazioni"][str(periodo)] for r in righe]
+    n = len(righe)
+    alt_riga = 7.5 * mm
+    altezza = n * alt_riga + 20 * mm
+    x0, larg = 14 * mm, LARGHEZZA - 28 * mm
+    spazio_nomi = 64 * mm / larg
+    vmin, vmax = min(valori + [0]), max(valori + [0])
+    if any(v < 0 for v in valori) and vmax < spazio_nomi * (vmax - vmin):
+        vmax = spazio_nomi * (-vmin) / (1 - spazio_nomi)
+    if any(v >= 0 for v in valori) and -vmin < spazio_nomi * (vmax - vmin):
+        vmin = -spazio_nomi * vmax / (1 - spazio_nomi)
+    ampiezza = (vmax - vmin) or 1
+    xz = x0 + (0 - vmin) / ampiezza * larg
+
+    d = Drawing(LARGHEZZA, altezza)
+    d.add(Rect(0, 0, LARGHEZZA, altezza, rx=10, ry=10, fillColor=BIANCO, strokeColor=CIELO, strokeWidth=1.2))
+    d.add(String(6 * mm, altezza - 9 * mm, titolo, fontName=SOTTO, fontSize=11, fillColor=INCHIOSTRO))
+    base = 7 * mm
+    d.add(Line(xz, base - 2 * mm, xz, base + n * alt_riga, strokeColor=GRIGIO, strokeWidth=0.8,
+               strokeDashArray=[2, 2]))
+    d.add(String(xz, base - 5.5 * mm, "0%", fontName=TESTO, fontSize=7, fillColor=GRIGIO, textAnchor="middle"))
+    for i, (r, v) in enumerate(zip(righe, valori)):
+        y = base + (n - 1 - i) * alt_riga + 1.5 * mm
+        fine = xz + v / ampiezza * larg
+        colore = ERBA if v >= 0 else POMODORO
+        d.add(Rect(min(xz, fine), y, max(abs(fine - xz), 1), 4.6 * mm, rx=4, ry=4, fillColor=colore, strokeColor=None))
+        spazio = (xz - x0) if v >= 0 else (x0 + larg - xz)
+        max_car = max(8, int(spazio / (8 * 0.5)) - 2)
+        nome = r["nome"] if len(r["nome"]) <= max_car else r["nome"][:max_car - 1] + "…"
+        if v >= 0:
+            d.add(String(xz - 2.5 * mm, y + 1.3 * mm, nome, fontName=TESTO, fontSize=8, fillColor=INCHIOSTRO,
+                         textAnchor="end"))
+            d.add(String(fine + 1.5 * mm, y + 1.3 * mm, _perc(v), fontName=TESTO_B, fontSize=8, fillColor=colore))
+        else:
+            d.add(String(xz + 2.5 * mm, y + 1.3 * mm, nome, fontName=TESTO, fontSize=8, fillColor=INCHIOSTRO))
+            d.add(String(fine - 1.5 * mm, y + 1.3 * mm, _perc(v), fontName=TESTO_B, fontSize=8, fillColor=colore,
+                         textAnchor="end"))
+    return d
 
 
-# =====================================================================
-#  PAGINE
-# =====================================================================
+# ---------- pagine ----------
 def _copertina(c, ctx):
     g = ctx["principale"]
     c.saveState()
-    mondo_di_giorno(c)
-    # carte che volano ai bordi
-    for x, y, w, a, col in ((W - 22 * mm, H - 118 * mm, 17 * mm, -14, ROSSO), (14 * mm, H - 128 * mm, 14 * mm, 12, VIOLA),
-                            (W - 14 * mm, 88 * mm, 13 * mm, 18, SOLE), (12 * mm, 70 * mm, 15 * mm, -10, CIELO)):
-        carta(c, x, y, w, a, col)
-    for x, y, r, col in ((W * 0.62, H - 22 * mm, 2.5, BIANCO), (22 * mm, H - 58 * mm, 2, SOLE),
-                         (W - 55 * mm, H - 100 * mm, 2.2, BIANCO)):
-        scintilla(c, x, y, r * mm, col)
+    _mondo_giorno(c)
+
+    # nastro con numero e data
+    nastro = f"SETTIMANALE DEL MERCATO POKÉMON GCC  ·  N. {ctx['numero']}  ·  {ctx['data_lunga'].upper()}"
+    larg = pdfmetrics.stringWidth(nastro, SOTTO, 9) + 10 * mm
+    c.saveState()
+    c.translate(MARGINE, H - 22 * mm)
+    c.rotate(1.5)
+    c.setFillColor(POMODORO)
+    c.roundRect(0, 0, larg, 7 * mm, 3.5 * mm, stroke=0, fill=1)
+    c.setFillColor(BIANCO)
+    c.setFont(SOTTO, 9)
+    c.drawString(5 * mm, 2.2 * mm, nastro)
+    c.restoreState()
 
     # testata
-    pillola(c, MARGINE, H - 24 * mm, f"IL SETTIMANALE DEL COLLEZIONISMO POKÉMON  ·  N. {ctx['numero']}  ·  "
-                                     f"{ctx['data_lunga'].upper()}", ROSSO, dim=8.5)
-    dim_testata = 40
-    while stringWidth(TESTATA, TESTATA_F, dim_testata) > LARGHEZZA - 30 * mm and dim_testata > 20:
-        dim_testata -= 1
-    testo_contornato(c, TESTATA, MARGINE, H - 48 * mm, TESTATA_F, dim_testata, SOLE, INCHIOSTRO, 2.4)
+    _testo_cartoon(c, MARGINE, H - 45 * mm, TESTATA, TITOLO, 46, SOLE, ombra=4)
+    c.setFont(SOTTO, 12)
+    c.setFillColor(INCHIOSTRO)
+    c.drawString(MARGINE + 1 * mm, H - 53 * mm, "Il giornalino di chi colleziona e investe in carte Pokémon")
 
-    # primo piano: il riquadro si adatta al testo
+    # primo piano
+    y_top = H - 60 * mm
     titolo = Paragraph(_t(ctx["apertura"]["titolo"]),
-                       ParagraphStyle("ct", fontName=TITOLO_F, fontSize=21, leading=24, textColor=INCHIOSTRO))
-    _, h = titolo.wrap(LARGHEZZA - 24 * mm, 50 * mm)
+                       ParagraphStyle("ct", fontName=TITOLO, fontSize=19, leading=23, textColor=INCHIOSTRO))
     sotto = Paragraph(_t(ctx["apertura"]["sottotitolo"]),
-                      ParagraphStyle("cs", fontName=CORPO, fontSize=11, leading=14, textColor=GRIGIO_T))
-    _, h2 = sotto.wrap(LARGHEZZA - 24 * mm, 20 * mm)
-    alt_pannello = h + h2 + 20 * mm
-    cima = H - 58 * mm
-    pannello_y = cima - alt_pannello
-    c.setFillColor(_alpha(BIANCO, 0.93))
-    c.setStrokeColor(INCHIOSTRO)
-    c.setLineWidth(1.5)
-    c.roundRect(MARGINE, pannello_y, LARGHEZZA - 12 * mm, alt_pannello, 6 * mm, stroke=1, fill=1)
-    pillola(c, MARGINE + 5 * mm, cima - 9 * mm, "IN PRIMO PIANO", VIOLA, dim=8)
-    titolo.drawOn(c, MARGINE + 5 * mm, cima - 12 * mm - h)
-    sotto.drawOn(c, MARGINE + 5 * mm, cima - 14 * mm - h - h2)
+                      ParagraphStyle("cs", fontName=TESTO, fontSize=11, leading=14.5, textColor=GRIGIO))
+    lp = LARGHEZZA - 45 * mm
+    _, h1 = titolo.wrap(lp - 12 * mm, 80 * mm)
+    _, h2 = sotto.wrap(lp - 12 * mm, 40 * mm)
+    alt = h1 + h2 + 20 * mm
+    _pannello(c, MARGINE, y_top - alt, lp, alt)
+    c.setFillColor(POMODORO)
+    c.roundRect(MARGINE + 6 * mm, y_top - 10 * mm, 30 * mm, 6 * mm, 3 * mm, stroke=0, fill=1)
+    c.setFillColor(BIANCO)
+    c.setFont(SOTTO, 8.5)
+    c.drawCentredString(MARGINE + 21 * mm, y_top - 8.2 * mm, "IN PRIMO PIANO")
+    titolo.drawOn(c, MARGINE + 6 * mm, y_top - 13 * mm - h1)
+    sotto.drawOn(c, MARGINE + 6 * mm, y_top - 15 * mm - h1 - h2)
+    y = y_top - alt - 8 * mm
 
-    # i numeri della settimana: quattro "gettoni" colorati
-    y = pannello_y - 33 * mm
-    card_w = (LARGHEZZA - 3 * 4 * mm) / 4
-    for i, ((numero, etichetta), col) in enumerate(zip(ctx["kpi"], (CIELO, ROSSO, VERDE, VIOLA))):
-        x = MARGINE + i * (card_w + 4 * mm)
-        c.setFillColor(_alpha(INCHIOSTRO, 0.2))
-        c.roundRect(x + 1.2 * mm, y - 1.2 * mm, card_w, 25 * mm, 5 * mm, stroke=0, fill=1)
-        c.setFillColor(col)
-        c.setStrokeColor(INCHIOSTRO)
-        c.setLineWidth(1.5)
-        c.roundRect(x, y, card_w, 25 * mm, 5 * mm, stroke=1, fill=1)
-        testo_contornato(c, str(numero), x + 4 * mm, y + 11 * mm, TITOLO_F, 25, BIANCO, INCHIOSTRO, 1.2, ombra=False)
+    # numeri della settimana: adesivi colorati
+    larg_card = (LARGHEZZA - 3 * 4 * mm) / 4
+    for i, ((numero, etichetta), colore) in enumerate(zip(ctx["kpi"], (CIELO, POMODORO, ERBA, VIOLA))):
+        x = MARGINE + i * (larg_card + 4 * mm)
+        c.saveState()
+        c.translate(x + larg_card / 2, y - 12 * mm)
+        c.rotate((-2, 1.5, -1, 2)[i])
+        c.setFillColor(colors.Color(0, 0, 0, alpha=0.18))
+        c.roundRect(-larg_card / 2 + 1.5, -12 * mm - 1.5, larg_card, 24 * mm, 4 * mm, stroke=0, fill=1)
+        c.setFillColor(colore)
+        c.setStrokeColor(BIANCO)
+        c.setLineWidth(2.5)
+        c.roundRect(-larg_card / 2, -12 * mm, larg_card, 24 * mm, 4 * mm, stroke=1, fill=1)
         c.setFillColor(BIANCO)
-        c.setFont(CORPO_B, 9)
-        c.drawString(x + 4 * mm, y + 4.5 * mm, etichetta)
+        c.setFont(TITOLO, 22)
+        c.drawCentredString(0, -1 * mm, str(numero))
+        c.setFont(SOTTO, 8)
+        c.drawCentredString(0, -8 * mm, etichetta)
+        c.restoreState()
+    y -= 32 * mm
 
     # sommario
-    y_som = y - 8 * mm
-    alt_som = 10 * mm + len(ctx["sommario"]) * 7 * mm
-    c.setFillColor(_alpha(BIANCO, 0.9))
-    c.setStrokeColor(INCHIOSTRO)
-    c.roundRect(MARGINE, y_som - alt_som, LARGHEZZA * 0.58, alt_som, 5 * mm, stroke=1, fill=1)
-    c.setFillColor(ROSSO)
-    c.setFont(TITOLO_F, 13)
-    c.drawString(MARGINE + 5 * mm, y_som - 8 * mm, "In questo numero")
-    yy = y_som - 15 * mm
-    for i, (titolo_r, _) in enumerate(ctx["sommario"]):
-        stella(c, MARGINE + 7 * mm, yy + 1.2 * mm, 1.8 * mm, (SOLE, CIELO, ROSSO, VERDE, VIOLA, ARANCIO)[i % 6],
-               bordo=INCHIOSTRO)
+    alt_s = 13 * mm + len(ctx["sommario"]) * 7 * mm
+    _pannello(c, MARGINE, y - alt_s, LARGHEZZA, alt_s)
+    c.setFillColor(VIOLA)
+    c.setFont(TITOLO, 13)
+    c.drawString(MARGINE + 6 * mm, y - 9 * mm, "IN QUESTO NUMERO")
+    yy = y - 17 * mm
+    for k, (titolo_r, descrizione) in enumerate(ctx["sommario"]):
+        _stella(c, MARGINE + 8 * mm, yy + 1.2 * mm, 2 * mm, ARCOBALENO[k % 6])
         c.setFillColor(INCHIOSTRO)
-        c.setFont(CORPO_B, 10.5)
-        c.drawString(MARGINE + 11 * mm, yy, titolo_r)
+        c.setFont(SOTTO, 11)
+        c.drawString(MARGINE + 12 * mm, yy, titolo_r)
+        c.setFillColor(GRIGIO)
+        c.setFont(TESTO, 9.5)
+        c.drawString(MARGINE + 75 * mm, yy, descrizione)
         yy -= 7 * mm
+    y -= alt_s + 6 * mm
 
-    # biglietto: cosa farei con 200 euro
+    # anteprima 200 euro
     car = g["carrello"]
-    bx, bw = MARGINE + LARGHEZZA * 0.62, LARGHEZZA * 0.38
-    c.setFillColor(SOLE)
-    c.setStrokeColor(INCHIOSTRO)
-    c.setLineWidth(1.5)
-    c.roundRect(bx, y_som - alt_som, bw, alt_som, 5 * mm, stroke=1, fill=1)
-    c.setDash(3, 2)
-    c.roundRect(bx + 2 * mm, y_som - alt_som + 2 * mm, bw - 4 * mm, alt_som - 4 * mm, 4 * mm, stroke=1, fill=0)
-    c.setDash()
+    righe = car["proposte"] or [None]
+    alt_c = 13 * mm + len(righe) * 6.5 * mm
+    _pannello(c, MARGINE, y - alt_c, LARGHEZZA, alt_c, colore=SOLE, alpha=1)
     c.setFillColor(INCHIOSTRO)
-    c.setFont(TITOLO_F, 14)
-    c.drawString(bx + 6 * mm, y_som - 9 * mm, "Con 200 € farei…")
-    yy = y_som - 17 * mm
-    if car["proposte"]:
-        for x in car["proposte"]:
-            c.setFont(CORPO_B, 8.5)
-            c.drawString(bx + 6 * mm, yy, x["categoria"].upper())
-            c.setFont(TITOLO_F, 10)
-            c.drawRightString(bx + bw - 6 * mm, yy, _eur(x["prezzo"]))
-            c.setFont(CORPO, 8.5)
-            nome = x["nome"]
-            while stringWidth(nome, CORPO, 8.5) > bw - 12 * mm:
-                nome = nome[:-2]
-            c.drawString(bx + 6 * mm, yy - 4 * mm, nome)
-            yy -= 11 * mm
-    else:
-        c.setFont(CORPO_B, 9.5)
-        c.drawString(bx + 6 * mm, yy, "...niente: li terrei")
-        c.drawString(bx + 6 * mm, yy - 5 * mm, "da parte questa settimana.")
+    c.setFont(TITOLO, 14)
+    c.drawString(MARGINE + 6 * mm, y - 9 * mm, "COSA FAREI CON 200 €")
+    yy = y - 16 * mm
+    for x in righe:
+        if x is None:
+            c.setFont(TESTO_B, 10)
+            c.drawString(MARGINE + 6 * mm, yy, "Niente: questa settimana li terrei da parte.")
+            break
+        c.setFont(SOTTO, 9.5)
+        c.drawString(MARGINE + 6 * mm, yy, x["categoria"].upper())
+        c.setFont(TESTO_B, 10)
+        c.drawString(MARGINE + 42 * mm, yy, x["nome"][:58])
+        c.drawRightString(W - MARGINE - 6 * mm, yy, _eur(x["prezzo"]))
+        yy -= 6.5 * mm
 
-    scrigno(c, W - 50 * mm, 8 * mm, 22 * mm)
-    c.setFillColor(_alpha(INCHIOSTRO, 0.75))
-    c.roundRect(MARGINE - 2 * mm, 3 * mm, 108 * mm, 6 * mm, 3 * mm, stroke=0, fill=1)
+    c.setFillColor(colors.Color(0.1, 0.2, 0.15, alpha=0.55))
+    c.roundRect(MARGINE - 3 * mm, 2.5 * mm, LARGHEZZA + 6 * mm, 7 * mm, 3.5 * mm, stroke=0, fill=1)
     c.setFillColor(BIANCO)
-    c.setFont(CORPO_B, 7.5)
-    c.drawString(MARGINE + 1 * mm, 5 * mm, f"Dati Cardmarket e notizie  ·  {g['giorni_storico']} giorni di storico  ·  "
-                                         "non è consulenza finanziaria")
+    c.setFont(TESTO_B, 8)
+    c.drawString(MARGINE, 5 * mm, f"Dati: Cardmarket e siti di notizie  ·  {g['giorni_storico']} giorni di storico  ·  "
+                                  "rivista informativa, non è consulenza finanziaria")
     c.restoreState()
 
 
@@ -633,167 +556,136 @@ def _pagina_interna(c, doc, ctx):
     c.saveState()
     c.setFillColor(CARTA)
     c.rect(0, 0, W, H, stroke=0, fill=1)
-    # puntini da album di figurine
-    c.setFillColor(_alpha(colors.HexColor("#F3D9A4"), 0.6))
-    for i in range(0, int(W / (8 * mm)) + 1):
-        for j in range(0, int(H / (8 * mm)) + 1):
-            if i < 2 or i > W / (8 * mm) - 3:
-                c.circle(4 * mm + i * 8 * mm, 4 * mm + j * 8 * mm, 0.5 * mm, stroke=0, fill=1)
-    # testata ondulata
-    p = c.beginPath()
-    p.moveTo(0, H)
-    p.lineTo(W, H)
-    p.lineTo(W, H - 14 * mm)
-    onde, seg = 7, W / 7
-    for i in range(onde):
-        x1 = W - i * seg
-        p.curveTo(x1 - seg * 0.25, H - 18 * mm, x1 - seg * 0.75, H - 10 * mm, x1 - seg, H - 14 * mm)
-    p.close()
+    # testata con strisce arcobaleno
     c.setFillColor(CIELO)
-    c.drawPath(p, stroke=0, fill=1)
-    testo_contornato(c, TESTATA, MARGINE, H - 10 * mm, TESTATA_F, 15, SOLE, INCHIOSTRO, 1.1)
+    c.rect(0, H - 13 * mm, W, 13 * mm, stroke=0, fill=1)
+    for k, col in enumerate(ARCOBALENO):
+        c.setFillColor(col)
+        c.rect(0, H - 13 * mm - (k + 1) * 1.1 * mm, W, 1.1 * mm, stroke=0, fill=1)
+    _testo_cartoon(c, MARGINE, H - 9.5 * mm, TESTATA, TITOLO, 14, SOLE, ombra=1.5)
     c.setFillColor(BIANCO)
-    c.setFont(CORPO_B, 9)
-    c.drawRightString(W - MARGINE, H - 9 * mm, f"N. {ctx['numero']}  ·  {ctx['data_lunga']}")
-    rng = random.Random(doc.page)
-    for _ in range(3):
-        scintilla(c, rng.uniform(70 * mm, W - 70 * mm), H - rng.uniform(4, 9) * mm, rng.uniform(1.2, 2) * mm, BIANCO)
-    # carte e stelle nei bordi
-    lato = MARGINE / 2
-    carta(c, lato if doc.page % 2 else W - lato, H - rng.uniform(60, 120) * mm, 9 * mm,
-          rng.uniform(-15, 15), rng.choice([ROSSO, VIOLA, CIELO, SOLE]))
-    stella(c, W - lato if doc.page % 2 else lato, rng.uniform(80, 180) * mm, 2.8 * mm,
-           rng.choice([SOLE, ROSSO, VERDE]), bordo=INCHIOSTRO)
-    scintilla(c, lato if doc.page % 2 == 0 else W - lato, rng.uniform(190, 240) * mm, 2 * mm, VIOLA)
-    # prato in fondo
-    c.setFillColor(PRATO)
-    p = c.beginPath()
-    p.moveTo(0, 0)
-    p.lineTo(0, 7 * mm)
-    for i in range(1, 41):
-        x = W * i / 40
-        p.lineTo(x, 7 * mm + 2.5 * mm * math.sin(doc.page + i * math.pi / 5))
-    p.lineTo(W, 0)
-    p.close()
-    c.drawPath(p, stroke=0, fill=1)
-    c.setFillColor(PRATO_SCURO)
-    c.rect(0, 0, W, 3.5 * mm, stroke=0, fill=1)
-    # numero di pagina in un bollino
-    c.setFillColor(SOLE)
-    c.setStrokeColor(INCHIOSTRO)
-    c.setLineWidth(1.2)
-    c.circle(W / 2, 8 * mm, 5 * mm, stroke=1, fill=1)
+    c.setFont(SOTTO, 9)
+    c.drawRightString(W - MARGINE, H - 8.5 * mm, f"N. {ctx['numero']}  ·  {ctx['data_lunga']}")
+    # prato in fondo pagina
+    _collina(c, 0, W, 7 * mm, 1.6 * mm, colors.HexColor("#9ADB8B"), doc.page, 14 * mm)
+    _collina(c, 0, W, 4 * mm, 1.2 * mm, ERBA, doc.page + 2, 10 * mm)
+    rnd = random.Random(doc.page)
+    for _ in range(14):
+        _fiore(c, rnd.uniform(0, W), rnd.uniform(1.5 * mm, 4 * mm), rnd.choice([POMODORO, SOLE, VIOLA, BIANCO]), 0.7)
+    # numero di pagina dentro una stella
+    _stella(c, W - MARGINE, 11 * mm, 6 * mm, SOLE)
     c.setFillColor(INCHIOSTRO)
-    c.setFont(TITOLO_F, 11)
-    c.drawCentredString(W / 2, 6.6 * mm, str(doc.page))
+    c.setFont(TITOLO, 9)
+    c.drawCentredString(W - MARGINE, 9.6 * mm, str(doc.page))
+    # decorazioni nei margini
+    for _ in range(9):
+        lato = rnd.choice((rnd.uniform(3 * mm, MARGINE - 5 * mm), rnd.uniform(W - MARGINE + 5 * mm, W - 3 * mm)))
+        yy = rnd.uniform(25 * mm, H - 30 * mm)
+        colore = rnd.choice(ARCOBALENO)
+        (_stella if rnd.random() < 0.5 else _scintilla)(c, lato, yy, rnd.uniform(1.5, 3) * mm, colore)
     if doc.page % 2 == 0:
-        scrigno(c, W - MARGINE - 16 * mm, 4 * mm, 11 * mm)
+        _carta(c, 7 * mm, H / 2 - 20 * mm, 9 * mm, 12, rnd.choice(ARCOBALENO), BIANCO)
+    else:
+        _carta(c, W - 7 * mm, H / 2 + 25 * mm, 9 * mm, -12, rnd.choice(ARCOBALENO), BIANCO)
     c.restoreState()
 
 
-def _chiusura(c, doc, ctx):
+def _retro(c, ctx):
     c.saveState()
-    mondo_di_sera(c)
-    testo_contornato(c, "Arrivederci al prossimo numero!", MARGINE, H - 30 * mm, TESTATA_F, 24, SOLE, INCHIOSTRO, 1.8)
+    _mondo_notte(c)
+    _testo_cartoon(c, W / 2, H - 45 * mm, "ALLA PROSSIMA!", TITOLO, 40, SOLE, ombra=4, centrato=True)
     c.setFillColor(BIANCO)
-    c.setFont(CORPO_B, 11)
-    c.drawString(MARGINE, H - 40 * mm, f"Il Collezionista n. {ctx['numero']} ti aspetta ogni domenica mattina.")
-    c.setFillColor(_alpha(BIANCO, 0.94))
-    c.setStrokeColor(INCHIOSTRO)
-    c.setLineWidth(1.5)
-    c.roundRect(MARGINE - 4 * mm, 80 * mm, LARGHEZZA + 8 * mm, H - 135 * mm, 7 * mm, stroke=1, fill=1)
-    scrigno(c, W / 2 - 18 * mm, 18 * mm, 26 * mm, saluta=True)
-    for x in (30 * mm, W - 40 * mm):
-        carta(c, x, 40 * mm, 13 * mm, 10 if x < W / 2 else -12, SOLE if x < W / 2 else CIELO)
+    c.setFont(SOTTO, 13)
+    c.drawCentredString(W / 2, H - 56 * mm, f"Il Collezionista n. {ctx['numero'] + 1} arriva domenica {ctx['prossima']}")
+    _pannello(c, MARGINE, H - 190 * mm, LARGHEZZA, 122 * mm, alpha=0.95)
     c.restoreState()
 
 
-# =====================================================================
-#  RUBRICHE
-# =====================================================================
+# ---------- rubriche ----------
 def _box_200(car, st):
     righe = [[Paragraph("Cosa farei con 200 €", st["box_titolo"])],
-             [Paragraph(_t("La proposta della settimana: al massimo tre acquisti, uno per tipo di segnale, "
-                           "calcolati con regole fisse senza superare il budget."), st["occhiello"])]]
-    colori = {"Occasione": VERDE, "Novità calda": ROSSO, "Tendenza solida": BLU}
+             [Paragraph(_t("La proposta della settimana, calcolata con regole fisse sui dati: al massimo tre "
+                           "acquisti, uno per tipo di segnale, senza superare il budget."), st["occhiello"])]]
+    colori = {"Occasione": ERBA, "Novità calda": POMODORO, "Tendenza solida": CIELO}
     for x in car["proposte"]:
         scheda = Table([
-            [Pillola(x["categoria"], colori.get(x["categoria"], VIOLA), 27 * mm),
+            [_tag(x["categoria"], colori.get(x["categoria"], VIOLA), st, 27 * mm),
              Paragraph(f'<link href="{escape(x["link"])}" color="#2B2D42">{_t(x["nome"][:70])}</link>',
                        st["box_nome"]),
-             Paragraph(_eur(x["prezzo"]), st["prezzo"])],
+             Paragraph(f"{_eur(x['prezzo'])}", ParagraphStyle("pz", parent=st["box_nome"], alignment=2,
+                                                              textColor=POMODORO))],
             ["", Paragraph(_t("Perché: " + x["perche"]), st["cella"]), ""],
             ["", Paragraph(_t("Rischio: " + x["rischio"]), ParagraphStyle("rs", parent=st["cella"],
-                                                                          textColor=GRIGIO_T)), ""],
-        ], colWidths=[30 * mm, LARGHEZZA - 30 * mm - 30 * mm - 16 * mm, 30 * mm])
+                                                                          textColor=GRIGIO)), ""],
+        ], colWidths=[30 * mm, LARGHEZZA - 30 * mm - 28 * mm - 14 * mm, 28 * mm])
         scheda.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
                                     ("BACKGROUND", (0, 0), (-1, -1), BIANCO),
                                     ("ROUNDEDCORNERS", [6, 6, 6, 6]),
-                                    ("BOX", (0, 0), (-1, -1), 1, INCHIOSTRO),
-                                    ("TOPPADDING", (0, 0), (-1, -1), 3.5), ("BOTTOMPADDING", (0, 0), (-1, -1), 3.5)]))
+                                    ("BOX", (0, 0), (-1, -1), 1, SOLE),
+                                    ("TOPPADDING", (0, 0), (-1, -1), 3), ("BOTTOMPADDING", (0, 0), (-1, -1), 3)]))
         righe.append([scheda])
     if car["proposte"]:
-        righe.append([Paragraph(f"<b>Totale: {_eur(car['speso'])}</b>  ·  restano {_eur(car['residuo'])}", st["p"])])
+        righe.append([Paragraph(f"<b>Totale: {_eur(car['speso'])}</b>  ·  restano {_eur(car['residuo'])}",
+                                ParagraphStyle("tot", parent=st["p"], fontName=TESTO_B))])
     for n in car["note"]:
-        righe.append([Paragraph(_t(n), ParagraphStyle("bn2", parent=st["p"], textColor=ROSSO, fontName=CORPO_B))])
+        righe.append([Paragraph(_t(n), ParagraphStyle("bn2", parent=st["p"], textColor=POMODORO))])
     righe.append([Paragraph(_t("Proposta automatica, non consulenza finanziaria. Il ragionamento completo è "
                                "nell'analisi di Claude della domenica."), st["nota"])])
-    box = Table(righe, colWidths=[LARGHEZZA - 4 * mm])
-    box.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FFE58F")),
-                             ("ROUNDEDCORNERS", [10, 10, 10, 10]),
-                             ("BOX", (0, 0), (-1, -1), 1.8, INCHIOSTRO),
-                             ("LEFTPADDING", (0, 0), (-1, -1), 8), ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+    box = Table(righe, colWidths=[LARGHEZZA])
+    box.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), CREMA),
+                             ("ROUNDEDCORNERS", [12, 12, 12, 12]),
+                             ("BOX", (0, 0), (-1, -1), 2.5, SOLE),
+                             ("LEFTPADDING", (0, 0), (-1, -1), 9), ("RIGHTPADDING", (0, 0), (-1, -1), 9),
                              ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4)]))
     return KeepTogether([box])
 
 
-def _stato(stato):
-    return Pillola(stato, COLORE_STATO.get(stato, VIOLA), 22 * mm)
+def _stato(stato, st):
+    return _tag(stato, COLORE_STATO.get(stato, GRIGIO), st, 22 * mm)
 
 
 def crea(percorso, ctx):
     st = _stili()
     g = ctx["principale"]
     doc = BaseDocTemplate(percorso, pagesize=A4, title=f"{TESTATA} n. {ctx['numero']}",
-                          leftMargin=MARGINE, rightMargin=MARGINE, topMargin=22 * mm, bottomMargin=18 * mm)
-    cornice = Frame(MARGINE, 18 * mm, LARGHEZZA, H - 42 * mm, id="testo", leftPadding=0, rightPadding=0)
-    cornice_chiusura = Frame(MARGINE + 2 * mm, 84 * mm, LARGHEZZA - 4 * mm, H - 143 * mm, id="chiusura",
-                             leftPadding=0, rightPadding=0)
+                          leftMargin=MARGINE, rightMargin=MARGINE, topMargin=24 * mm, bottomMargin=18 * mm)
+    cornice = Frame(MARGINE, 18 * mm, LARGHEZZA, H - 43 * mm, id="testo", leftPadding=0, rightPadding=0)
+    cornice_retro = Frame(MARGINE + 7 * mm, H - 186 * mm, LARGHEZZA - 14 * mm, 114 * mm, id="retro",
+                          leftPadding=0, rightPadding=0)
     doc.addPageTemplates([
-        PageTemplate(id="copertina", frames=[Frame(0, 0, W, H, id="vuota")], onPage=lambda c, d: _copertina(c, ctx)),
+        PageTemplate(id="copertina", frames=[Frame(0, 0, W, H, id="vuota")],
+                     onPage=lambda c, d: _copertina(c, ctx)),
         PageTemplate(id="interna", frames=[cornice], onPage=lambda c, d: _pagina_interna(c, d, ctx)),
-        PageTemplate(id="chiusura", frames=[cornice_chiusura], onPage=lambda c, d: _chiusura(c, d, ctx)),
+        PageTemplate(id="retro", frames=[cornice_retro], onPage=lambda c, d: _retro(c, ctx)),
     ])
     E = [NextPageTemplate("interna"), Spacer(1, 1), PageBreak()]
 
     # 1. La settimana in breve + 200 euro
-    E += [Rubrica("Editoriale", "La settimana in breve", VIOLA), Spacer(1, 4)]
-    for i, riga in enumerate(ctx["sintesi"]):
-        col = ("#EF476F", "#118AB2", "#06D6A0", "#8338EC", "#FF8C42")[i % 5]
-        E.append(Paragraph(f"{_pallino(col)}  {_t(riga)}", st["p"]))
-        E.append(Spacer(1, 3))
-    E += [Spacer(1, 8), _box_200(g["carrello"], st), Spacer(1, 6),
-          Mascotte("Ricorda: si compra con la testa, non con la pancia!", a_destra=True)]
+    E += [Rubrica("Editoriale", "La settimana in breve", VIOLA), Spacer(1, 3)]
+    for k, riga in enumerate(ctx["sintesi"]):
+        colore = ["#EE4266", "#FF9F1C", "#3BB273", "#4CC9F0", "#8E7DBE"][k % 5]
+        E.append(Paragraph(f'<font color="{colore}" name="{SOTTO}">»</font>  {_t(riga)}', st["p"]))
+        E.append(Spacer(1, 2.5))
+    E += [Spacer(1, 8), _box_200(g["carrello"], st), Spacer(1, 6), Decoro(seme=ctx["numero"])]
 
     # 2. Radar uscite
-    E += [Spacer(1, 6), CondPageBreak(70 * mm), Rubrica("Radar", "Le uscite in arrivo", ROSSO),
-          Paragraph(_t("Date di uscita trovate nelle notizie delle ultime settimane, da siti ufficiali, italiani "
-                       "e internazionali, per i prossimi 60 giorni. Più fonti = più interesse."), st["occhiello"]),
-          Spacer(1, 5)]
+    E += [Spacer(1, 6), CondPageBreak(60 * mm), Rubrica("Radar", "Le uscite in arrivo", POMODORO),
+          Paragraph(_t("Date di uscita trovate nelle notizie delle ultime settimane (siti ufficiali, italiani e "
+                       "internazionali) per i prossimi 60 giorni. Più fonti = più interesse. Controlla sempre la "
+                       "data sul link."), st["occhiello"]), Spacer(1, 5)]
     if g["radar"]:
         dati = [["Data", "Uscita", "Fonte", "Fonti", "Mercato"]]
         for u in g["radar"]:
             d = u["data"]
-            dati.append([Paragraph(f"<b>{d[8:10]}/{d[5:7]}</b>", st["cella_b"]),
+            dati.append([Paragraph(f"{d[8:10]}/{d[5:7]}", st["cella_b"]),
                          _link(u["titolo"], u["link"], st["cella"], 110), Paragraph(_t(u["fonte"]), st["cella"]),
-                         str(u["citazioni"]), _stato(u["mercato"])])
-        E.append(_tabella(dati, [15 * mm, 88 * mm, 32 * mm, 13 * mm, 30 * mm], ROSSO, allinea_destra_da=None))
-        E += [Spacer(1, 6), Mascotte("Controlla sempre la data sul link della fonte!")]
+                         str(u["citazioni"]), _stato(u["mercato"], st)])
+        E.append(_tabella(dati, [15 * mm, 88 * mm, 30 * mm, 12 * mm, 31 * mm], POMODORO, allinea_destra_da=None))
     else:
         E.append(Paragraph("Nessuna data di uscita trovata nelle notizie di questa settimana.", st["nota"]))
 
-    # 3. Previsioni
-    E += [Spacer(1, 8), CondPageBreak(70 * mm), Rubrica("Previsioni", "Il termometro delle novità", ARANCIO),
+    # 3. Termometro delle novità
+    E += [Spacer(1, 10), CondPageBreak(60 * mm), Rubrica("Previsioni", "Il termometro delle novità", ARANCIO),
           Paragraph(_t(f"Sigillato comparso su Cardmarket negli ultimi {C.PREVISIONI_GIORNI} giorni: prevendite, "
                        "prodotti in arrivo e appena usciti. Caldo = prezzo in salita o poche offerte sotto la "
                        "tendenza. Freddo = prezzo in calo o molte offerte scontate. In arrivo = ancora nessuna "
@@ -803,73 +695,67 @@ def crea(percorso, ctx):
         for p in g["previsioni"]:
             a = p["aggiunto"]
             dati.append([_link(p["nome"], p["link"], st["cella"], 55), f"{a[8:10]}/{a[5:7]}", _eur(p["prezzo"]),
-                         _perc(p["variazione"]), _stato(p["stato"]), Paragraph(_t(p["motivo"]), st["cella"])])
-        E.append(_tabella(dati, [52 * mm, 14 * mm, 19 * mm, 16 * mm, 25 * mm, 52 * mm], ARANCIO))
+                         _perc(p["variazione"]), _stato(p["stato"], st), Paragraph(_t(p["motivo"]), st["cella"])])
+        E.append(_tabella(dati, [50 * mm, 13 * mm, 19 * mm, 15 * mm, 25 * mm, 54 * mm], ARANCIO))
     else:
         E.append(Paragraph("Nessun prodotto sigillato nuovo nel periodo.", st["nota"]))
 
     # 4. Il borsino
-    E += [Spacer(1, 10), CondPageBreak(110 * mm), Rubrica("Mercato", "Il borsino della settimana", VERDE),
+    E += [Spacer(1, 10), CondPageBreak(110 * mm), Rubrica("Mercato", "Il borsino della settimana", ERBA),
           Paragraph(_t("Chi sale e chi scende. Prezzo = tendenza Cardmarket. * = stima dal primo giorno, "
                        "sostituita dallo storico reale man mano che si accumula."), st["occhiello"])]
-    for tipo, nome_tipo, colore in (("sigillato", "Sigillato", CIELO), ("singola", "Carte singole", VIOLA)):
-        per_desc = sorted(C.PERIODI, reverse=True)
-        cl = g["classifiche"][tipo]
-        # per il grafico: il periodo più lungo con sia rialzi sia ribassi, altrimenti il più lungo con dati
-        periodo = next((p for p in per_desc if cl[str(p)]["rialzi"] and cl[str(p)]["ribassi"]),
-                       next((p for p in per_desc if cl[str(p)]["rialzi"] or cl[str(p)]["ribassi"]), None))
-        E += [CondPageBreak(95 * mm), Paragraph(nome_tipo, st["sotto"])]
+    for tipo, nome_tipo, colore in (("sigillato", "Sigillato", ERBA), ("singola", "Carte singole", CIELO)):
+        periodo = next((p for p in sorted(C.PERIODI, reverse=True)
+                        if g["classifiche"][tipo][str(p)]["rialzi"] or g["classifiche"][tipo][str(p)]["ribassi"]),
+                       None)
+        E.append(Paragraph(nome_tipo, st["sotto"]))
         if periodo is None:
             E.append(Paragraph("Dati non ancora sufficienti.", st["nota"]))
             continue
         c = g["classifiche"][tipo][str(periodo)]
-        E += [KeepTogether([Barre(c["rialzi"] + c["ribassi"], periodo,
-                                  f"{nome_tipo}: chi sale e chi scende a {periodo} giorni")]), Spacer(1, 6)]
+        grafico = _grafico(c["rialzi"] + c["ribassi"], periodo, f"Maggiori movimenti a {periodo} giorni")
+        if grafico:
+            E += [grafico, Spacer(1, 6)]
         for p in C.PERIODI:
             c = g["classifiche"][tipo][str(p)]
             for verso in ("rialzi", "ribassi"):
-                righe_t = c[verso]
-                intest = f"{verso.capitalize()} a {p} giorni"
-                if verso == "ribassi" and not righe_t and c.get("piu_deboli"):
-                    righe_t = c["piu_deboli"]
-                    intest = f"Più deboli a {p} giorni (nessun calo)"
-                if not righe_t:
+                if not c[verso]:
                     continue
-                dati = [[intest, "Prezzo"] + [f"{q}g" for q in C.PERIODI] + ["Incertezza"]]
-                for r in righe_t:
-                    dati.append([_link(r["nome"], r["link"], st["cella"], 58), _eur(r["prezzo"])]
+                dati = [[f"{verso.capitalize()} a {p} giorni", "Prezzo"] + [f"{q}g" for q in C.PERIODI]
+                        + ["Incertezza"]]
+                for r in c[verso]:
+                    dati.append([_link(r["nome"], r["link"], st["cella"], 52), _eur(r["prezzo"])]
                                 + [_perc(r["variazioni"][str(q)]) + ("*" if r["fonti"][str(q)] == "stima" else "")
                                    for q in C.PERIODI] + [r["incertezza"]])
-                E += [KeepTogether([_tabella(dati, [62 * mm, 20 * mm] + [15 * mm] * len(C.PERIODI) + [20 * mm],
-                                             VERDE if verso == "rialzi" else
-                                             (ROSSO if c[verso] else ARANCIO))]), Spacer(1, 6)]
+                col = ERBA if verso == "rialzi" else POMODORO
+                E += [KeepTogether([_tabella(dati, [LARGHEZZA - 98 * mm, 20 * mm] + [15 * mm] * len(C.PERIODI) + [18 * mm],
+                                             col)]), Spacer(1, 6)]
 
     # 5. Occasioni
     if g["occasioni"]:
-        E += [Spacer(1, 6), CondPageBreak(60 * mm), Rubrica("Affari", "Le occasioni della settimana", BLU),
+        E += [Spacer(1, 6), CondPageBreak(50 * mm), Rubrica("Affari", "Le occasioni della settimana", SOLE),
               Paragraph(_t("Sigillato con un'offerta molto sotto il prezzo di tendenza. L'offerta più bassa può "
                            "riferirsi a un'altra lingua o condizione."), st["occhiello"]), Spacer(1, 5)]
         dati = [["Prodotto", "Offerta", "Tendenza", "Sconto"]]
         for o in g["occasioni"]:
             dati.append([_link(o["nome"], o["link"], st["cella"], 80), _eur(o["prezzo_minimo"]),
                          _eur(o["prezzo_tendenza"]), _perc(-o["sconto"])])
-        E.append(_tabella(dati, [104 * mm, 24 * mm, 24 * mm, 22 * mm], BLU))
+        E.append(_tabella(dati, [104 * mm, 24 * mm, 24 * mm, 24 * mm], ARANCIO))
 
     # 6. Notizie
     if g["notizie"]:
-        E += [Spacer(1, 10), CondPageBreak(50 * mm), Rubrica("Attualità", "Dal mondo Pokémon", ROSSO), Spacer(1, 3)]
-        for i, n in enumerate(g["notizie"]):
-            col = ("#EF476F", "#118AB2", "#06D6A0", "#8338EC")[i % 4]
-            E.append(Paragraph(f'{_pallino(col)} <font name="{CORPO_B}" color="{col}" size="8">'
-                               f'{_t((n.get("fonte") or "").upper())}  ·  {_t(n["data"])}</font><br/>'
-                               f'<link href="{escape(n["link"])}" color="#2B2D42">'
-                               f'<font name="{CORPO_B}">{_t(n["titolo"])}</font></link>', st["p"]))
+        E += [Spacer(1, 10), CondPageBreak(45 * mm), Rubrica("Attualità", "Dal mondo Pokémon", CIELO), Spacer(1, 3)]
+        for k, n in enumerate(g["notizie"]):
+            colore = ["#EE4266", "#FF9F1C", "#3BB273", "#4CC9F0", "#8E7DBE"][k % 5]
+            E.append(Paragraph(f'<font color="{colore}" name="{SOTTO}" size="8">{_t((n.get("fonte") or "").upper())}'
+                               f'  ·  {_t(n["data"])}</font><br/><link href="{escape(n["link"])}" color="#2B2D42">'
+                               f'<font name="{TESTO_B}">{_t(n["titolo"])}</font></link>', st["p"]))
             E.append(Spacer(1, 6))
+    E += [Spacer(1, 6), Decoro(seme=ctx["numero"] + 5)]
 
-    # 7. Chiusura: come leggere la rivista
-    E += [NextPageTemplate("chiusura"), PageBreak(),
-          Paragraph("Come leggere la rivista", st["titolo_chiusura"]), Spacer(1, 6)]
-    for i, nota in enumerate(ctx["note_metodo"]):
-        E.append(Paragraph(f"{_pallino(('#EF476F', '#118AB2', '#06D6A0', '#8338EC')[i % 4])}  {_t(nota)}", st["p"]))
+    # 7. Quarta di copertina: come leggere la rivista
+    E += [NextPageTemplate("retro"), PageBreak(), Rubrica("Metodo", "Come leggere la rivista", VIOLA), Spacer(1, 3)]
+    for nota in ctx["note_metodo"]:
+        E.append(Paragraph(f'<font color="#FF9F1C" name="{SOTTO}">»</font>  {_t(nota)}', st["p"]))
         E.append(Spacer(1, 4))
     doc.build(E)
