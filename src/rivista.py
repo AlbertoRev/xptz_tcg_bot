@@ -274,18 +274,18 @@ def _mondo_giorno(c, ctx=None):
     c.setFillColor(SOLE); c.rect(0,H-21*mm,W,2*mm,stroke=0,fill=1)
 
 def _mondo_tramonto(c, ctx=None):
-    _sfondo_mappa(c,.18,"#173B70")
-    c.saveState(); c.setFillColor(colors.Color(.035,.14,.30,alpha=.74)); c.rect(0,0,W,H,stroke=0,fill=1); c.restoreState()
+    _sfondo_mappa(c,.52,"#9BD6F2")
+    c.saveState(); c.setFillColor(colors.Color(.025,.14,.32,alpha=.42)); c.rect(0,0,W,H,stroke=0,fill=1); c.restoreState()
     hero=(_art_piano(ctx,7).get("hero_asset") if ctx else None) or _mondo_asset(ctx,"pokemon",6)
     c.setFillAlpha(1)
-    if hero: _immagine_asset(c,hero,W-43*mm,53*mm,86*mm)
+    if hero: _immagine_asset(c,hero,W-42*mm,60*mm,94*mm)
     # Ensemble finale: artwork veri, distribuiti nel grande spazio negativo.
     support=_mondo_asset(ctx,"pokemon",5)
     trainer=_mondo_asset(ctx,"allenatori",1)
     ball=_mondo_asset(ctx,"pokeball",1)
     item=_mondo_asset(ctx,"oggetti",1)
-    if support and support != hero: _immagine_asset(c,support,34*mm,64*mm,52*mm)
-    if trainer: _immagine_asset(c,trainer,35*mm,132*mm,53*mm)
+    if support and support != hero: _immagine_asset(c,support,35*mm,66*mm,61*mm)
+    if trainer: _immagine_asset(c,trainer,34*mm,122*mm,61*mm)
     if ball: _immagine_asset(c,ball,W-31*mm,137*mm,31*mm)
     if item: _immagine_asset(c,item,W-32*mm,105*mm,34*mm)
 
@@ -491,25 +491,37 @@ def _grafico(righe, periodo, titolo):
 
 # ---------- pagine ----------
 def _copertina(c, ctx):
-    c.saveState(); _sfondo_mappa(c,.52,"#DFF3FF")
-    c.setFillColor(colors.Color(.03,.30,.64,alpha=.22)); c.rect(0,0,W,H,stroke=0,fill=1)
-    p=c.beginPath(); p.moveTo(0,H*.72); p.lineTo(W,H*.88); p.lineTo(W,H); p.lineTo(0,H); p.close(); c.setFillColor(colors.Color(.05,.36,.70,alpha=.86)); c.drawPath(p,stroke=0,fill=1)
-    p=c.beginPath(); p.moveTo(0,0); p.lineTo(W*.58,0); p.lineTo(W*.22,H*.42); p.lineTo(0,H*.31); p.close(); c.setFillColor(colors.Color(1,.83,.16,alpha=.82)); c.drawPath(p,stroke=0,fill=1)
-    _logo(c,12*mm,H-38*mm,142*mm)
-    c.setFillColor(BIANCO); c.setFont(TESTO_B,7.2); c.drawRightString(W-10*mm,H-12*mm,f"N.{ctx['numero']}  ·  {ctx['data_lunga'].upper()}")
+    c.saveState(); _sfondo_mappa(c,.62,"#BFEAFF")
+    # Full bleed, contrasto acqua/fuoco come nella reference senza replicarne la composizione.
+    c.setFillColor(colors.Color(.03,.35,.72,alpha=.16)); c.rect(0,0,W,H,stroke=0,fill=1)
+    p=c.beginPath(); p.moveTo(W*.48,0); p.lineTo(W,0); p.lineTo(W,H*.72); p.lineTo(W*.73,H*.56); p.close()
+    c.setFillColor(colors.Color(.92,.20,.10,alpha=.32)); c.drawPath(p,stroke=0,fill=1)
+    p=c.beginPath(); p.moveTo(0,0); p.lineTo(W*.58,0); p.lineTo(W*.36,H*.55); p.lineTo(0,H*.70); p.close()
+    c.setFillColor(colors.Color(.02,.45,.82,alpha=.28)); c.drawPath(p,stroke=0,fill=1)
+    # numero/data e claim
+    c.setFillColor(BIANCO); c.setFont(TITOLO,12); c.drawString(8*mm,H-12*mm,f"N.{ctx['numero']}")
+    c.setFont(TESTO_B,6.5); c.drawString(8*mm,H-18*mm,ctx['data_lunga'].upper())
+    c.drawRightString(W-8*mm,H-11*mm,"LA TUA GUIDA SETTIMANALE")
+    c.drawRightString(W-8*mm,H-16*mm,"AL MONDO POKÉMON TCG")
+    _logo(c,10*mm,H-43*mm,160*mm)
     hero=(_art_piano(ctx,1).get("hero_asset") or _mondo_asset(ctx,"pokemon",0)); support=_mondo_asset(ctx,"pokemon",1); trainer=_mondo_asset(ctx,"allenatori",0)
     ball=_mondo_asset(ctx,"pokeball",0); item=_mondo_asset(ctx,"oggetti",0)
-    if support and support!=hero: _immagine_asset(c,support,W-27*mm,H-95*mm,52*mm)
-    if hero: _immagine_asset(c,hero,W-54*mm,H-157*mm,105*mm)
-    if trainer: _immagine_asset(c,trainer,29*mm,H-120*mm,57*mm)
-    if ball: _immagine_asset(c,ball,24*mm,43*mm,31*mm)
-    if item: _immagine_asset(c,item,W-23*mm,35*mm,32*mm)
-    pw=128*mm; titolo=Paragraph(_t(ctx["apertura"]["titolo"]),ParagraphStyle("cover_feature",fontName=TITOLO,fontSize=21,leading=21.5,textColor=BLU,alignment=TA_CENTER))
-    sotto=Paragraph(_t(ctx["apertura"]["sottotitolo"]),ParagraphStyle("cover_deck",fontName=TESTO_B,fontSize=8.5,leading=10.2,textColor=INCHIOSTRO,alignment=TA_CENTER))
-    _,th=titolo.wrap(pw-14*mm,70*mm); _,sh=sotto.wrap(pw-14*mm,35*mm); ph=th+sh+27*mm; x=11*mm; y=22*mm
-    _panel(c,x,y,pw,ph,5*mm,.95,"#1769B0"); chip=47*mm; c.setFillColor(ROSSO); c.roundRect(x+(pw-chip)/2,y+ph-10*mm,chip,7*mm,3.5*mm,stroke=0,fill=1)
-    c.setFillColor(BIANCO); c.setFont(TESTO_B,7); c.drawCentredString(x+pw/2,y+ph-7.5*mm,"IN PRIMO PIANO")
-    titolo.drawOn(c,x+7*mm,y+sh+12*mm); sotto.drawOn(c,x+7*mm,y+6*mm); c.restoreState()
+    if support and support!=hero: _immagine_asset(c,support,W-43*mm,H-132*mm,82*mm)
+    if hero: _immagine_asset(c,hero,47*mm,H-151*mm,112*mm)
+    if trainer: _immagine_asset(c,trainer,W-27*mm,57*mm,48*mm)
+    if ball: _immagine_asset(c,ball,21*mm,59*mm,24*mm)
+    if item: _immagine_asset(c,item,W-19*mm,92*mm,23*mm)
+    # cover line: niente box dashboard, solo ribbon e headline.
+    x=10*mm; y=18*mm; w=158*mm
+    c.saveState(); c.rotate(-2)
+    c.setFillColor(ROSSO); c.roundRect(x,y+52*mm,62*mm,9*mm,2*mm,stroke=0,fill=1)
+    c.setFillColor(BIANCO); c.setFont(TITOLO,10); c.drawCentredString(x+31*mm,y+55*mm,"IN PRIMO PIANO")
+    title=_t(ctx["apertura"]["titolo"]).upper(); deck=_t(ctx["apertura"]["sottotitolo"]).upper()
+    tp=Paragraph(title,ParagraphStyle("cover_title_ref",fontName=TITOLO,fontSize=28,leading=25,textColor=SOLE))
+    _,th=tp.wrap(w,48*mm); tp.drawOn(c,x,y+47*mm-th)
+    dp=Paragraph(deck,ParagraphStyle("cover_deck_ref",fontName=TESTO_B,fontSize=9.5,leading=10.5,textColor=BIANCO))
+    _,dh=dp.wrap(w,24*mm); dp.drawOn(c,x,y+42*mm-th-dh)
+    c.restoreState(); c.restoreState()
 
 
 def _art_piano(ctx, numero):
