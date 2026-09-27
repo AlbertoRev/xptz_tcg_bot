@@ -232,9 +232,12 @@ def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
         "allenatori": [],
     }
 
-    # La mappa viene generata localmente dal renderer sulla geografia di Hoenn.
-    # Non usiamo territori reali come sostituti: evita mappe realistiche ma geograficamente errate.
-    manifest["map"] = "hoenn_topographic.png"
+    # Mappa illustrata ufficiale di Hoenn (ORAS), non pixel. Fallback: carta fisica locale.
+    map_path=ASSET_DIR/"hoenn_realistic.png"
+    if _download_wikidex("Mapa de Hoenn ROZA.png",map_path):
+        manifest["map"]=map_path.name
+    else:
+        manifest["map"]="hoenn_topographic.png"
 
     # 7 Pokémon grandi: uno diverso per ciascuna pagina della rivista.
     for nome, url in _candidati_pokemon(rng, 10):
