@@ -391,7 +391,7 @@ def _tag(testo, colore, larghezza=21 * mm):
     return t
 
 
-def _tabella(dati, larghezze, colore=colors.HexColor("#587C6B"), allinea_destra_da=1):
+def _tabella(dati, larghezze, colore=colors.HexColor("#2366B1"), allinea_destra_da=1):
     t = Table(dati, colWidths=larghezze, repeatRows=1)
     stile = [
         ("FONTNAME", (0, 0), (-1, 0), SOTTO), ("FONTSIZE", (0, 0), (-1, 0), 7.8),
@@ -465,14 +465,16 @@ def _grafico(righe, periodo, titolo):
 def _copertina(c, ctx):
     g=ctx["principale"]; c.saveState(); _mondo_giorno(c,ctx)
     # Masthead più vicino a un magazine: forte, pulito, senza effetto "UI box".
-    c.setFillColor(BIANCO); c.setFont(TITOLO,25); c.drawString(MARGINE,H-12.7*mm,"POKEPUTZU WEEKLY")
+    # masthead con ombra gialla, più vicino alla forza grafica di una cover Nintendo
+    c.setFillColor(colors.HexColor("#173B70")); c.setFont(TITOLO,27); c.drawString(MARGINE+1*mm,H-13.7*mm,"POKEPUTZU WEEKLY")
+    c.setFillColor(SOLE); c.drawString(MARGINE,H-12.7*mm,"POKEPUTZU WEEKLY")
     c.setFillColor(colors.HexColor("#DCE7D9")); c.setFont(TESTO_B,7.5)
     c.drawRightString(W-MARGINE,H-11.8*mm,f"N. {ctx['numero']}  ·  {ctx['data_lunga'].upper()}")
 
     # Cover story: pannello leggero, non una cartuccia.
     x0,y0,pw,ph=MARGINE,H-132*mm,119*mm,84*mm
-    _panel(c,x0,y0,pw,ph,4*mm,.90,"#90A59A")
-    c.setFillColor(colors.HexColor("#5F8B73")); c.roundRect(x0,y0+ph-13*mm,42*mm,13*mm,4*mm,stroke=0,fill=1)
+    _panel(c,x0,y0,pw,ph,4*mm,.96,"#5EA9DF")
+    c.setFillColor(ROSSO); c.roundRect(x0,y0+ph-13*mm,44*mm,13*mm,4*mm,stroke=0,fill=1)
     c.setFillColor(BIANCO); c.setFont(TESTO_B,7.2); c.drawString(x0+6*mm,y0+ph-8.4*mm,"IN PRIMO PIANO")
     titolo=Paragraph(_t(ctx["apertura"]["titolo"]),ParagraphStyle("cover_title",fontName=TITOLO,fontSize=17.5,leading=18.2,textColor=INCHIOSTRO))
     kt=KeepInFrame(pw-14*mm,45*mm,[titolo],mode="shrink"); kt.canv=c; kt.wrap(pw-14*mm,45*mm); kt.drawOn(c,x0+7*mm,y0+28*mm)
@@ -486,21 +488,21 @@ def _copertina(c, ctx):
     # KPI: quattro pillole editoriali chiare, non blocchi scuri.
     ky=y0-29*mm; kw=(119*mm-9*mm)/4
     for i,(numero,etichetta) in enumerate(ctx["kpi"]):
-        x=MARGINE+i*(kw+3*mm); _panel(c,x,ky,kw,22*mm,3*mm,.88,"#A4B4AA")
-        c.setFillColor(colors.HexColor("#315E51")); c.setFont(TITOLO,15.5); c.drawCentredString(x+kw/2,ky+11.5*mm,str(numero))
+        x=MARGINE+i*(kw+3*mm); _panel(c,x,ky,kw,22*mm,3*mm,.97,"#73B7E6")
+        c.setFillColor(BLU); c.setFont(TITOLO,16.5); c.drawCentredString(x+kw/2,ky+11.5*mm,str(numero))
         lab=Paragraph(_t(etichetta.upper()),ParagraphStyle("kpi2",fontName=TESTO_B,fontSize=5.5,leading=5.9,textColor=GRIGIO,alignment=TA_CENTER))
         fit=KeepInFrame(kw-4*mm,6.5*mm,[lab],mode="shrink"); fit.canv=c; fit.wrap(kw-4*mm,6.5*mm); fit.drawOn(c,x+2*mm,ky+2.1*mm)
 
     # Indice come colonna editoriale traslucida.
-    sy=ky-68*mm; _panel(c,MARGINE,sy,119*mm,59*mm,4*mm,.88,"#A4B4AA")
-    c.setFillColor(colors.HexColor("#315E51")); c.setFont(TITOLO,9.5); c.drawString(MARGINE+7*mm,sy+47*mm,"NEL NUMERO")
+    sy=ky-68*mm; _panel(c,MARGINE,sy,119*mm,59*mm,4*mm,.96,"#73B7E6")
+    c.setFillColor(ROSSO); c.setFont(TITOLO,10.5); c.drawString(MARGINE+7*mm,sy+47*mm,"NEL NUMERO")
     yy=sy+38*mm
     for k,(titolo_r,_) in enumerate(ctx["sommario"],1):
         p=Paragraph(f'<b>{k:02d}</b>  {_t(titolo_r)}',ParagraphStyle(f"idx{k}",fontName=TESTO,fontSize=7.9,leading=8.5,textColor=INCHIOSTRO))
         box=KeepInFrame(105*mm,7*mm,[p],mode="shrink"); box.canv=c; box.wrap(105*mm,7*mm); box.drawOn(c,MARGINE+7*mm,yy-2*mm)
         yy-=7.1*mm
 
-    c.setFillColor(colors.HexColor("#315E51")); c.rect(0,0,W,10*mm,stroke=0,fill=1)
+    c.setFillColor(BLU); c.rect(0,0,W,10*mm,stroke=0,fill=1)
     c.setFillColor(colors.HexColor("#E2E9DF")); c.setFont(TESTO_B,6.5)
     c.drawString(MARGINE,3.6*mm,f"CARDMARKET DATA  ·  {g['giorni_storico']} GIORNI DI STORICO  ·  INFORMATIVO")
     c.restoreState()
