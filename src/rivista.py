@@ -862,9 +862,9 @@ def crea(percorso, ctx):
     # 7. Quarta di copertina: come leggere la rivista
     E += [NextPageTemplate("retro"), PageBreak(), Rubrica("Metodo", "Come leggere la rivista", BLU), Spacer(1, 3)]
     note=[]
-    retro_st=ParagraphStyle("retro_note",parent=st["p"],fontSize=9.3,leading=11.4)
+    retro_st=ParagraphStyle("retro_note",parent=st["p"],fontSize=9.3,leading=11.4,textColor=BIANCO)
     for nota in ctx["note_metodo"]:
-        note.append(Paragraph(f'<font color="#F04E45" name="{SOTTO}">›</font>  {_t(nota)}',retro_st))
+        note.append(Paragraph(f'<font color="#FFD84A" name="{SOTTO}">›</font>  {_t(nota)}',retro_st))
         note.append(Spacer(1,2.5))
     # Nessuna altezza imposta: ReportLab usa esattamente la somma delle note.
     E.extend(note)
