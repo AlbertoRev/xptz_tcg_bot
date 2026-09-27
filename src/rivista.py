@@ -658,14 +658,14 @@ def _pagina_interna(c, doc, ctx):
     if hero and page in (3,4,6): _immagine_asset(c,hero,W-18*mm,H-33*mm,31*mm)
     # Terzo inferiore = scena illustrata, non spazio residuo.
     scene_y=13*mm
-    p=c.beginPath(); p.moveTo(0,scene_y); p.lineTo(W,scene_y); p.lineTo(W,69*mm); p.lineTo(0,55*mm); p.close()
+    p=c.beginPath(); p.moveTo(0,scene_y); p.lineTo(W,scene_y); p.lineTo(W,154*mm); p.lineTo(0,132*mm); p.close()
     c.setFillColor(colors.Color(.05,.34,.68,alpha=.12)); c.drawPath(p,stroke=0,fill=1)
     hero=plan.get("hero_asset") or _mondo_asset(ctx,"pokemon",max(0,page-1))
     trainer=_mondo_asset(ctx,"allenatori",page-2); ball=_mondo_asset(ctx,"pokeball",page-2); item=_mondo_asset(ctx,"oggetti",page-2)
-    if hero: _immagine_asset(c,hero,W-47*mm,38*mm,68*mm)
-    if trainer and page in (2,4,6): _immagine_asset(c,trainer,28*mm,35*mm,46*mm)
-    if ball and page in (2,3,5): _immagine_asset(c,ball,20*mm,21*mm,22*mm)
-    if item and page in (3,5,6): _immagine_asset(c,item,53*mm,22*mm,24*mm)
+    if hero: _immagine_asset(c,hero,W-48*mm,91*mm,96*mm)
+    if trainer and page in (2,4,6): _immagine_asset(c,trainer,29*mm,83*mm,65*mm)
+    if ball and page in (2,3,5): _immagine_asset(c,ball,21*mm,47*mm,29*mm)
+    if item and page in (3,5,6): _immagine_asset(c,item,58*mm,43*mm,32*mm)
     # footer chiaro e marchio costante.
     c.setFillColor(colors.Color(1,1,1,alpha=.90)); c.rect(0,0,W,10*mm,stroke=0,fill=1)
     _logo(c,MARGINE,5.8*mm,39*mm,compact=True)
