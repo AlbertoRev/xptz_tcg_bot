@@ -1,12 +1,12 @@
 {
-  "data": "2026-09-26",
+  "data": "2026-09-27",
   "nota": "Tutti i numeri sono calcolati dal codice. Variazioni in percentuale. Prezzi in euro, prezzo di tendenza Cardmarket (tutte le lingue).",
   "giochi": {
     "pokemon": {
       "nome": "Pokémon",
       "livello": "principale",
       "lingua_investimento": "italiano",
-      "giorni_storico": 1,
+      "giorni_storico": 2,
       "classifiche": {
         "sigillato": {
           "7": {
@@ -36,10 +36,10 @@
             "rialzi": [
               {
                 "nome": "Maintenance",
-                "prezzo": 9.33,
+                "prezzo": 8.7,
                 "variazioni": {
                   "7": 299.2,
-                  "30": 143.6,
+                  "30": 127.2,
                   "90": null,
                   "180": null
                 },
@@ -47,10 +47,10 @@
               },
               {
                 "nome": "Articuno [Aurora Veil | Ice Beam]",
-                "prezzo": 773.44,
+                "prezzo": 727.0,
                 "variazioni": {
                   "7": 298.6,
-                  "30": 305.8,
+                  "30": 281.4,
                   "90": null,
                   "180": null
                 },
@@ -137,10 +137,10 @@
               },
               {
                 "nome": "Magneton [Overvolt Discharge | Electric Ball]",
-                "prezzo": 328.63,
+                "prezzo": 268.33,
                 "variazioni": {
                   "7": -80.6,
-                  "30": -16.5,
+                  "30": -31.8,
                   "90": null,
                   "180": null
                 },
@@ -151,6 +151,17 @@
           "30": {
             "fonte": "stima",
             "rialzi": [
+              {
+                "nome": "Ivysaur [Sleep Powder | Vine Whip]",
+                "prezzo": 10.24,
+                "variazioni": {
+                  "7": 33.5,
+                  "30": 293.8,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
               {
                 "nome": "Machoke [Mega Kick | Steady Punch]",
                 "prezzo": 115.17,
@@ -194,17 +205,6 @@
                   "180": null
                 },
                 "incertezza": "alta"
-              },
-              {
-                "nome": "Online Code Card (EX Power Trio Tins: Charizard-EX Tin)",
-                "prezzo": 11.85,
-                "variazioni": {
-                  "7": 0.0,
-                  "30": 288.5,
-                  "90": null,
-                  "180": null
-                },
-                "incertezza": "alta"
               }
             ],
             "ribassi": [
@@ -242,22 +242,22 @@
                 "incertezza": "alta"
               },
               {
-                "nome": "Team Rocket's Mimikyu [Gemstone Mimicry]",
-                "prezzo": 9.77,
+                "nome": "Beedrill [Venom Spray | Needle Rush]",
+                "prezzo": 22.59,
                 "variazioni": {
-                  "7": -50.8,
-                  "30": -88.1,
+                  "7": -43.0,
+                  "30": -89.0,
                   "90": null,
                   "180": null
                 },
                 "incertezza": "alta"
               },
               {
-                "nome": "Suicune [Sheer Cold]",
-                "prezzo": 6.45,
+                "nome": "Team Rocket's Mimikyu [Gemstone Mimicry]",
+                "prezzo": 9.77,
                 "variazioni": {
-                  "7": -45.6,
-                  "30": -87.8,
+                  "7": -50.8,
+                  "30": -88.1,
                   "90": null,
                   "180": null
                 },
@@ -286,6 +286,13 @@
           "sconto": 59.9
         },
         {
+          "nome": "Unbroken Bonds Booster",
+          "tipo": "sigillato",
+          "prezzo_minimo": 42.0,
+          "prezzo_tendenza": 104.48,
+          "sconto": 59.8
+        },
+        {
           "nome": "Pokémon GO Pin Collection—Bulbasaur",
           "tipo": "sigillato",
           "prezzo_minimo": 29.99,
@@ -297,6 +304,13 @@
           "tipo": "sigillato",
           "prezzo_minimo": 110.0,
           "prezzo_tendenza": 270.12,
+          "sconto": 59.3
+        },
+        {
+          "nome": "Ampharos ex Battle Deck",
+          "tipo": "sigillato",
+          "prezzo_minimo": 4.99,
+          "prezzo_tendenza": 12.25,
           "sconto": 59.3
         },
         {
@@ -333,20 +347,6 @@
           "prezzo_minimo": 38.99,
           "prezzo_tendenza": 94.67,
           "sconto": 58.8
-        },
-        {
-          "nome": "Twilight Masquerade 10 Elite Trainer Box Case",
-          "tipo": "sigillato",
-          "prezzo_minimo": 520.0,
-          "prezzo_tendenza": 1262.07,
-          "sconto": 58.8
-        },
-        {
-          "nome": "Ampharos ex Battle Deck",
-          "tipo": "sigillato",
-          "prezzo_minimo": 4.99,
-          "prezzo_tendenza": 12.1,
-          "sconto": 58.8
         }
       ],
       "nuovi_prodotti": [
@@ -370,13 +370,13 @@
           "data": "22/09"
         },
         {
-          "titolo": "GCC Pokémon Pocket: annunciata la nuova espansione Busta Deluxe Mega - Pokémon Millennium",
-          "link": "https://news.google.com/rss/articles/CBMitwFBVV95cUxPZTFlai1pcE1SWHhGOFRBYW5XYjhIMVB0V2FPd0VuUlIwTVlXTkJrU0VmNkJ5RGUwRVBNY2dxVlZBTFVGRG1MRm5Db29QWlowdTFOT0R0cFlhQlViUnZra3BZQlk3YVdWTHFfNDg3eW5RcTJhdGhySmRqZTRWRzlzZXVCcVFPY3FKcFVBME9keURib0pwQmVuZm1yQXBrYV90Um1VdzhhUzJBVHFMeHFaclZibjhscHM?oc=5",
+          "titolo": "Pokemon TCG Pocket Busta Deluxe Mega: data d'uscita e carte confermate dell'espansione - Everyeye.it",
+          "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxOc1p2aG92RWdVc18xUVk5MXdJeUpNS1BpVFN6bW5OeVZ2MTJWNXZZNVFFaF9HT2d1UklobVpHYThYTnRDaU1HTlBpdDV1QVJrQ29zVEJuYVA2OHZFQVJ5OU0wWHh1RkoyMDd5dDlMMTFoS0taVUtITmJMYnF5SlRpUU1ON2FNYUc0a3hFMWpGb19qblRlUEZRNURDMVZsTThzR2hFSHFYMTRuZTljdUcxT0VJOTFCSTlqSlNITg?oc=5",
           "data": "24/09"
         },
         {
-          "titolo": "Pokemon TCG Pocket Busta Deluxe Mega: data d'uscita e carte confermate dell'espansione - Everyeye.it",
-          "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxOc1p2aG92RWdVc18xUVk5MXdJeUpNS1BpVFN6bW5OeVZ2MTJWNXZZNVFFaF9HT2d1UklobVpHYThYTnRDaU1HTlBpdDV1QVJrQ29zVEJuYVA2OHZFQVJ5OU0wWHh1RkoyMDd5dDlMMTFoS0taVUtITmJMYnF5SlRpUU1ON2FNYUc0a3hFMWpGb19qblRlUEZRNURDMVZsTThzR2hFSHFYMTRuZTljdUcxT0VJOTFCSTlqSlNITg?oc=5",
+          "titolo": "GCC Pokémon Pocket: annunciata la nuova espansione Busta Deluxe Mega - Pokémon Millennium",
+          "link": "https://news.google.com/rss/articles/CBMitwFBVV95cUxPZTFlai1pcE1SWHhGOFRBYW5XYjhIMVB0V2FPd0VuUlIwTVlXTkJrU0VmNkJ5RGUwRVBNY2dxVlZBTFVGRG1MRm5Db29QWlowdTFOT0R0cFlhQlViUnZra3BZQlk3YVdWTHFfNDg3eW5RcTJhdGhySmRqZTRWRzlzZXVCcVFPY3FKcFVBME9keURib0pwQmVuZm1yQXBrYV90Um1VdzhhUzJBVHFMeHFaclZibjhscHM?oc=5",
           "data": "24/09"
         },
         {
@@ -385,7 +385,7 @@
           "data": "22/09"
         },
         {
-          "titolo": "Pokémon Megaevoluzione Dominio Delta: tutto sulla nuova espansione - ilfattoquotidiano.it",
+          "titolo": "Pokémon Megaevoluzione Dominio Delta: tutto sulla nuova espansione - Il Fatto Quotidiano",
           "link": "https://news.google.com/rss/articles/CBMirAFBVV95cUxQUVRBZ1hRVHAxV0dicV9sWlF0d0JlZVBrRmhPcF9zSjZlMHE0RkZPZk9DSUxVdnpURVFMRndTUkFWem1HNVlfbF9xdHlMNm1kOUZOTnpwaTRjUnVWbkJQaDZudmRXOWpnWG1BNjFfamJRaFV1NGxlbTZGdS04VExtb2lxaFBHSndXc0tVN3pkaTMwMGdEUEpmTkt1MTFwOU1SYWZwWnZFM2oxREZU?oc=5",
           "data": "22/09"
         },
@@ -400,7 +400,7 @@
       "nome": "One Piece",
       "livello": "principale",
       "lingua_investimento": "inglese",
-      "giorni_storico": 1,
+      "giorni_storico": 2,
       "classifiche": {
         "sigillato": {
           "7": {
@@ -463,10 +463,10 @@
               },
               {
                 "nome": "Boa Hancock (ST17-004)",
-                "prezzo": 192.26,
+                "prezzo": 174.88,
                 "variazioni": {
                   "7": 246.6,
-                  "30": 381.4,
+                  "30": 337.9,
                   "90": null,
                   "180": null
                 },
@@ -590,11 +590,11 @@
                 "incertezza": "alta"
               },
               {
-                "nome": "DON!! (Thousand Sunny)",
-                "prezzo": 30.0,
+                "nome": "Buckin (OP08-051)",
+                "prezzo": 7.99,
                 "variazioni": {
-                  "7": 0.0,
-                  "30": 275.0,
+                  "7": 160.7,
+                  "30": 273.4,
                   "90": null,
                   "180": null
                 },
@@ -715,18 +715,18 @@
           "sconto": 58.6
         },
         {
-          "nome": "Starter Deck: Uta",
-          "tipo": "sigillato",
-          "prezzo_minimo": 6.0,
-          "prezzo_tendenza": 14.29,
-          "sconto": 58.0
-        },
-        {
           "nome": "Carrying on his Will Sleeved Booster",
           "tipo": "sigillato",
           "prezzo_minimo": 9.5,
           "prezzo_tendenza": 22.59,
           "sconto": 57.9
+        },
+        {
+          "nome": "Starter Deck: Uta",
+          "tipo": "sigillato",
+          "prezzo_minimo": 6.0,
+          "prezzo_tendenza": 14.22,
+          "sconto": 57.8
         },
         {
           "nome": "Full Set - A Fist of Divine Speed (OP11)",
@@ -736,11 +736,11 @@
           "sconto": 57.5
         },
         {
-          "nome": "Starter Deck: Animal Kingdom Pirates",
+          "nome": "Emperors in the New World Booster Box (Non-English)",
           "tipo": "sigillato",
-          "prezzo_minimo": 14.0,
-          "prezzo_tendenza": 32.9,
-          "sconto": 57.4
+          "prezzo_minimo": 49.99,
+          "prezzo_tendenza": 117.63,
+          "sconto": 57.5
         }
       ],
       "nuovi_prodotti": [
@@ -784,7 +784,7 @@
           "nome": "The World's Strongest Warriors Sleeved Booster",
           "categoria": "One Piece Booster",
           "aggiunto": "2026-09-23",
-          "prezzo": 16.0
+          "prezzo": 15.45
         },
         {
           "nome": "Event Pack Vol.9",
@@ -847,6 +847,11 @@
           "data": "22/09"
         },
         {
+          "titolo": "Card Game Market Forecast to 2035: Collectible and Hobby Demand Drives Growth - IndexBox",
+          "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxOckFqNHlQa1I5N2ZaOEdYSDQ0MUd5X0d4Vlc3V3U0NkQxQk9pUFViak56czB3c3J3N3laZ2hOeHVTbXlkWXd5all3QTJjWkFMbHpPRFlpako0MW5UWk16c3RPejY3Mk1WclpyUmE5ZGNOWmJpeFlnWHY2cEVERDA1NGppUGFuSDRHUnQ1NnhXMWRrZm9sRFZUUU1xQ3RiRldwMXNxcFZ1Y0V1UQ?oc=5",
+          "data": "26/09"
+        },
+        {
           "titolo": "[Pokémon TCG] Lugia Price Guide & Market Analysis | 30th CELEBRATION - SNKRDUNK",
           "link": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxQR09iNlR3NkVORk9PREhMMUxneEhPMHpPVGo2RTA3dlk4RGpQeHo2dXRSdTNucGFoSWR3eERsa2JhdWd4em4zdEFrMzA1UE5tQ1BPQzlqZ0xvWkFucllCQmt6S1JwQjFtZEg4REgxNWl1Vms3bzc3N0xreXB3Z01mZng0azJTWlY5TTNGR1lvQV9FWUs3ajJFeVV4ZkpMRnV0TnAxcTRUY04xZmc?oc=5",
           "data": "24/09"
@@ -857,14 +862,9 @@
           "data": "21/09"
         },
         {
-          "titolo": "StarCraft Tabletop Miniatures Game - Review - IGN Southeast Asia",
-          "link": "https://news.google.com/rss/articles/CBMipgFBVV95cUxQNGZ4cVdERXdfUGhoNHJGOUJ3YTdjWlkxR1NCbFZ1RVEzejhJekhyNlVWSS1Bbms0ZHh3MkFma1gxa0U4eHgxY3hqcDZVdjhwUzNZWmZDYnY0dXM3S0g0ZlZ1SnhFM0JzUFI1T0ZuS1Z0bUNYRzdBZ0tqTE1LS3FxYjR5LUItR0ZpcEFFaUlfMUNkSm5QcXFQajdqZDhKdWJoQnRNNjh3?oc=5",
-          "data": "22/09"
-        },
-        {
-          "titolo": "Debut Patches are everywhere, and the cards they’re going into are selling for big money - The Athletic - The New York Times",
-          "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxQRmx5T1YteTZ6SHk0YUNjN21HYk5EQ0ZoN1dQQzRubkRBVmpld0pkb1N1RnhtZkpWdEpWd3NpZXZiemMzZ2ZiR1o0S2RqNHFRTWNqa09xdGZBV2VLSE1vS2VGSklkNFBZZGhOQXRFRHVPSXY1RmRqd2g3VTlfdWg2WmphUHRWbVlvSW5pcjFjQUktM2c?oc=5",
-          "data": "25/09"
+          "titolo": "Hot Holiday Toys 2026 - News12 | Hudson Valley",
+          "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxOMm9GTEN3R1hZUjRVU1ZuQXNsOFg0VjJoZTJvQmt5bi1TR0o1cHNFVDZaOE1qWkNacjV5b0x6T051bUdXWmdqX1VtRGRQTHpGQ0RmYzN3NHFReGVvdC15eHU1YTk2VHFJcDJleGZJMUx0WGZMbDRET1NKVFJONndUN0Z6UE1pT20xc21sOVlubGs?oc=5",
+          "data": "23/09"
         }
       ]
     }
