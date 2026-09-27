@@ -636,22 +636,20 @@ def _pagina_interna(c, doc, ctx):
     plan=_art_piano(ctx,page)
     # Nessuna immagine flottante: evita in modo strutturale coperture di testi e tabelle.
 
-    c.setFillColor(colors.HexColor("#173C35")); c.rect(0,0,W,9*mm,stroke=0,fill=1)
-    c.setFillColor(colors.HexColor("#DCEBCB")); c.setFont(TESTO_B,6.5)
-    c.drawString(MARGINE,3.2*mm,(plan.get("layout") or "editorial").upper())
-    c.drawRightString(W-MARGINE,3.2*mm,str(page))
+    c.setFillColor(colors.Color(1,1,1,alpha=.88)); c.rect(0,0,W,10*mm,stroke=0,fill=1)
+    _logo(c,MARGINE,5.8*mm,39*mm,compact=True)
+    c.setFillColor(BLU); c.setFont(TESTO_B,6.5)
+    c.drawRightString(W-MARGINE,3.4*mm,f"{(plan.get('layout') or 'editorial').upper()}  ·  {page}")
     c.restoreState()
 
 
 def _retro(c, ctx):
     c.saveState()
     _mondo_tramonto(c, ctx)
-    c.setFillColor(BIANCO)
-    c.setFont(TITOLO, 31)
-    c.drawString(MARGINE, H - 31 * mm, "SALVATAGGIO COMPLETATO")
-    c.setFont(SOTTO, 12)
-    c.setFillColor(colors.HexColor("#FFD84A"))
-    c.drawString(MARGINE, H - 42 * mm, f"POKEPUTZU WEEKLY N.{ctx['numero']} · PROSSIMO NUMERO {ctx['prossima']}")
+    _logo(c,MARGINE,H-34*mm,132*mm)
+    c.setFillColor(BIANCO); c.setFont(TITOLO,23); c.drawString(MARGINE,H-57*mm,"CI VEDIAMO AL PROSSIMO NUMERO!")
+    c.setFont(SOTTO,11); c.setFillColor(SOLE)
+    c.drawString(MARGINE,H-67*mm,f"N.{ctx['numero']} · PROSSIMO NUMERO {ctx['prossima']}")
     # Nessun pannello fisso: i flowable sottostanti seguono l’altezza reale del testo.
     c.restoreState()
 
