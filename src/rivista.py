@@ -21,39 +21,6 @@ import config as C
 from src import fonts
 from src.report import _eur, _perc, _t
 
-def applica_sfondo_e_decorazioni(canvas, doc):
-    """Gestisce lo sfondo nella 1a e ultima pagina e le Pokéball trasparenti nelle altre."""
-    canvas.saveState()
-    pagina_attuale = doc.page
-    
-    # Se il totale pagine non è ancora calcolato, usiamo un valore stimato o dinamico
-    totale_pagine = getattr(doc, 'page_count', 7)
-    
-    # 1. SFONDO NATURALE SU PRIMA E ULTIMA PAGINA
-    if pagina_attuale == 1 or pagina_attuale == totale_pagine:
-        sfondo_path = "assets/sfondo_natura.png"
-        if os.path.exists(sfondo_path):
-            canvas.setFillAlpha(0.12)  # Trasparenza leggera per non coprire il testo
-            canvas.drawImage(sfondo_path, 0, 0, width=A4[0], height=A4[1], preserveAspectRatio=False)
-            canvas.setFillAlpha(1.0)
-            
-    # 2. POKÉBALL SPARSE SULLE PAGINE INTERMEDIE (Watermark di sfondo)
-    else:
-        ball_map = {
-            2: "assets/pokeball.png",
-            3: "assets/megaball.png",
-            4: "assets/ultraball.png",
-            5: "assets/masterball.png",
-            6: "assets/pokeball.png"
-        }
-        ball_path = ball_map.get(pagina_attuale, "assets/pokeball.png")
-        if os.path.exists(ball_path):
-            canvas.setFillAlpha(0.08)  # Trasparenza tenue in sottofondo
-            canvas.drawImage(ball_path, A4[0] - 220, 50, width=200, height=200, mask='auto', preserveAspectRatio=True)
-            canvas.setFillAlpha(1.0)
-            
-    canvas.restoreState()
-  
 # ---------- font ----------
 F = fonts.carica()
 TITOLO, SOTTO, TESTO, TESTO_B = F["Testata"], F["Titolo"], F["Corpo"], F["CorpoB"]
@@ -931,5 +898,4 @@ def crea(percorso, ctx):
     for nota in ctx["note_metodo"]:
         E.append(Paragraph(f'<font color="#FF8C42" name="{SOTTO}">»</font>  {_t(nota)}', st["p"]))
         E.append(Spacer(1, 4))
-   # Passa la funzione 'applica_sfondo_e_decorazioni' a sia onFirstPage che onLaterPages:
-  doc.build(E, onFirstPage=applica_sfondo_e_decorazioni, onLaterPages=applica_sfondo_e_decorazioni)
+    doc.build(E)
