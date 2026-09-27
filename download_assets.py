@@ -196,7 +196,7 @@ def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
     # 3 trainer sprites: se un nome non è disponibile, si passa al successivo.
     for nome, url, trainer_nome in _candidati_trainer(rng):
         percorso = ASSET_DIR / nome
-        if _download(url, percorso):
+        if _download_mediawiki(url, percorso):
             manifest["allenatori"].append(nome)
         if len(manifest["allenatori"]) >= 3:
             break
