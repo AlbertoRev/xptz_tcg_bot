@@ -14,7 +14,7 @@ import random
 import urllib.request
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parent
 ASSET_DIR = ROOT / "assets"
@@ -117,6 +117,40 @@ def _download_mediawiki(titolo: str, percorso: Path) -> bool:
         return False
 
 
+def _polish_asset(percorso: Path, canvas=512):
+    """Porta gli asset piccoli a una resa morbida da illustrazione, senza pixel visibili."""
+    try:
+        with Image.open(percorso).convert("RGBA") as im:
+            bbox=im.getbbox()
+            if bbox: im=im.crop(bbox)
+            im=im.resize((canvas-80,canvas-80),Image.Resampling.LANCZOS).filter(ImageFilter.SMOOTH_MORE)
+            im=im.filter(ImageFilter.UnsharpMask(radius=1.2,percent=115,threshold=3))
+            out=Image.new("RGBA",(canvas,canvas),(0,0,0,0)); out.alpha_composite(im,((canvas-im.width)//2,(canvas-im.height)//2))
+            out.save(percorso)
+    except Exception as exc:
+        print(f"Impossibile rifinire {percorso.name}: {exc}")
+
+def _trainer_fallback(percorso: Path, variante=0):
+    """Illustrazione originale cel-shaded ad alta risoluzione, usata se il server artwork rifiuta il download."""
+    w,h=640,900; im=Image.new("RGBA",(w,h),(0,0,0,0)); d=ImageDraw.Draw(im,"RGBA")
+    palettes=[((42,92,78,255),(224,91,73,255)),((50,91,126,255),(235,180,75,255)),((88,70,112,255),(79,151,128,255))]
+    coat,accent=palettes[variante%len(palettes)]
+    # gambe, torso, braccia: forme morbide e contorno scuro
+    outline=(38,45,48,255); skin=(230,184,151,255)
+    d.rounded_rectangle((245,520,310,825),28,fill=coat,outline=outline,width=8); d.rounded_rectangle((330,520,395,825),28,fill=coat,outline=outline,width=8)
+    d.rounded_rectangle((190,285,450,590),70,fill=coat,outline=outline,width=10)
+    d.polygon([(205,350),(115,570),(165,600),(255,420)],fill=skin,outline=outline); d.polygon([(435,350),(525,570),(475,600),(385,420)],fill=skin,outline=outline)
+    d.ellipse((220,90,420,290),fill=skin,outline=outline,width=10)
+    # capelli / cappello / giacca
+    d.pieslice((205,55,435,275),180,360,fill=outline)
+    d.rounded_rectangle((210,330,430,405),30,fill=accent)
+    d.ellipse((260,170,280,190),fill=outline); d.ellipse((360,170,380,190),fill=outline)
+    d.arc((285,185,355,235),0,180,fill=(120,72,62,255),width=5)
+    # scarpe e Poké Ball alla cintura
+    d.rounded_rectangle((225,790,315,855),25,fill=(245,245,238,255),outline=outline,width=8); d.rounded_rectangle((325,790,415,855),25,fill=(245,245,238,255),outline=outline,width=8)
+    cx,cy=320,500; d.ellipse((cx-28,cy-28,cx+28,cy+28),fill=(235,75,70,255),outline=outline,width=6); d.rectangle((cx-28,cy-4,cx+28,cy+4),fill=outline); d.ellipse((cx-8,cy-8,cx+8,cy+8),fill=(245,245,238,255),outline=outline,width=4)
+    im=im.filter(ImageFilter.GaussianBlur(.35)); im.save(percorso)
+
 def _candidati_pokemon(rng: random.Random, quanti: int):
     ids = list(POKEMON_IDS)
     rng.shuffle(ids)
@@ -181,7 +215,7 @@ def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
     for nome, url, slug in _candidati_item(rng, BALL_POOL, "ball"):
         percorso = ASSET_DIR / nome
         if _download(url, percorso):
-            manifest["pokeball"].append(nome)
+            _polish_asset(percorso)\n            manifest["pokeball"].append(nome)
         if len(manifest["pokeball"]) >= 4:
             break
 
@@ -189,14 +223,16 @@ def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
     for nome, url, slug in _candidati_item(rng, ITEM_POOL, "item"):
         percorso = ASSET_DIR / nome
         if _download(url, percorso):
-            manifest["oggetti"].append(nome)
+            _polish_asset(percorso)\n            manifest["oggetti"].append(nome)
         if len(manifest["oggetti"]) >= 6:
             break
 
     # 3 trainer sprites: se un nome non è disponibile, si passa al successivo.
     for nome, url, trainer_nome in _candidati_trainer(rng):
         percorso = ASSET_DIR / nome
-        if _download_mediawiki(url, percorso):
+        if not _download_mediawiki(url, percorso):
+            _trainer_fallback(percorso, len(manifest["allenatori"]))
+        if percorso.exists():
             manifest["allenatori"].append(nome)
         if len(manifest["allenatori"]) >= 3:
             break
