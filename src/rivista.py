@@ -29,20 +29,20 @@ F = fonts.carica()
 TITOLO, SOTTO, TESTO, TESTO_B = F["Testata"], F["Titolo"], F["Corpo"], F["CorpoB"]
 
 # ---------- palette giocosa ----------
-INCHIOSTRO = colors.HexColor("#2B2D42")
-CIELO = colors.HexColor("#4CC9F0")
-SOLE = colors.HexColor("#FFD23F")
-ROSSO = colors.HexColor("#EF476F")
-VERDE = colors.HexColor("#06D6A0")
-PRATO = colors.HexColor("#7BC950")
-VIOLA = colors.HexColor("#8338EC")
-ARANCIO = colors.HexColor("#FF8C42")
-BLU = colors.HexColor("#118AB2")
-CARTA = colors.HexColor("#FFF8E7")
-CREMA = colors.HexColor("#FFF1C9")
-PASTELLO = colors.HexColor("#FFF3DC")
-VERDE_SCURO = colors.HexColor("#03A07A")     # per le scritte verdi su fondo bianco
-GRIGIO = colors.HexColor("#6B6F80")
+INCHIOSTRO = colors.HexColor("#24332F")
+CIELO = colors.HexColor("#8EB9B2")
+SOLE = colors.HexColor("#D8C78D")
+ROSSO = colors.HexColor("#A85D52")
+VERDE = colors.HexColor("#5F9478")
+PRATO = colors.HexColor("#86A86F")
+VIOLA = colors.HexColor("#7B718A")
+ARANCIO = colors.HexColor("#B98B62")
+BLU = colors.HexColor("#4D8790")
+CARTA = colors.HexColor("#F4F1E6")
+CREMA = colors.HexColor("#ECE7D5")
+PASTELLO = colors.HexColor("#E9E7DC")
+VERDE_SCURO = colors.HexColor("#356B58")     # per le scritte verdi su fondo bianco
+GRIGIO = colors.HexColor("#65716D")
 BIANCO = colors.white
 LEGNO = colors.HexColor("#C8792B")
 LEGNO_SCURO = colors.HexColor("#9C5A1C")
@@ -229,27 +229,38 @@ def _arcobaleno(c, cx, cy, r, spessore):
 
 
 # ---------- scenari a tutta pagina ----------
+def _sfondo_mappa(c, alpha=.12, wash="#F1EFE4"):
+    """Mappa Hoenn full-page come texture editoriale, con velo uniforme per la leggibilità."""
+    path=_topographic_map_path()
+    c.saveState()
+    c.setFillColor(colors.HexColor(wash)); c.rect(0,0,W,H,stroke=0,fill=1)
+    try:
+        c.setFillAlpha(alpha)
+        # leggero overscan: la mappa diventa ambiente, non un riquadro.
+        c.drawImage(str(path),-16*mm,-4*mm,W+32*mm,H+8*mm,preserveAspectRatio=False,mask="auto")
+        c.setFillAlpha(1)
+    except Exception:
+        pass
+    c.setFillColor(colors.Color(0.96,0.95,0.90,alpha=.62)); c.rect(0,0,W,H,stroke=0,fill=1)
+    c.restoreState()
+
+def _panel(c,x,y,w,h,r=3*mm,alpha=.92,stroke="#7A9186"):
+    c.saveState()
+    c.setFillColor(colors.Color(1,1,.965,alpha=alpha)); c.roundRect(x,y,w,h,r,stroke=0,fill=1)
+    c.setStrokeColor(colors.HexColor(stroke)); c.setLineWidth(.65); c.roundRect(x,y,w,h,r,stroke=1,fill=0)
+    c.restoreState()
+
 def _mondo_giorno(c, ctx=None):
-    """Sfondo editoriale Hoenn, morbido e senza griglie/pixel."""
-    c.setFillColor(colors.HexColor("#E8E8D5")); c.rect(0,0,W,H,stroke=0,fill=1)
-    # grandi forme atmosferiche molto leggere
-    c.setFillColor(colors.Color(.38,.58,.39,alpha=.10)); c.circle(25*mm,48*mm,55*mm,stroke=0,fill=1)
-    c.setFillColor(colors.Color(.25,.55,.58,alpha=.09)); c.circle(W-18*mm,H-72*mm,62*mm,stroke=0,fill=1)
-    c.setFillColor(colors.HexColor("#1F5B4A")); c.rect(0,H-19*mm,W,19*mm,stroke=0,fill=1)
-    c.setFillColor(colors.HexColor("#79B86B")); c.rect(0,H-21*mm,W,2*mm,stroke=0,fill=1)
+    _sfondo_mappa(c,.16,"#F2EFE2")
+    c.setFillColor(colors.HexColor("#315E51")); c.rect(0,H-19*mm,W,19*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#91AD83")); c.rect(0,H-20.5*mm,W,1.5*mm,stroke=0,fill=1)
 
 def _mondo_tramonto(c, ctx=None):
-    """Quarta di copertina elegante, senza scanline o reticoli."""
-    c.setFillColor(colors.HexColor("#183A34")); c.rect(0,0,W,H,stroke=0,fill=1)
-    c.setFillColor(colors.HexColor("#2E6757")); c.rect(0,0,W,34*mm,stroke=0,fill=1)
-    c.setFillColor(colors.Color(.55,.78,.62,alpha=.08)); c.circle(W*.18,H*.20,48*mm,stroke=0,fill=1)
-    c.setFillColor(colors.Color(.25,.58,.60,alpha=.08)); c.circle(W*.82,H*.15,58*mm,stroke=0,fill=1)
-    _art_map(c,MARGINE,18*mm,88*mm,55*mm,71)
+    _sfondo_mappa(c,.14,"#29453E")
+    c.saveState(); c.setFillColor(colors.Color(.08,.20,.17,alpha=.76)); c.rect(0,0,W,H,stroke=0,fill=1); c.restoreState()
     hero=(_art_piano(ctx,7).get("hero_asset") if ctx else None) or _mondo_asset(ctx,"pokemon",6)
     c.setFillAlpha(1)
-    c.saveState(); c.setFillColor(colors.Color(1,1,1,alpha=.14)); c.circle(W-43*mm,46*mm,38*mm,stroke=0,fill=1); c.restoreState()
-    _immagine_asset(c,hero,W-43*mm,46*mm,76*mm)
-
+    if hero: _immagine_asset(c,hero,W-45*mm,50*mm,82*mm)
 
 # ---------- stili ----------
 
