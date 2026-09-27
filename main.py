@@ -215,12 +215,12 @@ def settimanale(invia_telegram=True):
     ctx["art_direction"] = piano
 
     Path("output").mkdir(exist_ok=True)
-    percorso_pdf = f"output/Il_Collezionista_n{numero}_{oggi.isoformat()}.pdf"
+    percorso_pdf = f"output/POKEPUTZU_WEEKLY_n{numero}_{oggi.isoformat()}.pdf"
     ctx["pokemon_mondo"] = pokemon_mondo
     rivista.crea(percorso_pdf, ctx)
     storage.scrivi_json("riepilogo/ultimo.json", report.dati_per_claude(ctx))
     if invia_telegram:
-        telegram.documento(percorso_pdf, f"Il Collezionista n. {numero} - {ctx['data_lunga']}")
+        telegram.documento(percorso_pdf, f"POKEPUTZU WEEKLY n. {numero} - {ctx['data_lunga']}")
         storage.scrivi_json("numero_rivista.json", {"numero": numero})
         print(f"Rivista n. {numero} inviata")
     else:
