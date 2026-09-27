@@ -3,15 +3,17 @@
   python main.py setup         -> riconosce i giochi su Cardmarket e manda un messaggio di prova
   python main.py giornaliero   -> salva i prezzi del giorno e manda gli alert
   python main.py settimanale   -> salva i prezzi (se mancano) e manda il report completo
+  python main.py prova_grafica -> prova il nuovo art director Gemini senza inviare PDF
 """
 import datetime as dt
 import html
+import json
 import sys
 from pathlib import Path
 
 import config as C
 from download_assets import scarica_immagini_pokemon
-from src import analysis, cardmarket, news, report, rivista, storage, telegram, verify
+from src import analysis, art_director, cardmarket, news, report, rivista, storage, telegram, verify
 
 LINGUE_IT = {"italian": "italiano", "english": "inglese", "japanese": "giapponese"}
 
@@ -216,6 +218,12 @@ def settimanale():
     print(f"Rivista n. {numero} inviata")
 
 
+def prova_grafica():
+    numero = storage.leggi_json("numero_rivista.json", {"numero": 0})["numero"] + 1
+    piano = art_director.salva_piano_test(numero, "hoenn")
+    print(json.dumps(piano, ensure_ascii=False, indent=2))
+
+
 def setup():
     trovati = cardmarket.trova_id_giochi(C.GIOCHI)
     ids = {k: trovati.get(k) for k in C.GIOCHI}
@@ -235,7 +243,7 @@ def setup():
 
 
 if __name__ == "__main__":
-    comandi = {"setup": setup, "giornaliero": giornaliero, "settimanale": settimanale}
+    comandi = {"setup": setup, "giornaliero": giornaliero, "settimanale": settimanale, "prova_grafica": prova_grafica}
     if len(sys.argv) != 2 or sys.argv[1] not in comandi:
         print(__doc__)
         sys.exit(1)
