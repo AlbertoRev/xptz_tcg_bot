@@ -149,12 +149,12 @@ def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
         "allenatori": [],
     }
 
-    # 6 Pokémon grandi: copertina, bordi, separatori e retro.
+    # 7 Pokémon grandi: uno diverso per ciascuna pagina della rivista.
     for nome, url in _candidati_pokemon(rng, 10):
         percorso = ASSET_DIR / nome
         if _download(url, percorso):
             manifest["pokemon"].append(nome)
-        if len(manifest["pokemon"]) >= 6:
+        if len(manifest["pokemon"]) >= 7:
             break
 
     # 4 Poké Ball diverse a settimana.
