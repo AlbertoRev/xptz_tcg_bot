@@ -1,4 +1,9 @@
-"""Prepara il set grafico Pokémon della settimana.\n\nIl bot scarica soltanto gli asset scelti per quel numero della rivista.\n"""\n\nfrom __future__ import annotations
+"""Prepara il set grafico Pokémon della settimana.
+
+Il bot scarica soltanto gli asset scelti per quel numero della rivista.
+"""
+
+from __future__ import annotations
 
 import datetime as dt
 import hashlib
