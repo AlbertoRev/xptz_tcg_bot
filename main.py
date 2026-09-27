@@ -110,8 +110,10 @@ def giornaliero():
         telegram.messaggio(report.telegram_alert(sig, g["nome"], "sigillato", (len(mov_sig), len(occ), len(oss))))
 
         # --- carte singole
-        mov_sing = [a for a in movimenti if a["tipo"] == "singola"]
-        sla = [{**a, **base, "genere": "slancio"} for a in analysis.slancio_singole(df, slug, link)]
+        # carte singole: solo ribassi
+        mov_sing = [a for a in movimenti if a["tipo"] == "singola" and a["variazione_7g"] < 0]
+        sla = [{**a, **base, "genere": "slancio"} for a in analysis.slancio_singole(df, slug, link)
+               if a["variazione"] < 0]
         sing = _seleziona(mov_sing + sla, C.MAX_ALERT_SINGOLE, stato, oggi)
         telegram.messaggio(report.telegram_alert(sing, g["nome"], "singola", (len(mov_sing), len(sla))))
         print(f"{g['nome']}: {len(sig)} alert sigillato, {len(sing)} alert singole")
@@ -153,6 +155,8 @@ def settimanale():
     ctx = {"data": oggi.isoformat(), "data_it": oggi.strftime("%d/%m/%Y"), "numero": numero,
            "data_lunga": f"{oggi.day} {MESI_IT[oggi.month - 1]} {oggi.year}",
            "mensile": oggi.day <= 7, "giochi": {}, "anomalie": 0}
+    prossima = oggi + dt.timedelta(days=7)
+    ctx["prossima"] = f"{prossima.day} {MESI_IT[prossima.month - 1]}"
     radar_grezzo = news.uscite(oggi)
     for chiave, (giorno, prezzi, cat) in dati.items():
         g = C.GIOCHI[chiave]
@@ -199,8 +203,7 @@ def settimanale():
     percorso_pdf = f"output/Il_Collezionista_n{numero}_{oggi.isoformat()}.pdf"
     rivista.crea(percorso_pdf, ctx)
     storage.scrivi_json("riepilogo/ultimo.json", report.dati_per_claude(ctx))
-    telegram.messaggio(report.telegram_settimanale(ctx))
-    telegram.documento(percorso_pdf, f"Il Collezionista n. {numero} - {ctx['data_it']}")
+    telegram.documento(percorso_pdf, f"Il Collezionista n. {numero} - {ctx['data_lunga']}")
     storage.scrivi_json("numero_rivista.json", {"numero": numero})
     print(f"Rivista n. {numero} inviata")
 
