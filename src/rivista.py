@@ -48,8 +48,8 @@ LEGNO = colors.HexColor("#C8792B")
 LEGNO_SCURO = colors.HexColor("#9C5A1C")
 ARCOBALENO = [ROSSO, ARANCIO, SOLE, VERDE, CIELO, VIOLA]
 HEX = ["#2366B1", "#F04E45", "#42A85A", "#8B62D9", "#FF9D3C"]
-COLORE_STATO = {"caldo": colors.HexColor("#8A4F3D"), "tiepido": colors.HexColor("#9A7540"),
-                "freddo": colors.HexColor("#356B66"), "in arrivo": colors.HexColor("#2F7D55"),
+COLORE_STATO = {"caldo": ROSSO, "tiepido": ARANCIO,
+                "freddo": BLU, "in arrivo": VERDE,
                 "da valutare": colors.HexColor("#6D8452"), "nessun dato": colors.HexColor("#66736B")}
 
 W, H = A4
@@ -256,8 +256,8 @@ def _mondo_giorno(c, ctx=None):
     c.setFillColor(SOLE); c.rect(0,H-21*mm,W,2*mm,stroke=0,fill=1)
 
 def _mondo_tramonto(c, ctx=None):
-    _sfondo_mappa(c,.14,"#29453E")
-    c.saveState(); c.setFillColor(colors.Color(.08,.20,.17,alpha=.76)); c.rect(0,0,W,H,stroke=0,fill=1); c.restoreState()
+    _sfondo_mappa(c,.18,"#173B70")
+    c.saveState(); c.setFillColor(colors.Color(.035,.14,.30,alpha=.74)); c.rect(0,0,W,H,stroke=0,fill=1); c.restoreState()
     hero=(_art_piano(ctx,7).get("hero_asset") if ctx else None) or _mondo_asset(ctx,"pokemon",6)
     c.setFillAlpha(1)
     if hero: _immagine_asset(c,hero,W-43*mm,53*mm,86*mm)
@@ -407,7 +407,7 @@ def _tabella(dati, larghezze, colore=colors.HexColor("#2366B1"), allinea_destra_
         ("TEXTCOLOR", (0, 1), (-1, -1), INCHIOSTRO),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("LEFTPADDING", (0, 0), (-1, -1), 3), ("RIGHTPADDING", (0, 0), (-1, -1), 3),
-        ("TOPPADDING", (0, 0), (-1, -1), 2.8), ("BOTTOMPADDING", (0, 0), (-1, -1), 2.8),
+        ("TOPPADDING", (0, 0), (-1, -1), 2.2), ("BOTTOMPADDING", (0, 0), (-1, -1), 2.2),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),
         ("BOX", (0, 0), (-1, -1), 1.2, colore),
     ]
@@ -701,14 +701,14 @@ def _box_200(car, st):
     righe = [[Paragraph("Cosa farei con 200 €", st["box_titolo"])],
              [Paragraph(_t("La proposta della settimana, calcolata con regole fisse sui dati: al massimo tre "
                            "acquisti, uno per tipo di segnale, senza superare il budget."), st["occhiello"])]]
-    colori = {"Occasione": colors.HexColor("#2F7D55"), "Novità calda": colors.HexColor("#8A4F3D"), "Tendenza solida": colors.HexColor("#356B66")}
+    colori = {"Occasione": VERDE, "Novità calda": ROSSO, "Tendenza solida": BLU}
     for x in car["proposte"]:
         scheda = Table([
             [_tag(x["categoria"], colori.get(x["categoria"], VIOLA), 27 * mm),
              Paragraph(f'<link href="{escape(x["link"])}" color="#2B2D42">{_t(x["nome"][:70])}</link>',
                        st["box_nome"]),
              Paragraph(f"{_eur(x['prezzo'])}", ParagraphStyle("pz", parent=st["box_nome"], alignment=2,
-                                                              textColor=colors.HexColor("#8A4F3D")))],
+                                                              textColor=ROSSO))],
             ["", Paragraph(_t("Perché: " + x["perche"]), st["cella"]), ""],
             ["", Paragraph(_t("Rischio: " + x["rischio"]), ParagraphStyle("rs", parent=st["cella"],
                                                                           textColor=GRIGIO)), ""],
@@ -716,14 +716,14 @@ def _box_200(car, st):
         scheda.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
                                     ("BACKGROUND", (0, 0), (-1, -1), BIANCO),
                                     ("ROUNDEDCORNERS", [6, 6, 6, 6]),
-                                    ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#568D55")),
+                                    ("BOX", (0, 0), (-1, -1), 1, BLU),
                                     ("TOPPADDING", (0, 0), (-1, -1), 3), ("BOTTOMPADDING", (0, 0), (-1, -1), 3)]))
         righe.append([scheda])
     if car["proposte"]:
         righe.append([Paragraph(f"<b>Totale: {_eur(car['speso'])}</b>  ·  restano {_eur(car['residuo'])}",
                                 ParagraphStyle("tot", parent=st["p"], fontName=TESTO_B))])
     for n in car["note"]:
-        righe.append([Paragraph(_t(n), ParagraphStyle("bn2", parent=st["p"], textColor=colors.HexColor("#8A4F3D")))])
+        righe.append([Paragraph(_t(n), ParagraphStyle("bn2", parent=st["p"], textColor=ROSSO))])
     righe.append([Paragraph(_t("Proposta automatica, non consulenza finanziaria. Il ragionamento completo è "
                                "nell'analisi di Claude della domenica."), st["nota"])])
     box = Table(righe, colWidths=[LARGHEZZA])
@@ -775,7 +775,7 @@ def crea(percorso, ctx):
     E = [NextPageTemplate("interna"), Spacer(1, 1), PageBreak()]
 
     # 1. La settimana in breve + 200 euro
-    E += [Rubrica("Editoriale", "La settimana in breve", colors.HexColor("#568D55")), Spacer(1, 3)]
+    E += [Rubrica("Editoriale", "La settimana in breve", BLU), Spacer(1, 3)]
     for k, riga in enumerate(ctx["sintesi"]):
         E.append(Paragraph(f'<font color="{HEX[k % 5]}" name="{SOTTO}">»</font>  {_t(riga)}', st["p"]))
         E.append(Spacer(1, 2.5))
@@ -783,7 +783,7 @@ def crea(percorso, ctx):
           _box_200(g["carrello"], st), Spacer(1, 6), Decoro(ctx, seme=ctx["numero"])]
 
     # 2. Radar uscite
-    E += [Spacer(1, 6), CondPageBreak(60 * mm), Rubrica("Radar", "Le uscite in arrivo", colors.HexColor("#356B66")),
+    E += [Spacer(1, 6), CondPageBreak(60 * mm), Rubrica("Radar", "Le uscite in arrivo", BLU),
           Paragraph(_t("Date di uscita trovate nelle notizie delle ultime settimane (siti ufficiali, italiani e "
                        "internazionali) per i prossimi 60 giorni. Più fonti = più interesse. Controlla sempre la "
                        "data sul link."), st["occhiello"]), Spacer(1, 5)]
@@ -794,7 +794,7 @@ def crea(percorso, ctx):
             dati.append([Paragraph(f"{d[8:10]}/{d[5:7]}", st["cella_b"]),
                          _link(u["titolo"], u["link"], st["cella"], 110), Paragraph(_t(u["fonte"]), st["cella"]),
                          str(u["citazioni"]), _stato(u["mercato"])])
-        E.append(_tabella(dati, [15 * mm, 88 * mm, 30 * mm, 12 * mm, 31 * mm], colors.HexColor("#356B66"), allinea_destra_da=None))
+        E.append(_tabella(dati, [15 * mm, 88 * mm, 30 * mm, 12 * mm, 31 * mm], BLU, allinea_destra_da=None))
     else:
         E.append(Paragraph("Nessuna data di uscita trovata nelle notizie di questa settimana.", st["nota"]))
 
@@ -815,7 +815,7 @@ def crea(percorso, ctx):
         E.append(Paragraph("Nessun prodotto sigillato nuovo nel periodo.", st["nota"]))
 
     # 4. Il borsino
-    E += [Spacer(1, 10), CondPageBreak(110 * mm), Rubrica("Mercato", "Il borsino della settimana", colors.HexColor("#2F7D55")),
+    E += [Spacer(1, 10), CondPageBreak(110 * mm), Rubrica("Mercato", "Il borsino della settimana", VERDE),
           Paragraph(_t("Chi sale e chi scende. Prezzo = tendenza Cardmarket. * = stima dal primo giorno, "
                        "sostituita dallo storico reale man mano che si accumula."), st["occhiello"])]
     for tipo, nome_tipo in (("sigillato", "Sigillato"), ("singola", "Carte singole")):
@@ -832,16 +832,16 @@ def crea(percorso, ctx):
         for p in C.PERIODI:
             c = cl[str(p)]
             if c["rialzi"]:
-                E += [_tabella_classifica(f"Rialzi a {p} giorni", c["rialzi"], colors.HexColor("#2F7D55")), Spacer(1, 6)]
+                E += [_tabella_classifica(f"Rialzi a {p} giorni", c["rialzi"], VERDE), Spacer(1, 6)]
             if c["ribassi"]:
-                E += [_tabella_classifica(f"Ribassi a {p} giorni", c["ribassi"], colors.HexColor("#8A4F3D")), Spacer(1, 6)]
+                E += [_tabella_classifica(f"Ribassi a {p} giorni", c["ribassi"], ROSSO), Spacer(1, 6)]
             elif c.get("piu_deboli"):
-                E += [_tabella_classifica(f"Più deboli a {p} giorni (nessun calo)", c["piu_deboli"], colors.HexColor("#9A7540")),
+                E += [_tabella_classifica(f"Più deboli a {p} giorni (nessun calo)", c["piu_deboli"], ARANCIO),
                       Spacer(1, 6)]
 
     # 5. Occasioni
     if g["occasioni"]:
-        E += [Spacer(1, 6), CondPageBreak(80 * mm), Rubrica("Affari", "Le occasioni della settimana", colors.HexColor("#8A7545")),
+        E += [Spacer(1, 6), CondPageBreak(80 * mm), Rubrica("Affari", "Le occasioni della settimana", ARANCIO),
               Paragraph(_t("Sigillato con un'offerta molto sotto il prezzo di tendenza."), st["occhiello"]),
               Spacer(1, 4),
               Fumetto("Occhio: l'offerta più bassa può essere in un'altra lingua o rovinata. Apri il link e "
@@ -850,11 +850,11 @@ def crea(percorso, ctx):
         for o in g["occasioni"]:
             dati.append([_link(o["nome"], o["link"], st["cella"], 80), _eur(o["prezzo_minimo"]),
                          _eur(o["prezzo_tendenza"]), _perc(-o["sconto"])])
-        E.append(_tabella(dati, [104 * mm, 24 * mm, 24 * mm, 24 * mm], colors.HexColor("#9A7540")))
+        E.append(_tabella(dati, [104 * mm, 24 * mm, 24 * mm, 24 * mm], ARANCIO))
 
     # 6. Notizie
     if g["notizie"]:
-        E += [Spacer(1, 10), CondPageBreak(45 * mm), Rubrica("Attualità", "Dal mondo Pokémon", colors.HexColor("#356B66")), Spacer(1, 3)]
+        E += [Spacer(1, 10), CondPageBreak(45 * mm), Rubrica("Attualità", "Dal mondo Pokémon", BLU), Spacer(1, 3)]
         for k, n in enumerate(g["notizie"]):
             E.append(Paragraph(f'<font color="{HEX[k % 5]}" name="{SOTTO}" size="8">'
                                f'{_t((n.get("fonte") or "").upper())}  ·  {_t(n["data"])}</font><br/>'
@@ -864,11 +864,12 @@ def crea(percorso, ctx):
     E += [Spacer(1, 8), PokemonHero(ctx, indice=5, altezza=50*mm)]
 
     # 7. Quarta di copertina: come leggere la rivista
-    E += [NextPageTemplate("retro"), PageBreak(), Rubrica("Metodo", "Come leggere la rivista", colors.HexColor("#568D55")), Spacer(1, 3)]
+    E += [NextPageTemplate("retro"), PageBreak(), Rubrica("Metodo", "Come leggere la rivista", BLU), Spacer(1, 3)]
     note=[]
     retro_st=ParagraphStyle("retro_note",parent=st["p"],fontSize=9.3,leading=11.4)
     for nota in ctx["note_metodo"]:
         note.append(Paragraph(f'<font color="#F04E45" name="{SOTTO}">›</font>  {_t(nota)}',retro_st))
         note.append(Spacer(1,2.5))
-    E.append(KeepInFrame(LARGHEZZA,82*mm,note,mode="shrink"))
+    # Nessuna altezza imposta: ReportLab usa esattamente la somma delle note.
+    E.extend(note)
     doc.build(E)
