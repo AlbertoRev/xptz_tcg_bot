@@ -232,16 +232,9 @@ def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
         "allenatori": [],
     }
 
-    # Mappa Hoenn su rilievo reale di Kyūshū (Wikimedia Commons); il renderer ha comunque un fallback locale.
-    map_path=ASSET_DIR/"hoenn_realistic.png"
-    if _download_wikimedia("Kyushu_relief_map.svg",map_path,1800):
-        try:
-            with Image.open(map_path).convert("RGB") as m:
-                m=m.rotate(90,expand=True,resample=Image.Resampling.BICUBIC)
-                m.save(map_path,"PNG")
-            manifest["map"]=map_path.name
-        except Exception as exc:
-            print(f"Impossibile preparare mappa realistica: {exc}")
+    # La mappa viene generata localmente dal renderer sulla geografia di Hoenn.
+    # Non usiamo territori reali come sostituti: evita mappe realistiche ma geograficamente errate.
+    manifest["map"] = "hoenn_topographic.png"
 
     # 7 Pokémon grandi: uno diverso per ciascuna pagina della rivista.
     for nome, url in _candidati_pokemon(rng, 10):
