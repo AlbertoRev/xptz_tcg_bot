@@ -761,7 +761,7 @@ def crea(percorso, ctx):
     doc = BaseDocTemplate(percorso, pagesize=A4, title=f"{TESTATA} n. {ctx['numero']}",
                           leftMargin=MARGINE, rightMargin=MARGINE, topMargin=24 * mm, bottomMargin=18 * mm)
     cornice = Frame(MARGINE, 18 * mm, LARGHEZZA, H - 43 * mm, id="testo", leftPadding=0, rightPadding=0)
-    cornice_retro = Frame(MARGINE + 7 * mm, H - 163 * mm, LARGHEZZA - 14 * mm, 88 * mm, id="retro",
+    cornice_retro = Frame(MARGINE + 7 * mm, H - 166 * mm, LARGHEZZA - 14 * mm, 96 * mm, id="retro",
                           leftPadding=0, rightPadding=0)
     doc.addPageTemplates([
         PageTemplate(id="copertina", frames=[Frame(0, 0, W, H, id="vuota")],
