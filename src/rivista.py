@@ -648,7 +648,7 @@ def _box_200(car, st):
              Paragraph(f'<link href="{escape(x["link"])}" color="#2B2D42">{_t(x["nome"][:70])}</link>',
                        st["box_nome"]),
              Paragraph(f"{_eur(x['prezzo'])}", ParagraphStyle("pz", parent=st["box_nome"], alignment=2,
-                                                              textColor=colors.HexColor("#8A4F3D"))],
+                                                              textColor=colors.HexColor("#8A4F3D")))],
             ["", Paragraph(_t("Perché: " + x["perche"]), st["cella"]), ""],
             ["", Paragraph(_t("Rischio: " + x["rischio"]), ParagraphStyle("rs", parent=st["cella"],
                                                                           textColor=GRIGIO)), ""],
