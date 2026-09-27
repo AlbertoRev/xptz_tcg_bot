@@ -20,7 +20,12 @@ ROOT = Path(__file__).resolve().parent
 ASSET_DIR = ROOT / "assets"
 
 POKEAPI_RAW = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites"
-SHOWDOWN_TRAINER_RAW = "https://play.pokemonshowdown.com/sprites/trainers"
+TRAINERCARDS_ITEMS_RAW = "https://raw.githubusercontent.com/jonbarrow/trainercards.studio/master/public/images/items"
+TRAINER_ART_POOL = [
+    ("may", "https://archives.bulbagarden.net/wiki/Special:Redirect/file/Spr_Masters_May_Sygna_2.png"),
+    ("lyra", "https://archives.bulbagarden.net/wiki/Special:Redirect/file/Spr_Masters_Lyra_2.png"),
+    ("looker", "https://archives.bulbagarden.net/wiki/Special:Redirect/file/Spr_Masters_Looker_2.png"),
+]
 
 # Poké Ball e varianti: tutte arrivano dagli sprite item di PokéAPI.
 BALL_POOL = [
@@ -114,19 +119,16 @@ def _candidati_pokemon(rng: random.Random, quanti: int):
 
 
 def _candidati_item(rng: random.Random, piscina, prefisso: str):
-    slugs = list(piscina)
-    rng.shuffle(slugs)
+    slugs=list(piscina); rng.shuffle(slugs)
     for slug in slugs:
-        nome = f"{prefisso}_{slug}.png"
-        url = f"{POKEAPI_RAW}/items/{slug}.png"
-        yield nome, url, slug
-
+        nome=f"{prefisso}_{slug}.png"
+        # Trainer Cards Studio conserva immagini item più grandi/pulite del vecchio sprite 24–30 px.
+        yield nome, f"{TRAINERCARDS_ITEMS_RAW}/{slug}.png", slug
 
 def _candidati_trainer(rng: random.Random):
-    nomi = list(TRAINER_POOL)
-    rng.shuffle(nomi)
-    for nome in nomi:
-        yield f"trainer_{nome}.png", f"{SHOWDOWN_TRAINER_RAW}/{nome}.png", nome
+    candidati=list(TRAINER_ART_POOL); rng.shuffle(candidati)
+    for nome,url in candidati:
+        yield f"trainer_{nome}.png", url, nome
 
 
 def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
