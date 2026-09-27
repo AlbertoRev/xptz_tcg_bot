@@ -192,12 +192,6 @@ def _candidati_trainer(rng: random.Random):
     for nome,titolo in candidati:
         yield f"trainer_{nome}.png", "wikidex:"+titolo, nome
 
-def _candidati_trainer(rng: random.Random):
-    candidati=list(TRAINER_ART_POOL); rng.shuffle(candidati)
-    for nome,url in candidati:
-        yield f"trainer_{nome}.png", url, nome
-
-
 def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
     """Costruisce e scarica il kit grafico della settimana.
 
