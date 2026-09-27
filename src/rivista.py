@@ -533,7 +533,9 @@ def _art_piano(ctx, numero):
 
 def _topographic_map_path():
     """Genera una carta fisica raster ad alta risoluzione, riutilizzata nel numero."""
-    realistic=ASSET_DIR/"hoenn_realistic.png"\n    if realistic.exists(): return realistic\n    out=ASSET_DIR/"hoenn_topographic.png"
+    realistic=ASSET_DIR/"hoenn_realistic.png"
+    if realistic.exists(): return realistic
+    out=ASSET_DIR/"hoenn_topographic.png"
     if out.exists(): return out
     ASSET_DIR.mkdir(parents=True,exist_ok=True)
     Wm,Hm=1200,760
