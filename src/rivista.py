@@ -475,7 +475,7 @@ def _copertina(c, ctx):
     area_s=KeepInFrame(pw-14*mm,18*mm,[sotto],mode="shrink")
     area_s.canv=c; _,hs=area_s.wrap(pw-14*mm,18*mm); area_s.drawOn(c,x0+7*mm,y0+7*mm)
     # colonna visuale dedicata: mappa e Pokémon non possono sovrapporsi ai dati
-    _art_map(c,W-83*mm,H-96*mm,68*mm,52*mm,ctx["numero"])
+    _art_map(c,W-79*mm,H-96*mm,64*mm,52*mm,ctx["numero"])
     hero=(_art_piano(ctx,1).get("hero_asset") or _mondo_asset(ctx,"pokemon",0))
     if hero:
         _immagine_asset(c,hero,W-40*mm,H-139*mm,58*mm)
@@ -490,8 +490,8 @@ def _copertina(c, ctx):
         c.setFillColor(colors.HexColor("#DCEBCB"))
         c.setFont(TITOLO, 17)
         c.drawCentredString(x + kw/2, ky + 12 * mm, str(numero))
-        c.setFont(TESTO_B, 6.5)
-        c.drawCentredString(x + kw/2, ky + 5 * mm, etichetta.upper())
+        lab=Paragraph(_t(etichetta.upper()),ParagraphStyle("kpi_lab",fontName=TESTO_B,fontSize=5.8,leading=6.2,textColor=colors.HexColor("#DCEBCB"),alignment=TA_CENTER))
+        fit=KeepInFrame(kw-3*mm,6.5*mm,[lab],mode="shrink"); fit.canv=c; fit.wrap(kw-3*mm,6.5*mm); fit.drawOn(c,x+1.5*mm,ky+2.2*mm)
 
     # indice stile Pokédex/menu
     sy = ky - 67 * mm
