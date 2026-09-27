@@ -59,6 +59,20 @@ TESTATA = "POKEPUTZU WEEKLY"
 ASSET_DIR = Path(__file__).resolve().parent.parent / "assets"
 
 
+def _logo(c, x, y, width, compact=False):
+    """Marchio originale POKèPUTZU WEEKLY."""
+    main="POKèPUTZU"; size=max(10,width/5.8); tw=pdfmetrics.stringWidth(main,TITOLO,size)
+    if tw>width: size*=width/tw; tw=pdfmetrics.stringWidth(main,TITOLO,size)
+    c.saveState(); c.translate(x,y); c.rotate(-2 if not compact else 0)
+    c.setFillColor(colors.HexColor("#123E78")); c.setFont(TITOLO,size); c.drawString(2.2,-2.2,main)
+    t=c.beginText(0,0); t.setFont(TITOLO,size); t.setTextRenderMode(2); t.setFillColor(SOLE); t.setStrokeColor(BLU); t.setLineWidth(max(1.2,size/13)); t.textOut(main); c.drawText(t)
+    if not compact:
+        rw=min(width*.48,48*mm); rh=max(7*mm,size*.34); rx=max(0,tw-rw*.88); ry=-rh*.92
+        c.setFillColor(ROSSO); c.roundRect(rx,ry,rw,rh,rh/2,stroke=0,fill=1); c.setFillColor(BIANCO); c.setFont(TITOLO,max(7,size*.30)); c.drawCentredString(rx+rw/2,ry+rh*.26,"WEEKLY")
+    else:
+        c.setFillColor(ROSSO); c.setFont(TESTO_B,max(5,size*.23)); c.drawRightString(min(width,tw),-3.2*mm,"WEEKLY")
+    c.restoreState()
+
 def _mondo_asset(ctx, gruppo, indice=0):
     """Restituisce un asset del kit settimanale, oppure None se non disponibile."""
     mondo = (ctx or {}).get("pokemon_mondo", {})
@@ -470,60 +484,25 @@ def _grafico(righe, periodo, titolo):
 
 # ---------- pagine ----------
 def _copertina(c, ctx):
-    g=ctx["principale"]; c.saveState(); _mondo_giorno(c,ctx)
-    # Masthead più vicino a un magazine: forte, pulito, senza effetto "UI box".
-    # masthead con ombra gialla, più vicino alla forza grafica di una cover Nintendo
-    c.setFillColor(colors.HexColor("#173B70")); c.setFont(TITOLO,27); c.drawString(MARGINE+1*mm,H-13.7*mm,"POKEPUTZU WEEKLY")
-    c.setFillColor(SOLE); c.drawString(MARGINE,H-12.7*mm,"POKEPUTZU WEEKLY")
-    c.setFillColor(colors.HexColor("#DCE7D9")); c.setFont(TESTO_B,7.5)
-    c.drawRightString(W-MARGINE,H-11.8*mm,f"N. {ctx['numero']}  ·  {ctx['data_lunga'].upper()}")
-
-    # Cover story content-driven: altezza derivata da titolo+sottotitolo.
-    x0,pw=MARGINE,119*mm
-    titolo=Paragraph(_t(ctx["apertura"]["titolo"]),ParagraphStyle("cover_title",fontName=TITOLO,fontSize=18,leading=19,textColor=BLU,alignment=TA_CENTER))
-    sotto=Paragraph(_t(ctx["apertura"]["sottotitolo"]),ParagraphStyle("cover_sub",fontName=TESTO,fontSize=8.6,leading=10.5,textColor=GRIGIO,alignment=TA_CENTER))
-    _,th=titolo.wrap(pw-16*mm,60*mm); _,sh=sotto.wrap(pw-16*mm,35*mm)
-    ph=th+sh+28*mm; y0=H-48*mm-ph
-    _panel(c,x0,y0,pw,ph,4*mm,.97,"#72B7E4")
-    chipw=44*mm; c.setFillColor(ROSSO); c.roundRect(x0+(pw-chipw)/2,y0+ph-10*mm,chipw,7*mm,3.5*mm,stroke=0,fill=1)
-    c.setFillColor(BIANCO); c.setFont(TESTO_B,6.8); c.drawCentredString(x0+pw/2,y0+ph-7.5*mm,"IN PRIMO PIANO")
-    titolo.drawOn(c,x0+8*mm,y0+sh+13*mm)
-    sotto.drawOn(c,x0+8*mm,y0+7*mm)
-
-    # Artwork protagonista più grande, libero sul fondo-mappa.
-    hero=(_art_piano(ctx,1).get("hero_asset") or _mondo_asset(ctx,"pokemon",0))
-    if hero: _immagine_asset(c,hero,W-35*mm,H-119*mm,72*mm)
-    # Secondo piano illustrato: riempie la colonna destra senza competere col protagonista.
-    support=_mondo_asset(ctx,"pokemon",1)
-    if support and support != hero: _immagine_asset(c,support,W-23*mm,H-181*mm,42*mm)
+    c.saveState(); _sfondo_mappa(c,.52,"#DFF3FF")
+    c.setFillColor(colors.Color(.03,.30,.64,alpha=.22)); c.rect(0,0,W,H,stroke=0,fill=1)
+    p=c.beginPath(); p.moveTo(0,H*.72); p.lineTo(W,H*.88); p.lineTo(W,H); p.lineTo(0,H); p.close(); c.setFillColor(colors.Color(.05,.36,.70,alpha=.86)); c.drawPath(p,stroke=0,fill=1)
+    p=c.beginPath(); p.moveTo(0,0); p.lineTo(W*.58,0); p.lineTo(W*.22,H*.42); p.lineTo(0,H*.31); p.close(); c.setFillColor(colors.Color(1,.83,.16,alpha=.82)); c.drawPath(p,stroke=0,fill=1)
+    _logo(c,12*mm,H-38*mm,142*mm)
+    c.setFillColor(BIANCO); c.setFont(TESTO_B,7.2); c.drawRightString(W-10*mm,H-12*mm,f"N.{ctx['numero']}  ·  {ctx['data_lunga'].upper()}")
+    hero=(_art_piano(ctx,1).get("hero_asset") or _mondo_asset(ctx,"pokemon",0)); support=_mondo_asset(ctx,"pokemon",1); trainer=_mondo_asset(ctx,"allenatori",0)
     ball=_mondo_asset(ctx,"pokeball",0); item=_mondo_asset(ctx,"oggetti",0)
-    if ball: _immagine_asset(c,ball,W-63*mm,H-168*mm,27*mm)
-    if item: _immagine_asset(c,item,W-27*mm,H-214*mm,30*mm)
-
-    # KPI misurati sul contenuto: numero e label centrati otticamente.
-    kw=(119*mm-9*mm)/4; labs=[]
-    for numero,etichetta in ctx["kpi"]:
-        lab=Paragraph(_t(etichetta.upper()),ParagraphStyle("kpi_auto",fontName=TESTO_B,fontSize=5.7,leading=6.2,textColor=GRIGIO,alignment=TA_CENTER))
-        _,lh=lab.wrap(kw-5*mm,20*mm); labs.append((numero,lab,lh))
-    kh=max(19*mm,max(lh for _,_,lh in labs)+14*mm); ky=y0-kh-7*mm
-    for i,(numero,lab,lh) in enumerate(labs):
-        x=MARGINE+i*(kw+3*mm); _panel(c,x,ky,kw,kh,3*mm,.97,"#72B7E4")
-        c.setFillColor(BLU); c.setFont(TITOLO,15.5); c.drawCentredString(x+kw/2,ky+kh-8.2*mm,str(numero))
-        lab.drawOn(c,x+2.5*mm,ky+3.2*mm)
-
-    # Indice come colonna editoriale traslucida.
-    idxh=(18+7.2*len(ctx["sommario"]))*mm; sy=ky-idxh-7*mm; _panel(c,MARGINE,sy,119*mm,idxh,4*mm,.97,"#72B7E4")
-    c.setFillColor(ROSSO); c.setFont(TITOLO,10.5); c.drawCentredString(MARGINE+59.5*mm,sy+idxh-9*mm,"NEL NUMERO")
-    yy=sy+idxh-18*mm
-    for k,(titolo_r,_) in enumerate(ctx["sommario"],1):
-        p=Paragraph(f'<b>{k:02d}</b>  {_t(titolo_r)}',ParagraphStyle(f"idx{k}",fontName=TESTO,fontSize=7.9,leading=8.5,textColor=INCHIOSTRO))
-        box=KeepInFrame(105*mm,7*mm,[p],mode="shrink"); box.canv=c; box.wrap(105*mm,7*mm); box.drawOn(c,MARGINE+7*mm,yy-2*mm)
-        yy-=7.1*mm
-
-    c.setFillColor(BLU); c.rect(0,0,W,10*mm,stroke=0,fill=1)
-    c.setFillColor(colors.HexColor("#E2E9DF")); c.setFont(TESTO_B,6.5)
-    c.drawString(MARGINE,3.6*mm,f"CARDMARKET DATA  ·  {g['giorni_storico']} GIORNI DI STORICO  ·  INFORMATIVO")
-    c.restoreState()
+    if support and support!=hero: _immagine_asset(c,support,W-27*mm,H-95*mm,52*mm)
+    if hero: _immagine_asset(c,hero,W-54*mm,H-157*mm,105*mm)
+    if trainer: _immagine_asset(c,trainer,29*mm,H-120*mm,57*mm)
+    if ball: _immagine_asset(c,ball,24*mm,43*mm,31*mm)
+    if item: _immagine_asset(c,item,W-23*mm,35*mm,32*mm)
+    pw=128*mm; titolo=Paragraph(_t(ctx["apertura"]["titolo"]),ParagraphStyle("cover_feature",fontName=TITOLO,fontSize=21,leading=21.5,textColor=BLU,alignment=TA_CENTER))
+    sotto=Paragraph(_t(ctx["apertura"]["sottotitolo"]),ParagraphStyle("cover_deck",fontName=TESTO_B,fontSize=8.5,leading=10.2,textColor=INCHIOSTRO,alignment=TA_CENTER))
+    _,th=titolo.wrap(pw-14*mm,70*mm); _,sh=sotto.wrap(pw-14*mm,35*mm); ph=th+sh+27*mm; x=11*mm; y=22*mm
+    _panel(c,x,y,pw,ph,5*mm,.95,"#1769B0"); chip=47*mm; c.setFillColor(ROSSO); c.roundRect(x+(pw-chip)/2,y+ph-10*mm,chip,7*mm,3.5*mm,stroke=0,fill=1)
+    c.setFillColor(BIANCO); c.setFont(TESTO_B,7); c.drawCentredString(x+pw/2,y+ph-7.5*mm,"IN PRIMO PIANO")
+    titolo.drawOn(c,x+7*mm,y+sh+12*mm); sotto.drawOn(c,x+7*mm,y+6*mm); c.restoreState()
 
 
 def _art_piano(ctx, numero):
