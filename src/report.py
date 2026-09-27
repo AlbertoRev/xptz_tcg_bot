@@ -282,7 +282,7 @@ def telegram_settimanale(ctx):
 
 
 def telegram_alert(alert, gioco, tipo, conteggi):
-    titolo = "Sigillato" if tipo == "sigillato" else "Carte singole"
+    titolo = "Sigillato" if tipo == "sigillato" else "Carte singole in ribasso"
     icona_t = "📦" if tipo == "sigillato" else "🃏"
     r = [f"<b>{icona_t} Alert {html.escape(gioco)} · {titolo}</b>"]
     if not alert:
@@ -318,9 +318,9 @@ def telegram_alert(alert, gioco, tipo, conteggi):
         r.append("<i>🔺🔻 movimento forte confermato · 💡 minimo sotto il 70% della tendenza · "
                  "👀 minimo tra 70% e 85%</i>")
     else:
-        r.append(f"<i>Trovati oggi: {conteggi[0]} movimenti, {conteggi[1]} con slancio nelle vendite</i>")
-        r.append("<i>🔺🔻 movimento forte confermato · 📈📉 slancio: media vendite 7 giorni contro media "
-                 "30 giorni (stima)</i>")
+        r.append(f"<i>Trovati oggi: {conteggi[0]} ribassi forti, {conteggi[1]} carte con vendite in calo</i>")
+        r.append("<i>🔻 ribasso forte confermato · 📉 vendite dell'ultima settimana sotto la media del mese "
+                 "(stima)</i>")
     return "\n".join(r)
 
 
