@@ -3,9 +3,10 @@ import json, os
 from pathlib import Path
 MODEL=os.getenv("GEMINI_MODEL","gemini-2.5-flash-lite")
 SCHEMA={"type":"object","properties":{"region":{"type":"string"},"visual_direction":{"type":"string"},"palette":{"type":"array","items":{"type":"string"}},"pages":{"type":"array","items":{"type":"object","properties":{"page":{"type":"integer"},"layout":{"type":"string"},"hero_pokemon":{"type":"string"},"secondary_pokemon":{"type":"array","items":{"type":"string"}},"map":{"type":"string"},"ui":{"type":"string"},"notes":{"type":"string"}},"required":["page","layout","hero_pokemon","secondary_pokemon","map","ui","notes"]}}},"required":["region","visual_direction","palette","pages"]}
-def _local_plan(issue_number,region):
- layouts=[("cover","Treecko","hoenn_map_01","pokedex"),("editorial","Mudkip","hoenn_map_02","dialogue"),("radar","Rayquaza","hoenn_map_03","battle"),("thermometer","Torchic","hoenn_map_01","trainer_card"),("market","Groudon","hoenn_map_02","pokedex"),("deals_news","Kyogre","hoenn_map_03","dialogue"),("back_cover","Blaziken","hoenn_map_01","menu")]
- return {"region":region,"visual_direction":"Magazine Pokémon handheld 2002-2008: mappe, Pokédex, battaglia e pannelli dati; Pokémon protagonista.","palette":["verde smeraldo","blu acqua","crema carta","nero grafite"],"pages":[{"page":i,"layout":a,"hero_pokemon":p,"secondary_pokemon":[],"map":m,"ui":u,"notes":"Pokémon protagonista, dati secondari, decorazione minima."} for i,(a,p,m,u) in enumerate(layouts,1)]}
+def _local_plan(issue_number,region,available_pokemon=None):
+ layouts=[("cover","hoenn_map_01","pokedex"),("editorial","hoenn_map_02","dialogue"),("radar","hoenn_map_03","battle"),("thermometer","hoenn_map_01","trainer_card"),("market","hoenn_map_02","pokedex"),("deals_news","hoenn_map_03","dialogue"),("back_cover","hoenn_map_01","menu")]
+ disponibili=list(available_pokemon or [])
+ return {"region":region,"visual_direction":"Magazine Pokémon handheld 2002-2008: mappe, Pokédex, battaglia e pannelli dati; Pokémon protagonista.","palette":["verde smeraldo","blu acqua","crema carta","nero grafite"],"pages":[{"page":i,"layout":a,"hero_pokemon":(disponibili[(i-1)%len(disponibili)] if disponibili else ""), "secondary_pokemon":[],"map":m,"ui":u,"notes":"Pokémon protagonista, dati secondari, decorazione minima."} for i,(a,m,u) in enumerate(layouts,1)]}
 def _normalize(plan,region):
  plan=dict(plan or {}); plan["region"]=region; pages=list(plan.get("pages") or [])[:7]; used=set(); out=[]
  for i,p in enumerate(pages,1):
@@ -15,7 +16,7 @@ def _normalize(plan,region):
   p.update(page=i,hero_pokemon=hero,secondary_pokemon=list(p.get("secondary_pokemon") or [])); out.append(p)
  plan["pages"]=out; return plan
 def genera_piano(issue_number,region="hoenn",available_pokemon=None,content_titles=None):
- fallback=_local_plan(issue_number,region); key=os.getenv("GEMINI_API_KEY")
+ fallback=_local_plan(issue_number,region,available_pokemon); key=os.getenv("GEMINI_API_KEY")
  if not key: return fallback
  try:
   from google import genai
