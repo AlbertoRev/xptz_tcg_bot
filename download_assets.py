@@ -50,7 +50,7 @@ ITEM_POOL = [
 ]
 
 # La pagina di PokéAPI indica che la National Dex corrente contiene 1025 Pokémon.
-POKEMON_IDS = tuple(range(1, 1026))
+POKEMON_IDS = tuple(range(252, 387))  # Hoenn: Treecko (252) → Deoxys (386)
 
 # Pokémon Showdown espone una collezione di trainer sprites con nomi leggibili.
 # La usiamo solo per la componente "allenatore", perché il repository sprite di PokéAPI
