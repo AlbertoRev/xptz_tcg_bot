@@ -347,8 +347,11 @@ class Rubrica(Flowable):
     def draw(self):
         c=self.canv
         c.setFillColor(colors.Color(.05,.15,.30,alpha=.12)); c.roundRect(1*mm,0,self.w-2*mm,self.h-1*mm,3*mm,stroke=0,fill=1)
-        c.setFillColor(BIANCO); c.setStrokeColor(colors.HexColor("#72B7E4")); c.setLineWidth(.8)
+        c.setFillColor(colors.Color(1,1,1,alpha=.96)); c.setStrokeColor(colors.HexColor("#72B7E4")); c.setLineWidth(.8)
         c.roundRect(0,1*mm,self.w-2*mm,self.h-1*mm,3*mm,stroke=1,fill=1)
+        # taglio giallo diagonale da magazine
+        p=c.beginPath(); p.moveTo(0,self.h); p.lineTo(14*mm,self.h); p.lineTo(8*mm,1*mm); p.lineTo(0,1*mm); p.close()
+        c.setFillColor(SOLE); c.drawPath(p,stroke=0,fill=1)
         # occhiello dimensionato sul testo
         ow=max(29*mm,min(48*mm,pdfmetrics.stringWidth(self.occhiello,TESTO_B,6)*1.18+8*mm))
         c.setFillColor(ROSSO); c.roundRect((self.w-ow)/2,self.h-7.3*mm,ow,5.7*mm,2.8*mm,stroke=0,fill=1)
@@ -624,26 +627,24 @@ def _art_overlay(c, ctx, page):
     c.drawString(MARGINE+48*mm,H-16*mm,f"{plan.get('layout','editorial').upper()} · {plan.get('hero_pokemon','POKEMON').upper()}")
 
 def _pagina_interna(c, doc, ctx):
-    c.saveState()
-    page=doc.page
-    # Hoenn è l'ambiente comune di tutte le rubriche; varia solo l'intensità del velo.
-    _sfondo_mappa(c,.145,"#FFFDF4")
-    accent="#8FA984"
-
-    # barra titolo
-    c.setFillColor(colors.HexColor("#2366B1")); c.rect(0,H-16*mm,W,16*mm,stroke=0,fill=1)
-    c.setFillColor(SOLE); c.rect(0,H-18*mm,W,2*mm,stroke=0,fill=1)
-    c.setFillColor(BIANCO); c.setFont(SOTTO,11); c.drawString(MARGINE,H-10.5*mm,"POKEPUTZU WEEKLY")
-    c.setFont(TESTO_B,7.5); c.setFillColor(colors.HexColor("#DCEBCB"))
-    c.drawRightString(W-MARGINE,H-11*mm,f"N.{ctx['numero']} · {ctx['data_lunga']} · P.{page}")
-
-    plan=_art_piano(ctx,page)
-    # Nessuna immagine flottante: evita in modo strutturale coperture di testi e tabelle.
-
-    c.setFillColor(colors.Color(1,1,1,alpha=.88)); c.rect(0,0,W,10*mm,stroke=0,fill=1)
+    c.saveState(); page=doc.page; plan=_art_piano(ctx,page)
+    # Reference magazine: scenario visibile, velo leggero, testata diagonale ad alto contrasto.
+    _sfondo_mappa(c,.28,"#EAF8FC")
+    c.setFillColor(colors.Color(.86,.96,1,alpha=.28)); c.rect(0,0,W,H,stroke=0,fill=1)
+    # fascia superiore obliqua
+    p=c.beginPath(); p.moveTo(0,H); p.lineTo(W,H); p.lineTo(W,H-20*mm); p.lineTo(0,H-14*mm); p.close()
+    c.setFillColor(colors.HexColor("#0E4C91")); c.drawPath(p,stroke=0,fill=1)
+    p=c.beginPath(); p.moveTo(0,H-14*mm); p.lineTo(W,H-20*mm); p.lineTo(W,H-23*mm); p.lineTo(0,H-17*mm); p.close()
+    c.setFillColor(SOLE); c.drawPath(p,stroke=0,fill=1)
+    c.setFillColor(BIANCO); c.setFont(TITOLO,14); c.drawString(MARGINE,H-11.5*mm,(plan.get("layout") or "POKEPUTZU").replace("_"," ").upper())
+    c.setFont(TESTO_B,6.8); c.drawRightString(W-MARGINE,H-10.5*mm,f"N.{ctx['numero']} · {ctx['data_lunga']} · P.{page}")
+    # piccoli elementi illustrati solo nella fascia sicura superiore/destra.
+    hero=plan.get("hero_asset")
+    if hero and page in (3,4,6): _immagine_asset(c,hero,W-18*mm,H-33*mm,31*mm)
+    # footer chiaro e marchio costante.
+    c.setFillColor(colors.Color(1,1,1,alpha=.90)); c.rect(0,0,W,10*mm,stroke=0,fill=1)
     _logo(c,MARGINE,5.8*mm,39*mm,compact=True)
-    c.setFillColor(BLU); c.setFont(TESTO_B,6.5)
-    c.drawRightString(W-MARGINE,3.4*mm,f"{(plan.get('layout') or 'editorial').upper()}  ·  {page}")
+    c.setFillColor(BLU); c.setFont(TESTO_B,6.5); c.drawRightString(W-MARGINE,3.4*mm,str(page))
     c.restoreState()
 
 
