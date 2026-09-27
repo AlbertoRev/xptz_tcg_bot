@@ -741,7 +741,9 @@ def _layout_profile(ctx, compact=False):
     mode="data-heavy" if score>52 else ("balanced" if score>24 else "visual")
     return {"mode":mode,"compact":compact,"space":3 if compact else (5 if mode=="data-heavy" else 7),"hero":43*mm if compact else (48*mm if mode=="data-heavy" else 58*mm)}
 
-def crea(percorso, ctx):
+def crea(percorso, ctx, compact=False):
+    profile = _layout_profile(ctx, compact)
+    ctx["_layout_profile"] = profile
     st = _stili()
     g = ctx["principale"]
     doc = BaseDocTemplate(percorso, pagesize=A4, title=f"{TESTATA} n. {ctx['numero']}",
