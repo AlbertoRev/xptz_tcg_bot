@@ -245,7 +245,7 @@ def _mondo_tramonto(c, ctx=None):
     c.setFillColor(colors.Color(.25,.58,.60,alpha=.08)); c.circle(W*.82,H*.15,58*mm,stroke=0,fill=1)
     _art_map(c,MARGINE,20*mm,72*mm,48*mm,71)
     hero=(_art_piano(ctx,7).get("hero_asset") if ctx else None) or _mondo_asset(ctx,"pokemon",6)
-    c.setFillColor(colors.Color(1,1,1,alpha=.14)); c.circle(W-43*mm,46*mm,38*mm,stroke=0,fill=1)
+    c.saveState(); c.setFillColor(colors.Color(1,1,1,alpha=.14)); c.circle(W-43*mm,46*mm,38*mm,stroke=0,fill=1); c.restoreState()
     _immagine_asset(c,hero,W-43*mm,46*mm,76*mm)
 
 
@@ -334,8 +334,7 @@ class Fumetto(Flowable):
 
     def draw(self):
         c = self.canv
-        trainer = _mondo_asset(self.ctx, "allenatori", self.indice)
-        _immagine_asset(c, trainer, 12 * mm, self.altezza / 2, 23 * mm)
+        _trainer_vector(c, 12 * mm, self.altezza / 2, .72)
         x, y, h = 27 * mm, 2 * mm, self.altezza - 4 * mm
         c.setFillColor(colors.HexColor("#173C35"))
         c.roundRect(x, y, self.larg_box, h, 2 * mm, stroke=0, fill=1)
@@ -351,7 +350,7 @@ class PokemonHero(Flowable):
     def draw(self):
         c=self.canv
         c.setFillColor(colors.HexColor("#DCE7CF")); c.roundRect(0,2*mm,LARGHEZZA,self.altezza-4*mm,4*mm,stroke=0,fill=1)
-        c.setFillColor(colors.Color(.25,.55,.58,alpha=.10)); c.circle(LARGHEZZA*.76,self.altezza*.50,25*mm,stroke=0,fill=1)
+        c.saveState(); c.setFillColor(colors.Color(.25,.55,.58,alpha=.10)); c.circle(LARGHEZZA*.76,self.altezza*.50,25*mm,stroke=0,fill=1); c.restoreState()
         asset=_mondo_asset(self.ctx,"pokemon",self.indice)
         if asset: _immagine_asset(c,asset,LARGHEZZA*.76,self.altezza*.50,46*mm)
         _art_map(c,8*mm,8*mm,58*mm,self.altezza-16*mm,self.indice+1)
