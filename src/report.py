@@ -119,15 +119,26 @@ def pdf(percorso, ctx):
         if g["livello"] != "principale":
             continue
         E.append(Paragraph(_t(g["nome"]), st["h1"]))
-        if g["nuovi"]:
-            E.append(Paragraph("Nuovi prodotti sigillati aggiunti su Cardmarket (ultimi 7 giorni)", st["h2"]))
-            dati = [["Prodotto", "Categoria", "Aggiunto", "Prezzo"]]
-            for n in g["nuovi"]:
-                dati.append([_link(n["nome"], n["link"], st["cella"]), _t(n["categoria"])[:30],
-                             n["aggiunto"], _eur(n["prezzo"])])
-            t = Table(dati, colWidths=[80 * mm, 50 * mm, 22 * mm, 24 * mm], repeatRows=1)
+        E.append(Paragraph("Previsioni", st["h2"]))
+        E.append(Paragraph(_t(
+            f"Sigillato aggiunto su Cardmarket negli ultimi {C.PREVISIONI_GIORNI} giorni: prevendite e uscite "
+            "recenti. Caldo = prezzo in salita o poche offerte sotto la tendenza; freddo = prezzo in calo o "
+            "molte offerte molto scontate. Le date di uscita ufficiali sono nell'analisi di Claude."), st["nota"]))
+        if g["previsioni"]:
+            colori = {"caldo": "#c0392b", "tiepido": "#b9770e", "freddo": "#2e6da4"}
+            dati = [["Prodotto", "Aggiunto", "Prezzo", "Variaz.", "Stato", "Perché"]]
+            for n in g["previsioni"]:
+                stato = n["stato"]
+                col = colori.get(stato)
+                cella_stato = Paragraph(f'<font color="{col}"><b>{stato}</b></font>' if col else _t(stato),
+                                        st["cella"])
+                dati.append([_link(n["nome"], n["link"], st["cella"]), n["aggiunto"], _eur(n["prezzo"]),
+                             _perc(n["variazione"]), cella_stato, Paragraph(_t(n["motivo"]), st["cella"])])
+            t = Table(dati, colWidths=[58 * mm, 19 * mm, 19 * mm, 18 * mm, 20 * mm, 52 * mm], repeatRows=1)
             t.setStyle(_stile_tabella())
             E.append(t)
+        else:
+            E.append(Paragraph("Nessun prodotto sigillato nuovo nel periodo.", st["nota"]))
         for tipo, nome_tipo in TIPI.items():
             E.append(Paragraph(nome_tipo, st["h2"]))
             vuoto = True
@@ -143,17 +154,18 @@ def pdf(percorso, ctx):
             if vuoto:
                 E.append(Paragraph("Dati non ancora sufficienti per questa sezione.", st["nota"]))
         if g["occasioni"]:
-            E.append(Paragraph("Occasioni da verificare", st["h2"]))
-            E.append(Paragraph(_t(
-                f"Prezzo minimo in vendita molto sotto la tendenza. Il prezzo minimo può riferirsi a un'altra "
-                f"lingua o condizione: verifica sempre la copia in {g['lingua_it']} prima di comprare."), st["nota"]))
-            dati = [["Prodotto", "Tipo", "Minimo", "Tendenza", "Sconto", "In lingua"]]
+            E.append(Paragraph("Occasioni sul sigillato", st["h2"]))
+            E.append(Paragraph(_t("Prezzo minimo in vendita molto sotto la tendenza. Il minimo può riferirsi a "
+                                  "un'altra lingua o condizione."), st["nota"]))
+            con_lingua = any(o.get("verifica_lingua") for o in g["occasioni"])
+            dati = [["Prodotto", "Tipo", "Minimo", "Tendenza", "Sconto"] + (["In lingua"] if con_lingua else [])]
             for o in g["occasioni"]:
-                v = o.get("verifica_lingua")
+                v = o.get("verifica_lingua") or {}
                 dati.append([_link(o["nome"], o["link"], st["cella"]), o["tipo"], _eur(o["prezzo_minimo"]),
-                             _eur(o["prezzo_tendenza"]), _perc(o["sconto"]),
-                             _eur(v["da"]) if v and v.get("da") else "da verificare"])
-            t = Table(dati, colWidths=[72 * mm, 18 * mm, 22 * mm, 22 * mm, 18 * mm, 24 * mm], repeatRows=1)
+                             _eur(o["prezzo_tendenza"]), _perc(-o["sconto"])]
+                            + ([_eur(v.get("da"))] if con_lingua else []))
+            larg = [72 * mm, 18 * mm, 22 * mm, 22 * mm, 18 * mm] + ([24 * mm] if con_lingua else [])
+            t = Table(dati, colWidths=larg, repeatRows=1)
             t.setStyle(_stile_tabella())
             E.append(t)
         if g["notizie"]:
@@ -218,79 +230,97 @@ def _migliore(g, tipo, verso):
 
 
 def sintesi_righe(ctx):
+    """Frasi della rubrica 'La settimana in breve', costruite dai numeri."""
     righe = []
     for g in ctx["giochi"].values():
         if g["livello"] != "principale":
             continue
-        for tipo in TIPI:
-            for verso in ("rialzi", "ribassi"):
-                p, r = _migliore(g, tipo, verso)
-                if r:
-                    righe.append(f"{g['nome']}, {TIPI[tipo].lower()}, maggiore {verso[:-1] + 'o'} a {p} giorni: "
-                                 f"{r['nome']} {_perc(r['variazioni'][str(p)])} (prezzo {_eur(r['prezzo'])}, "
-                                 f"incertezza {r['incertezza']}).")
+        for tipo, nome in (("sigillato", "Sigillato"), ("singola", "Carte singole")):
+            p, r = _migliore(g, tipo, "rialzi")
+            if r:
+                righe.append(f"{nome}: il rialzo più forte è {r['nome']}, {_perc(r['variazioni'][str(p)])} in {p} "
+                             f"giorni (prezzo {_eur(r['prezzo'])}, incertezza {r['incertezza']}).")
+            p, r = _migliore(g, tipo, "ribassi")
+            if r:
+                righe.append(f"{nome}: il calo più forte è {r['nome']}, {_perc(r['variazioni'][str(p)])} in {p} "
+                             f"giorni (prezzo {_eur(r['prezzo'])}).")
+        caldi = [p["nome"] for p in g.get("previsioni", []) if p["stato"] == "caldo"]
+        if g.get("previsioni"):
+            righe.append(f"Novità: {len(caldi)} calde su {len(g['previsioni'])} prodotti in prevendita, in arrivo o "
+                         f"appena usciti" + (f"; in testa {caldi[0]}." if caldi else "."))
+        if g.get("radar"):
+            u = g["radar"][0]
+            righe.append(f"Prossima data nel radar: {u['data'][8:10]}/{u['data'][5:7]}, {u['titolo']}.")
         if g["occasioni"]:
-            righe.append(f"{g['nome']}: {len(g['occasioni'])} possibili occasioni da verificare.")
-        if g["nuovi"]:
-            righe.append(f"{g['nome']}: {len(g['nuovi'])} nuovi prodotti sigillati su Cardmarket.")
+            righe.append(f"{len(g['occasioni'])} offerte sul sigillato molto sotto il prezzo di tendenza.")
+        righe.append(f"Storico disponibile: {_copertura(g['giorni_storico'])}.")
     return righe or ["Nessun movimento rilevante: servono ancora dati storici."]
 
 
 def telegram_settimanale(ctx):
-    r = [f"<b>📊 Report TCG settimanale - {ctx['data_it']}</b>", ""]
-    for g in ctx["giochi"].values():
-        if g["livello"] != "principale":
-            continue
-        r.append(f"<b>{html.escape(g['nome'])}</b> <i>({_copertura(g['giorni_storico'])})</i>")
-        for tipo in TIPI:
-            for verso, icona in (("rialzi", "🔺"), ("ribassi", "🔻")):
-                p, x = _migliore(g, tipo, verso)
-                if x:
-                    r.append(f"{icona} {TIPI[tipo]} {p}g: <a href=\"{html.escape(x['link'])}\">"
-                             f"{html.escape(x['nome'][:45])}</a> {_perc(x['variazioni'][str(p)])} "
-                             f"({_eur(x['prezzo'])}, inc. {x['incertezza']})")
-        if g["occasioni"]:
-            r.append(f"💡 {len(g['occasioni'])} occasioni da verificare")
-        if g["nuovi"]:
-            r.append(f"🆕 {len(g['nuovi'])} nuovi prodotti sigillati")
-        r.append("")
-    r.append("Report completo nel PDF qui sotto.")
+    g = ctx["principale"]
+    r = [f"<b>🗞 Il Collezionista n. {ctx['numero']}</b>",
+         f"<i>Settimanale del mercato Pokémon · {ctx['data_lunga']}</i>", "",
+         f"<b>In primo piano:</b> {html.escape(ctx['apertura']['titolo'])}", ""]
+    car = g["carrello"]
+    if car["proposte"]:
+        r.append(f"<b>💶 Cosa farei con 200 €</b> ({_eur(car['speso'])})")
+        for x in car["proposte"]:
+            r.append(f"• {html.escape(x['categoria'])}: <a href=\"{html.escape(x['link'])}\">"
+                     f"{html.escape(x['nome'][:50])}</a> {_eur(x['prezzo'])}")
+    else:
+        r.append("<b>💶 Cosa farei con 200 €:</b> niente, li terrei da parte")
+    r.append("")
+    if g["radar"]:
+        u = g["radar"][0]
+        r.append(f"📅 Prossima uscita nel radar: {u['data'][8:10]}/{u['data'][5:7]} - {html.escape(u['titolo'][:70])}")
+    conta = {k: sum(1 for p in g["previsioni"] if p["stato"] == k) for k in ("caldo", "tiepido", "freddo")}
+    r.append(f"🔮 Novità: {conta['caldo']} calde, {conta['tiepido']} tiepide, {conta['freddo']} fredde")
+    r.append(f"💡 {len(g['occasioni'])} occasioni sul sigillato")
+    r += ["", "La rivista completa è nel PDF qui sotto."]
     return "\n".join(r)
 
 
-def telegram_alert(alert, conteggi=None):
-    r = ["<b>🚨 Alert mercato TCG</b>"]
-    giochi = list(dict.fromkeys(a["gioco"] for a in alert))
-    for gioco in giochi:
-        lista = [a for a in alert if a["gioco"] == gioco]
-        n_nuovi = sum(1 for a in lista if not a.get("segnalato_dal"))
-        r += ["", f"<b>{html.escape(gioco)}</b> - {len(lista)} alert ({n_nuovi} nuovi, "
-                  f"{len(lista) - n_nuovi} ancora attivi)"]
-        for a in lista:
-            link = f"<a href=\"{html.escape(a['link'])}\">{html.escape(a['nome'][:50])}</a>"
-            if a["genere"] == "movimento":
-                icona = "🔺" if a["variazione_7g"] > 0 else "🔻"
-                riga = (f"{icona} {link}: {_perc(a['variazione_7g'])} in 7 giorni, ora {_eur(a['prezzo'])} "
-                        f"(confermato 2 giorni)")
-            else:
-                icona = "💡" if a["genere"] == "occasione" else "👀"
-                riga = (f"{icona} {link}: minimo {_eur(a['prezzo_minimo'])} contro tendenza "
-                        f"{_eur(a['prezzo_tendenza'])} (-{a['sconto']:.0f}%)")
-                v = a.get("verifica_lingua")
-                riga += (f" · in {a['lingua_it']} da {_eur(v['da'])}" if v and v.get("da")
-                         else f" · verifica la copia in {a['lingua_it']}")
-            if a.get("segnalato_dal"):
-                d = a["segnalato_dal"]
-                riga += f" · <i>ancora attivo dal {d[8:10]}/{d[5:7]}</i>"
-            else:
-                riga += " · <b>nuovo</b>"
-            r.append(riga)
-    if conteggi:
-        r += ["", "<i>Trovati oggi (movimenti / occasioni / da osservare):</i>"]
-        for gioco, (m, o, d) in conteggi.items():
-            r.append(f"<i>{html.escape(gioco)}: {m} / {o} / {d}</i>")
-    r += ["", "🔺🔻 movimento forte · 💡 occasione (minimo sotto il 70% della tendenza) · "
-              "👀 da osservare (tra 70% e 85%)"]
+def telegram_alert(alert, gioco, tipo, conteggi):
+    titolo = "Sigillato" if tipo == "sigillato" else "Carte singole"
+    icona_t = "📦" if tipo == "sigillato" else "🃏"
+    r = [f"<b>{icona_t} Alert {html.escape(gioco)} · {titolo}</b>"]
+    if not alert:
+        r += ["", "Nessun segnale oggi."]
+    else:
+        n_nuovi = sum(1 for a in alert if not a.get("segnalato_dal"))
+        r += [f"{len(alert)} alert: {n_nuovi} nuovi, {len(alert) - n_nuovi} ancora attivi", ""]
+    for a in alert:
+        link = f"<a href=\"{html.escape(a['link'])}\">{html.escape(a['nome'][:55])}</a>"
+        if a["genere"] == "movimento":
+            icona = "🔺" if a["variazione_7g"] > 0 else "🔻"
+            riga = f"{icona} {link}: {_perc(a['variazione_7g'])} in 7 giorni, ora {_eur(a['prezzo'])}"
+        elif a["genere"] == "slancio":
+            icona = "📈" if a["variazione"] > 0 else "📉"
+            riga = (f"{icona} {link}: vendite 7 giorni {_perc(a['variazione'])} rispetto al mese, "
+                    f"prezzo {_eur(a['prezzo'])}")
+        else:
+            icona = "💡" if a["genere"] == "occasione" else "👀"
+            riga = (f"{icona} {link}: minimo {_eur(a['prezzo_minimo'])} contro tendenza "
+                    f"{_eur(a['prezzo_tendenza'])} (-{a['sconto']:.0f}%)")
+            v = a.get("verifica_lingua")
+            if v and v.get("da"):
+                riga += f" · in {a['lingua_it']} da {_eur(v['da'])}"
+        if a.get("segnalato_dal"):
+            d = a["segnalato_dal"]
+            riga += f" · <i>attivo dal {d[8:10]}/{d[5:7]}</i>"
+        else:
+            riga += " · <b>nuovo</b>"
+        r.append(riga)
+    r.append("")
+    if tipo == "sigillato":
+        r.append(f"<i>Trovati oggi: {conteggi[0]} movimenti, {conteggi[1]} occasioni, {conteggi[2]} da osservare</i>")
+        r.append("<i>🔺🔻 movimento forte confermato · 💡 minimo sotto il 70% della tendenza · "
+                 "👀 minimo tra 70% e 85%</i>")
+    else:
+        r.append(f"<i>Trovati oggi: {conteggi[0]} movimenti, {conteggi[1]} con slancio nelle vendite</i>")
+        r.append("<i>🔺🔻 movimento forte confermato · 📈📉 slancio: media vendite 7 giorni contro media "
+                 "30 giorni (stima)</i>")
     return "\n".join(r)
 
 
@@ -315,8 +345,16 @@ def dati_per_claude(ctx):
             "giorni_storico": g["giorni_storico"], "classifiche": classifiche,
             "occasioni": [{x: o[x] for x in ("nome", "tipo", "prezzo_minimo", "prezzo_tendenza", "sconto")}
                           for o in g["occasioni"]],
-            "nuovi_prodotti": [{x: n[x] for x in ("nome", "categoria", "aggiunto", "prezzo")} for n in g["nuovi"]],
+            "previsioni": [{x: n[x] for x in ("nome", "categoria", "aggiunto", "prezzo", "variazione", "stato", "motivo")}
+                           for n in g["previsioni"]],
             "notizie": g["notizie"],
         }
+    for k, g in ctx["giochi"].items():
+        out["giochi"][k]["radar_uscite"] = [{x: u[x] for x in ("data", "titolo", "fonte", "citazioni", "mercato")}
+                                            for u in g.get("radar", [])]
+        out["giochi"][k]["cosa_farei_con_200_euro"] = {
+            "proposte": [{x: p[x] for x in ("categoria", "nome", "prezzo", "perche", "rischio")}
+                         for p in g["carrello"]["proposte"]],
+            "speso": g["carrello"]["speso"], "note": g["carrello"]["note"]}
     out["notizie_extra"] = ctx.get("notizie_extra", {})
     return out
