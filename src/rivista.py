@@ -229,44 +229,23 @@ def _arcobaleno(c, cx, cy, r, spessore):
 
 # ---------- scenari a tutta pagina ----------
 def _mondo_giorno(c, ctx=None):
-    """Sfondo principale ispirato alla schermata mappa di Pokémon Emerald/GBA."""
-    c.setFillColor(colors.HexColor("#DDE7C6"))
-    c.rect(0, 0, W, H, stroke=0, fill=1)
-    # griglia pixel discreta
-    c.setStrokeColor(colors.Color(0.18, 0.35, 0.25, alpha=0.10))
-    c.setLineWidth(0.35)
-    passo = 5 * mm
-    x = 0
-    while x <= W:
-        c.line(x, 0, x, H); x += passo
-    y = 0
-    while y <= H:
-        c.line(0, y, W, y); y += passo
-    # fascia superiore stile interfaccia GBA
-    c.setFillColor(colors.HexColor("#1F5B4A"))
-    c.rect(0, H - 19 * mm, W, 19 * mm, stroke=0, fill=1)
-    c.setFillColor(colors.HexColor("#79B86B"))
-    c.rect(0, H - 21 * mm, W, 2 * mm, stroke=0, fill=1)
-    # pannello-mappa di sfondo
-    _art_map(c, W - 79 * mm, H - 103 * mm, 64 * mm, 53 * mm, 17)
-    # hero grande: un solo protagonista, niente decorazioni casuali
-    hero = (_art_piano(ctx, 1).get("hero_asset") if ctx else None) or _mondo_asset(ctx, "pokemon", 0)
-    _immagine_asset(c, hero, W - 42 * mm, H - 139 * mm, 72 * mm)
+    """Sfondo editoriale Hoenn, morbido e senza griglie/pixel."""
+    c.setFillColor(colors.HexColor("#E8E8D5")); c.rect(0,0,W,H,stroke=0,fill=1)
+    # grandi forme atmosferiche molto leggere
+    c.setFillColor(colors.Color(.38,.58,.39,alpha=.10)); c.circle(25*mm,48*mm,55*mm,stroke=0,fill=1)
+    c.setFillColor(colors.Color(.25,.55,.58,alpha=.09)); c.circle(W-18*mm,H-72*mm,62*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#1F5B4A")); c.rect(0,H-19*mm,W,19*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#79B86B")); c.rect(0,H-21*mm,W,2*mm,stroke=0,fill=1)
 
 def _mondo_tramonto(c, ctx=None):
-    """Quarta di copertina come schermata finale di un gioco GBA."""
-    c.setFillColor(colors.HexColor("#183A34"))
-    c.rect(0, 0, W, H, stroke=0, fill=1)
-    c.setFillColor(colors.HexColor("#2E6757"))
-    c.rect(0, 0, W, 34 * mm, stroke=0, fill=1)
-    c.setStrokeColor(colors.Color(0.75, 0.9, 0.75, alpha=0.14))
-    c.setLineWidth(0.4)
-    for k in range(0, 60):
-        yy = k * 5 * mm
-        c.line(0, yy, W, yy)
-    _art_map(c, MARGINE, 22 * mm, 72 * mm, 48 * mm, 71)
-    hero = (_art_piano(ctx, 7).get("hero_asset") if ctx else None) or _mondo_asset(ctx, "pokemon", 6)
-    _immagine_asset(c, hero, W - 43 * mm, 46 * mm, 82 * mm)
+    """Quarta di copertina elegante, senza scanline o reticoli."""
+    c.setFillColor(colors.HexColor("#183A34")); c.rect(0,0,W,H,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#2E6757")); c.rect(0,0,W,34*mm,stroke=0,fill=1)
+    c.setFillColor(colors.Color(.55,.78,.62,alpha=.08)); c.circle(W*.18,H*.20,48*mm,stroke=0,fill=1)
+    c.setFillColor(colors.Color(.25,.58,.60,alpha=.08)); c.circle(W*.82,H*.15,58*mm,stroke=0,fill=1)
+    _art_map(c,MARGINE,20*mm,72*mm,48*mm,71)
+    hero=(_art_piano(ctx,7).get("hero_asset") if ctx else None) or _mondo_asset(ctx,"pokemon",6)
+    _immagine_asset(c,hero,W-43*mm,46*mm,76*mm)
 
 
 # ---------- stili ----------
@@ -294,7 +273,7 @@ def _stile_tag(colore):
 
 # ---------- flowable ----------
 class Rubrica(Flowable):
-    """Intestazione come barra-menu di un RPG portatile."""
+    """Intestazione editoriale ispirata alle interfacce di gioco, senza stile pixel."""
 
     def __init__(self, occhiello, titolo, colore=ROSSO):
         super().__init__()
@@ -345,7 +324,7 @@ class Fumetto(Flowable):
 class Decoro(Flowable):
     """Separatore essenziale: una riga di inventario, senza stelline o ornamenti cartoon."""
 
-    def __init__(self, ctx=None, seme=1, altezza=18 * mm):
+    def __init__(self, ctx=None, seme=1, altezza=28 * mm):
         super().__init__()
         self.ctx, self.seme, self.altezza = ctx or {}, seme, altezza
 
@@ -360,7 +339,7 @@ class Decoro(Flowable):
             nome = _mondo_asset(self.ctx, gruppo, self.seme + k)
             if nome:
                 x = LARGHEZZA * (0.30 + 0.20 * k)
-                larghezza = 30 * mm if gruppo == "allenatori" else 20 * mm
+                larghezza = 32 * mm if gruppo == "allenatori" else 22 * mm
                 _immagine_asset(c, nome, x, self.altezza / 2, larghezza)
 
 
@@ -501,10 +480,8 @@ def _copertina(c, ctx):
     c.drawString(MARGINE + 7 * mm, sy + 45 * mm, "INDICE / HOENN DATA")
     yy = sy + 37 * mm
     for k, (titolo_r, descrizione) in enumerate(ctx["sommario"], 1):
-        c.setFillColor(INCHIOSTRO); c.setFont(TESTO_B, 8.5)
-        c.drawString(MARGINE + 8 * mm, yy, f"{k:02d}  {titolo_r}")
-        c.setFillColor(GRIGIO); c.setFont(TESTO, 7.5)
-        c.drawString(MARGINE + 80 * mm, yy, descrizione[:56])
+        c.setFillColor(INCHIOSTRO); c.setFont(TESTO_B, 8.2)
+        c.drawString(MARGINE + 8 * mm, yy, f"{k:02d}  {titolo_r[:34]}")
         yy -= 6.3 * mm
 
     c.setFillColor(colors.HexColor("#173C35"))
@@ -646,18 +623,7 @@ def _pagina_interna(c, doc, ctx):
     c.drawRightString(W-MARGINE,H-11*mm,f"N.{ctx['numero']} · {ctx['data_lunga']} · P.{page}")
 
     plan=_art_piano(ctx,page)
-    asset=plan.get("hero_asset")
-    if asset:
-        if page == 2:
-            _immagine_asset(c,asset,W-38*mm,54*mm,54*mm)
-        elif page == 6:
-            _immagine_asset(c,asset,W-40*mm,50*mm,58*mm)
-        else:
-            _immagine_asset(c,asset,W-13*mm,H-33*mm,22*mm)
-    if page == 2:
-        _art_map(c,MARGINE,22*mm,55*mm,38*mm,page)
-    elif page == 6:
-        _art_map(c,MARGINE,20*mm,52*mm,36*mm,page)
+    # Nessuna immagine flottante: evita in modo strutturale coperture di testi e tabelle.
 
     c.setFillColor(colors.HexColor("#173C35")); c.rect(0,0,W,9*mm,stroke=0,fill=1)
     c.setFillColor(colors.HexColor("#DCEBCB")); c.setFont(TESTO_B,6.5)
