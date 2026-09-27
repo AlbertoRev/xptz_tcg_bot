@@ -478,15 +478,17 @@ def _copertina(c, ctx):
     c.setFillColor(colors.HexColor("#DCE7D9")); c.setFont(TESTO_B,7.5)
     c.drawRightString(W-MARGINE,H-11.8*mm,f"N. {ctx['numero']}  ·  {ctx['data_lunga'].upper()}")
 
-    # Cover story: pannello leggero, non una cartuccia.
-    x0,y0,pw,ph=MARGINE,H-132*mm,119*mm,84*mm
-    _panel(c,x0,y0,pw,ph,4*mm,.96,"#5EA9DF")
-    c.setFillColor(ROSSO); c.roundRect(x0,y0+ph-13*mm,44*mm,13*mm,4*mm,stroke=0,fill=1)
-    c.setFillColor(BIANCO); c.setFont(TESTO_B,7.2); c.drawString(x0+6*mm,y0+ph-8.4*mm,"IN PRIMO PIANO")
-    titolo=Paragraph(_t(ctx["apertura"]["titolo"]),ParagraphStyle("cover_title",fontName=TITOLO,fontSize=17.5,leading=18.2,textColor=INCHIOSTRO))
-    kt=KeepInFrame(pw-14*mm,45*mm,[titolo],mode="shrink"); kt.canv=c; kt.wrap(pw-14*mm,45*mm); kt.drawOn(c,x0+7*mm,y0+28*mm)
-    sotto=Paragraph(_t(ctx["apertura"]["sottotitolo"]),ParagraphStyle("cover_sub",fontName=TESTO,fontSize=8.2,leading=10,textColor=GRIGIO))
-    ks=KeepInFrame(pw-14*mm,18*mm,[sotto],mode="shrink"); ks.canv=c; ks.wrap(pw-14*mm,18*mm); ks.drawOn(c,x0+7*mm,y0+7*mm)
+    # Cover story content-driven: altezza derivata da titolo+sottotitolo.
+    x0,pw=MARGINE,119*mm
+    titolo=Paragraph(_t(ctx["apertura"]["titolo"]),ParagraphStyle("cover_title",fontName=TITOLO,fontSize=18,leading=19,textColor=BLU,alignment=TA_CENTER))
+    sotto=Paragraph(_t(ctx["apertura"]["sottotitolo"]),ParagraphStyle("cover_sub",fontName=TESTO,fontSize=8.6,leading=10.5,textColor=GRIGIO,alignment=TA_CENTER))
+    _,th=titolo.wrap(pw-16*mm,60*mm); _,sh=sotto.wrap(pw-16*mm,35*mm)
+    ph=th+sh+28*mm; y0=H-48*mm-ph
+    _panel(c,x0,y0,pw,ph,4*mm,.97,"#72B7E4")
+    chipw=44*mm; c.setFillColor(ROSSO); c.roundRect(x0+(pw-chipw)/2,y0+ph-10*mm,chipw,7*mm,3.5*mm,stroke=0,fill=1)
+    c.setFillColor(BIANCO); c.setFont(TESTO_B,6.8); c.drawCentredString(x0+pw/2,y0+ph-7.5*mm,"IN PRIMO PIANO")
+    titolo.drawOn(c,x0+8*mm,y0+sh+13*mm)
+    sotto.drawOn(c,x0+8*mm,y0+7*mm)
 
     # Artwork protagonista più grande, libero sul fondo-mappa.
     hero=(_art_piano(ctx,1).get("hero_asset") or _mondo_asset(ctx,"pokemon",0))
@@ -498,18 +500,21 @@ def _copertina(c, ctx):
     if ball: _immagine_asset(c,ball,W-63*mm,H-168*mm,27*mm)
     if item: _immagine_asset(c,item,W-27*mm,H-214*mm,30*mm)
 
-    # KPI: quattro pillole editoriali chiare, non blocchi scuri.
-    ky=y0-29*mm; kw=(119*mm-9*mm)/4
-    for i,(numero,etichetta) in enumerate(ctx["kpi"]):
-        x=MARGINE+i*(kw+3*mm); _panel(c,x,ky,kw,22*mm,3*mm,.97,"#73B7E6")
-        c.setFillColor(BLU); c.setFont(TITOLO,16.5); c.drawCentredString(x+kw/2,ky+11.5*mm,str(numero))
-        lab=Paragraph(_t(etichetta.upper()),ParagraphStyle("kpi2",fontName=TESTO_B,fontSize=5.5,leading=5.9,textColor=GRIGIO,alignment=TA_CENTER))
-        fit=KeepInFrame(kw-4*mm,6.5*mm,[lab],mode="shrink"); fit.canv=c; fit.wrap(kw-4*mm,6.5*mm); fit.drawOn(c,x+2*mm,ky+2.1*mm)
+    # KPI misurati sul contenuto: numero e label centrati otticamente.
+    kw=(119*mm-9*mm)/4; labs=[]
+    for numero,etichetta in ctx["kpi"]:
+        lab=Paragraph(_t(etichetta.upper()),ParagraphStyle("kpi_auto",fontName=TESTO_B,fontSize=5.7,leading=6.2,textColor=GRIGIO,alignment=TA_CENTER))
+        _,lh=lab.wrap(kw-5*mm,20*mm); labs.append((numero,lab,lh))
+    kh=max(19*mm,max(lh for _,_,lh in labs)+14*mm); ky=y0-kh-7*mm
+    for i,(numero,lab,lh) in enumerate(labs):
+        x=MARGINE+i*(kw+3*mm); _panel(c,x,ky,kw,kh,3*mm,.97,"#72B7E4")
+        c.setFillColor(BLU); c.setFont(TITOLO,15.5); c.drawCentredString(x+kw/2,ky+kh-8.2*mm,str(numero))
+        lab.drawOn(c,x+2.5*mm,ky+3.2*mm)
 
     # Indice come colonna editoriale traslucida.
-    sy=ky-68*mm; _panel(c,MARGINE,sy,119*mm,59*mm,4*mm,.96,"#73B7E6")
-    c.setFillColor(ROSSO); c.setFont(TITOLO,10.5); c.drawString(MARGINE+7*mm,sy+47*mm,"NEL NUMERO")
-    yy=sy+38*mm
+    idxh=(18+7.2*len(ctx["sommario"]))*mm; sy=ky-idxh-7*mm; _panel(c,MARGINE,sy,119*mm,idxh,4*mm,.97,"#72B7E4")
+    c.setFillColor(ROSSO); c.setFont(TITOLO,10.5); c.drawCentredString(MARGINE+59.5*mm,sy+idxh-9*mm,"NEL NUMERO")
+    yy=sy+idxh-18*mm
     for k,(titolo_r,_) in enumerate(ctx["sommario"],1):
         p=Paragraph(f'<b>{k:02d}</b>  {_t(titolo_r)}',ParagraphStyle(f"idx{k}",fontName=TESTO,fontSize=7.9,leading=8.5,textColor=INCHIOSTRO))
         box=KeepInFrame(105*mm,7*mm,[p],mode="shrink"); box.canv=c; box.wrap(105*mm,7*mm); box.drawOn(c,MARGINE+7*mm,yy-2*mm)
