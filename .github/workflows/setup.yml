@@ -1,0 +1,44 @@
+name: Setup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dati
+  cancel-in-progress: false
+
+jobs:
+  esegui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      CMAPI_KEY: ${{ secrets.CMAPI_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Installa le librerie
+        run: pip install -r requirements.txt
+      - name: Esegui
+        run: python main.py setup
+      - name: Salva i dati nel repository
+        run: |
+          git config user.name "tcg-bot"
+          git config user.email "tcg-bot@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet || git commit -m "Dati $(date -u +%F)"
+          git pull --rebase
+          git push
+      - name: Avviso su Telegram in caso di errore
+        if: failure()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="⚠️ Bot TCG: errore in 'Setup'. Apri GitHub, scheda Actions, per i dettagli."
