@@ -244,9 +244,9 @@ def _sfondo_mappa(c, alpha=.12, wash="#F1EFE4"):
     c.setFillColor(colors.Color(1,1,.98,alpha=.48)); c.rect(0,0,W,H,stroke=0,fill=1)
     c.restoreState()
 
-def _panel(c,x,y,w,h,r=3*mm,alpha=.92,stroke="#7A9186"):
+def _panel(c,x,y,w,h,r=3*mm,alpha=.94,stroke="#8CB5D9"):
     c.saveState()
-    c.setFillColor(colors.Color(1,1,.965,alpha=alpha)); c.roundRect(x,y,w,h,r,stroke=0,fill=1)
+    c.setFillColor(colors.Color(1,1,1,alpha=alpha)); c.roundRect(x,y,w,h,r,stroke=0,fill=1)
     c.setStrokeColor(colors.HexColor(stroke)); c.setLineWidth(.65); c.roundRect(x,y,w,h,r,stroke=1,fill=0)
     c.restoreState()
 
@@ -308,19 +308,21 @@ def _trainer_vector(c,x,y,s=1):
 
 # ---------- flowable ----------
 class Rubrica(Flowable):
-    """Titolo di sezione editoriale, arioso e sempre contenuto."""
+    """Titolo da magazine: fascia colorata, gerarchia forte, centratura ottica."""
     def __init__(self, occhiello, titolo, colore=ROSSO):
         super().__init__(); self.occhiello=occhiello.upper(); self.titolo=titolo; self.colore=colore
     def wrap(self,aw,ah):
-        self.w=max(20*mm,aw)
-        return self.w,20*mm
+        self.w=max(20*mm,aw); return self.w,22*mm
     def draw(self):
         c=self.canv
-        _panel(c,0,1.5*mm,self.w,17*mm,2.5*mm,.88,"#A9B8AE")
-        c.setFillColor(colors.HexColor("#5F8B73")); c.roundRect(0,1.5*mm,3.2*mm,17*mm,1.6*mm,stroke=0,fill=1)
-        c.setFillColor(colors.HexColor("#5A7167")); c.setFont(TESTO_B,6.4); c.drawString(8*mm,13.1*mm,self.occhiello[:40])
-        p=Paragraph(_t(self.titolo),ParagraphStyle("rubrica_fit2",fontName=TITOLO,fontSize=15.2,leading=15.8,textColor=INCHIOSTRO))
-        k=KeepInFrame(self.w-16*mm,9*mm,[p],mode="shrink"); k.canv=c; k.wrap(self.w-16*mm,9*mm); k.drawOn(c,8*mm,3.0*mm)
+        # ombra corta + card bianca
+        c.setFillColor(colors.Color(.08,.16,.26,alpha=.13)); c.roundRect(1.2*mm,.2*mm,self.w-1.2*mm,18.5*mm,3*mm,stroke=0,fill=1)
+        c.setFillColor(BIANCO); c.roundRect(0,1.4*mm,self.w-1.2*mm,18.5*mm,3*mm,stroke=0,fill=1)
+        c.setFillColor(SOLE); c.roundRect(0,1.4*mm,5*mm,18.5*mm,2.5*mm,stroke=0,fill=1)
+        c.setFillColor(ROSSO); c.roundRect(7*mm,14.2*mm,30*mm,5.2*mm,2.6*mm,stroke=0,fill=1)
+        c.setFillColor(BIANCO); c.setFont(TESTO_B,5.8); c.drawCentredString(22*mm,16.0*mm,self.occhiello[:28])
+        p=Paragraph(_t(self.titolo),ParagraphStyle("rubrica_pop",fontName=TITOLO,fontSize=17,leading=17.2,textColor=BLU,alignment=0))
+        k=KeepInFrame(self.w-18*mm,10*mm,[p],mode="shrink"); k.canv=c; k.wrap(self.w-18*mm,10*mm); k.drawOn(c,10*mm,3.2*mm)
 
 class Fumetto(Flowable):
     """Box dialogo GBA con ritratto allenatore."""
@@ -353,7 +355,7 @@ class PokemonHero(Flowable):
         super().__init__(); self.ctx=ctx or {}; self.indice=indice; self.altezza=altezza
     def wrap(self,*_): return LARGHEZZA,self.altezza
     def draw(self):
-        c=self.canv; _panel(c,0,2*mm,LARGHEZZA,self.altezza-4*mm,4*mm,.78,"#A8B8AE")
+        c=self.canv; _panel(c,0,2*mm,LARGHEZZA,self.altezza-4*mm,4*mm,.90,"#7DB7E3")
         asset=_mondo_asset(self.ctx,"pokemon",self.indice)
         if asset: _immagine_asset(c,asset,LARGHEZZA*.70,self.altezza*.50,55*mm)
         ball=_mondo_asset(self.ctx,"pokeball",self.indice)
@@ -375,7 +377,7 @@ class Decoro(Flowable):
 
     def draw(self):
         c=self.canv
-        _panel(c,0,2*mm,LARGHEZZA,self.altezza-4*mm,4*mm,.76,"#A8B8AE")
+        _panel(c,0,2*mm,LARGHEZZA,self.altezza-4*mm,4*mm,.90,"#7DB7E3")
         specs=(("pokeball",.27,29*mm),("oggetti",.50,31*mm),("allenatori",.75,43*mm))
         for k,(gruppo,px,size) in enumerate(specs):
             asset=_mondo_asset(self.ctx,gruppo,self.seme+k)
