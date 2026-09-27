@@ -46,7 +46,7 @@ BIANCO = colors.white
 LEGNO = colors.HexColor("#C8792B")
 LEGNO_SCURO = colors.HexColor("#9C5A1C")
 ARCOBALENO = [ROSSO, ARANCIO, SOLE, VERDE, CIELO, VIOLA]
-HEX = ["#EF476F", "#FF8C42", "#06D6A0", "#118AB2", "#8338EC"]
+HEX = ["#1F5B4A", "#568D55", "#2F7D55", "#356B66", "#6D8452"]
 COLORE_STATO = {"caldo": ROSSO, "tiepido": ARANCIO, "freddo": BLU, "in arrivo": VERDE,
                 "da valutare": VIOLA, "nessun dato": GRIGIO}
 
@@ -371,7 +371,7 @@ def _tag(testo, colore, larghezza=21 * mm):
     return t
 
 
-def _tabella(dati, larghezze, colore=CIELO, allinea_destra_da=1):
+def _tabella(dati, larghezze, colore=colors.HexColor("#2F5D50"), allinea_destra_da=1):
     t = Table(dati, colWidths=larghezze, repeatRows=1)
     stile = [
         ("FONTNAME", (0, 0), (-1, 0), SOTTO), ("FONTSIZE", (0, 0), (-1, 0), 9),
@@ -386,7 +386,7 @@ def _tabella(dati, larghezze, colore=CIELO, allinea_destra_da=1):
     if allinea_destra_da is not None:
         stile.append(("ALIGN", (allinea_destra_da, 1), (-1, -1), "RIGHT"))
     for i in range(1, len(dati)):
-        stile.append(("BACKGROUND", (0, i), (-1, i), BIANCO if i % 2 else PASTELLO))
+        stile.append(("BACKGROUND", (0, i), (-1, i), colors.HexColor("#F5F3E3") if i % 2 else colors.HexColor("#E6EDD4")))
     t.setStyle(TableStyle(stile))
     return t
 
@@ -588,13 +588,11 @@ def _pagina_interna(c, doc, ctx):
     c.drawRightString(W - MARGINE, H - 10.5 * mm, f"N.{ctx['numero']} · {ctx['data_lunga']} · P.{doc.page}")
 
     plan = _art_piano(ctx, doc.page)
-    # hero grande sul margine destro, dietro al contenuto ma non ripetuto
+    # Hero di pagina nel margine alto destro: completamente dentro il foglio
+    # e fuori dalla cornice di testo, così non copre rubriche o tabelle.
     asset = plan.get("hero_asset")
     if asset:
-        _immagine_asset(c, asset, W - 18 * mm, H - 70 * mm, 42 * mm)
-    # modulo UI/map compatto in alto a destra
-    if doc.page in (2,3,4,5,6):
-        _art_map(c, W - 55 * mm, H - 52 * mm, 39 * mm, 25 * mm, doc.page)
+        _immagine_asset(c, asset, W - 10 * mm, H - 34 * mm, 18 * mm)
     # footer essenziale
     c.setFillColor(colors.HexColor("#173C35"))
     c.rect(0, 0, W, 9 * mm, stroke=0, fill=1)
@@ -642,7 +640,7 @@ def _box_200(car, st):
     righe = [[Paragraph("Cosa farei con 200 €", st["box_titolo"])],
              [Paragraph(_t("La proposta della settimana, calcolata con regole fisse sui dati: al massimo tre "
                            "acquisti, uno per tipo di segnale, senza superare il budget."), st["occhiello"])]]
-    colori = {"Occasione": VERDE, "Novità calda": ROSSO, "Tendenza solida": BLU}
+    colori = {"Occasione": colors.HexColor("#2F7D55"), "Novità calda": colors.HexColor("#8A4F3D"), "Tendenza solida": colors.HexColor("#356B66")}
     for x in car["proposte"]:
         scheda = Table([
             [_tag(x["categoria"], colori.get(x["categoria"], VIOLA), 27 * mm),
@@ -657,7 +655,7 @@ def _box_200(car, st):
         scheda.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
                                     ("BACKGROUND", (0, 0), (-1, -1), BIANCO),
                                     ("ROUNDEDCORNERS", [6, 6, 6, 6]),
-                                    ("BOX", (0, 0), (-1, -1), 1, SOLE),
+                                    ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#568D55")),
                                     ("TOPPADDING", (0, 0), (-1, -1), 3), ("BOTTOMPADDING", (0, 0), (-1, -1), 3)]))
         righe.append([scheda])
     if car["proposte"]:
@@ -716,7 +714,7 @@ def crea(percorso, ctx):
     E = [NextPageTemplate("interna"), Spacer(1, 1), PageBreak()]
 
     # 1. La settimana in breve + 200 euro
-    E += [Rubrica("Editoriale", "La settimana in breve", VIOLA), Spacer(1, 3)]
+    E += [Rubrica("Editoriale", "La settimana in breve", colors.HexColor("#568D55")), Spacer(1, 3)]
     for k, riga in enumerate(ctx["sintesi"]):
         E.append(Paragraph(f'<font color="{HEX[k % 5]}" name="{SOTTO}">»</font>  {_t(riga)}', st["p"]))
         E.append(Spacer(1, 2.5))
@@ -724,7 +722,7 @@ def crea(percorso, ctx):
           _box_200(g["carrello"], st), Spacer(1, 6), Decoro(ctx, seme=ctx["numero"])]
 
     # 2. Radar uscite
-    E += [Spacer(1, 6), CondPageBreak(60 * mm), Rubrica("Radar", "Le uscite in arrivo", ROSSO),
+    E += [Spacer(1, 6), CondPageBreak(60 * mm), Rubrica("Radar", "Le uscite in arrivo", colors.HexColor("#356B66")),
           Paragraph(_t("Date di uscita trovate nelle notizie delle ultime settimane (siti ufficiali, italiani e "
                        "internazionali) per i prossimi 60 giorni. Più fonti = più interesse. Controlla sempre la "
                        "data sul link."), st["occhiello"]), Spacer(1, 5)]
@@ -735,12 +733,12 @@ def crea(percorso, ctx):
             dati.append([Paragraph(f"{d[8:10]}/{d[5:7]}", st["cella_b"]),
                          _link(u["titolo"], u["link"], st["cella"], 110), Paragraph(_t(u["fonte"]), st["cella"]),
                          str(u["citazioni"]), _stato(u["mercato"])])
-        E.append(_tabella(dati, [15 * mm, 88 * mm, 30 * mm, 12 * mm, 31 * mm], ROSSO, allinea_destra_da=None))
+        E.append(_tabella(dati, [15 * mm, 88 * mm, 30 * mm, 12 * mm, 31 * mm], colors.HexColor("#356B66"), allinea_destra_da=None))
     else:
         E.append(Paragraph("Nessuna data di uscita trovata nelle notizie di questa settimana.", st["nota"]))
 
     # 3. Termometro delle novità
-    E += [Spacer(1, 10), CondPageBreak(60 * mm), Rubrica("Previsioni", "Il termometro delle novità", ARANCIO),
+    E += [Spacer(1, 10), CondPageBreak(60 * mm), Rubrica("Previsioni", "Il termometro delle novità", colors.HexColor("#6D8452")),
           Paragraph(_t(f"Sigillato comparso su Cardmarket negli ultimi {C.PREVISIONI_GIORNI} giorni: prevendite, "
                        "prodotti in arrivo e appena usciti. Caldo = prezzo in salita o poche offerte sotto la "
                        "tendenza. Freddo = prezzo in calo o molte offerte scontate. In arrivo = ancora nessuna "
@@ -751,12 +749,12 @@ def crea(percorso, ctx):
             a = p["aggiunto"]
             dati.append([_link(p["nome"], p["link"], st["cella"], 55), f"{a[8:10]}/{a[5:7]}", _eur(p["prezzo"]),
                          _perc(p["variazione"]), _stato(p["stato"]), Paragraph(_t(p["motivo"]), st["cella"])])
-        E.append(_tabella(dati, [50 * mm, 13 * mm, 19 * mm, 15 * mm, 25 * mm, 54 * mm], ARANCIO))
+        E.append(_tabella(dati, [50 * mm, 13 * mm, 19 * mm, 15 * mm, 25 * mm, 54 * mm], colors.HexColor("#6D8452")))
     else:
         E.append(Paragraph("Nessun prodotto sigillato nuovo nel periodo.", st["nota"]))
 
     # 4. Il borsino
-    E += [Spacer(1, 10), CondPageBreak(110 * mm), Rubrica("Mercato", "Il borsino della settimana", VERDE),
+    E += [Spacer(1, 10), CondPageBreak(110 * mm), Rubrica("Mercato", "Il borsino della settimana", colors.HexColor("#2F7D55")),
           Paragraph(_t("Chi sale e chi scende. Prezzo = tendenza Cardmarket. * = stima dal primo giorno, "
                        "sostituita dallo storico reale man mano che si accumula."), st["occhiello"])]
     for tipo, nome_tipo in (("sigillato", "Sigillato"), ("singola", "Carte singole")):
@@ -782,7 +780,7 @@ def crea(percorso, ctx):
 
     # 5. Occasioni
     if g["occasioni"]:
-        E += [Spacer(1, 6), CondPageBreak(80 * mm), Rubrica("Affari", "Le occasioni della settimana", SOLE),
+        E += [Spacer(1, 6), CondPageBreak(80 * mm), Rubrica("Affari", "Le occasioni della settimana", colors.HexColor("#8A7545")),
               Paragraph(_t("Sigillato con un'offerta molto sotto il prezzo di tendenza."), st["occhiello"]),
               Spacer(1, 4),
               Fumetto("Occhio: l'offerta più bassa può essere in un'altra lingua o rovinata. Apri il link e "
@@ -795,7 +793,7 @@ def crea(percorso, ctx):
 
     # 6. Notizie
     if g["notizie"]:
-        E += [Spacer(1, 10), CondPageBreak(45 * mm), Rubrica("Attualità", "Dal mondo Pokémon", CIELO), Spacer(1, 3)]
+        E += [Spacer(1, 10), CondPageBreak(45 * mm), Rubrica("Attualità", "Dal mondo Pokémon", colors.HexColor("#356B66")), Spacer(1, 3)]
         for k, n in enumerate(g["notizie"]):
             E.append(Paragraph(f'<font color="{HEX[k % 5]}" name="{SOTTO}" size="8">'
                                f'{_t((n.get("fonte") or "").upper())}  ·  {_t(n["data"])}</font><br/>'
@@ -805,7 +803,7 @@ def crea(percorso, ctx):
     E += [Spacer(1, 6), Decoro(ctx, seme=ctx["numero"] + 5)]
 
     # 7. Quarta di copertina: come leggere la rivista
-    E += [NextPageTemplate("retro"), PageBreak(), Rubrica("Metodo", "Come leggere la rivista", VIOLA), Spacer(1, 3)]
+    E += [NextPageTemplate("retro"), PageBreak(), Rubrica("Metodo", "Come leggere la rivista", colors.HexColor("#568D55")), Spacer(1, 3)]
     for nota in ctx["note_metodo"]:
         E.append(Paragraph(f'<font color="#FF8C42" name="{SOTTO}">»</font>  {_t(nota)}', st["p"]))
         E.append(Spacer(1, 4))
