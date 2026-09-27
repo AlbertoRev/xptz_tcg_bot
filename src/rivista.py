@@ -311,14 +311,16 @@ class Rubrica(Flowable):
     """Titolo di sezione editoriale, arioso e sempre contenuto."""
     def __init__(self, occhiello, titolo, colore=ROSSO):
         super().__init__(); self.occhiello=occhiello.upper(); self.titolo=titolo; self.colore=colore
-    def wrap(self,*_): return LARGHEZZA,20*mm
+    def wrap(self,aw,ah):
+        self.w=max(20*mm,aw)
+        return self.w,20*mm
     def draw(self):
         c=self.canv
-        _panel(c,0,1.5*mm,LARGHEZZA,17*mm,2.5*mm,.88,"#A9B8AE")
+        _panel(c,0,1.5*mm,self.w,17*mm,2.5*mm,.88,"#A9B8AE")
         c.setFillColor(colors.HexColor("#5F8B73")); c.roundRect(0,1.5*mm,3.2*mm,17*mm,1.6*mm,stroke=0,fill=1)
         c.setFillColor(colors.HexColor("#5A7167")); c.setFont(TESTO_B,6.4); c.drawString(8*mm,13.1*mm,self.occhiello[:40])
         p=Paragraph(_t(self.titolo),ParagraphStyle("rubrica_fit2",fontName=TITOLO,fontSize=15.2,leading=15.8,textColor=INCHIOSTRO))
-        k=KeepInFrame(LARGHEZZA-16*mm,9*mm,[p],mode="shrink"); k.canv=c; k.wrap(LARGHEZZA-16*mm,9*mm); k.drawOn(c,8*mm,3.0*mm)
+        k=KeepInFrame(self.w-16*mm,9*mm,[p],mode="shrink"); k.canv=c; k.wrap(self.w-16*mm,9*mm); k.drawOn(c,8*mm,3.0*mm)
 
 class Fumetto(Flowable):
     """Box dialogo GBA con ritratto allenatore."""
