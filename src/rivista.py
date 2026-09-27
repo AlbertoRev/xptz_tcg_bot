@@ -65,7 +65,7 @@ def _logo(c, x, y, width, compact=False):
     if tw>width: size*=width/tw; tw=pdfmetrics.stringWidth(main,TITOLO,size)
     c.saveState(); c.translate(x,y); c.rotate(-2 if not compact else 0)
     c.setFillColor(colors.HexColor("#123E78")); c.setFont(TITOLO,size); c.drawString(2.2,-2.2,main)
-    t=c.beginText(0,0); t.setFont(TITOLO,size); t.setTextRenderMode(2); t.setFillColor(SOLE); t.setStrokeColor(BLU); t.setLineWidth(max(1.2,size/13)); t.textOut(main); c.drawText(t)
+    t=c.beginText(0,0); t.setFont(TITOLO,size); t.setTextRenderMode(2); t.setFillColor(SOLE); t.setStrokeColor(BLU); c.setLineWidth(max(1.2,size/13)); t.textOut(main); c.drawText(t)
     if not compact:
         rw=min(width*.48,48*mm); rh=max(7*mm,size*.34); rx=max(0,tw-rw*.88); ry=-rh*.92
         c.setFillColor(ROSSO); c.roundRect(rx,ry,rw,rh,rh/2,stroke=0,fill=1); c.setFillColor(BIANCO); c.setFont(TITOLO,max(7,size*.30)); c.drawCentredString(rx+rw/2,ry+rh*.26,"WEEKLY")
