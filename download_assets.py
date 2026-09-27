@@ -220,33 +220,29 @@ def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
         if len(manifest["pokemon"]) >= 7:
             break
 
-    # 4 Poké Ball diverse a settimana.
-    for nome, url, slug in _candidati_item(rng, BALL_POOL, "ball"):
-        percorso = ASSET_DIR / nome
-        if _download(url, percorso):
-            _polish_asset(percorso)
-            manifest["pokeball"].append(nome)
-        if len(manifest["pokeball"]) >= 4:
-            break
+    # 4 Poké Ball illustrate ad alta risoluzione.
+    for nome,url,slug in _candidati_item(rng,BALL_POOL,"ball"):
+        percorso=ASSET_DIR/nome
+        ok=_download_wikidex(url[8:],percorso) if url.startswith("wikidex:") else _download(url,percorso)
+        if ok:
+            _polish_asset(percorso); manifest["pokeball"].append(nome)
+        if len(manifest["pokeball"])>=4: break
 
-    # 6 strumenti diversi a settimana.
-    for nome, url, slug in _candidati_item(rng, ITEM_POOL, "item"):
-        percorso = ASSET_DIR / nome
-        if _download(url, percorso):
-            _polish_asset(percorso)
-            manifest["oggetti"].append(nome)
-        if len(manifest["oggetti"]) >= 6:
-            break
+    # Strumenti con artwork illustrato.
+    for nome,url,slug in _candidati_item(rng,ITEM_POOL,"item"):
+        percorso=ASSET_DIR/nome
+        ok=_download_wikidex(url[8:],percorso) if url.startswith("wikidex:") else _download(url,percorso)
+        if ok:
+            _polish_asset(percorso); manifest["oggetti"].append(nome)
+        if len(manifest["oggetti"])>=6: break
 
-    # 3 trainer sprites: se un nome non è disponibile, si passa al successivo.
-    for nome, url, trainer_nome in _candidati_trainer(rng):
-        percorso = ASSET_DIR / nome
-        if not _download_mediawiki(url, percorso):
-            _trainer_fallback(percorso, len(manifest["allenatori"]))
-        if percorso.exists():
-            manifest["allenatori"].append(nome)
-        if len(manifest["allenatori"]) >= 3:
-            break
+    # Allenatori Hoenn: artwork ad alta risoluzione, fallback cel-shaded solo se la fonte è indisponibile.
+    for nome,url,trainer_nome in _candidati_trainer(rng):
+        percorso=ASSET_DIR/nome
+        ok=_download_wikidex(url[8:],percorso) if url.startswith("wikidex:") else _download_mediawiki(url,percorso)
+        if not ok: _trainer_fallback(percorso,len(manifest["allenatori"]))
+        if percorso.exists(): manifest["allenatori"].append(nome)
+        if len(manifest["allenatori"])>=3: break
 
     # Il manifest è utile per debuggare un run di GitHub Actions e resta in assets/,
     # già esclusa dal repository tramite .gitignore.
