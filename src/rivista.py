@@ -496,60 +496,45 @@ def _art_piano(ctx, numero):
     pages=((ctx or {}).get("art_direction") or {}).get("pages") or []
     return next((p for p in pages if p.get("page")==numero), {})
 
-def _art_map(c, x, y, w, h, seed=1):
-    """Mappa editoriale di Hoenn: sagoma ispirata alla geografia RSE, con mare, isole, città e rotte."""
+def _art_map(c,x,y,w,h,seed=1):
+    """Carta illustrata originale di Hoenn: forme organiche, mare, rilievi, rotte e città."""
     c.saveState()
-    c.setFillColor(colors.HexColor("#9BC9C5"))
-    c.setStrokeColor(colors.HexColor("#173C35"))
-    c.setLineWidth(1.1)
-    c.roundRect(x, y, w, h, 2*mm, stroke=1, fill=1)
-    # mare a pixel / scanline
-    c.setStrokeColor(colors.Color(1,1,1,alpha=.20))
-    c.setLineWidth(.35)
-    yy=y+3*mm
-    while yy<y+h-3*mm:
-        c.line(x+3*mm,yy,x+w-3*mm,yy); yy+=3*mm
-
-    # continente principale di Hoenn, forma semplificata ma riconoscibile
-    pts=[
-        (.08,.63),(.18,.76),(.34,.79),(.42,.69),(.54,.72),(.61,.84),(.73,.78),
-        (.82,.64),(.76,.54),(.88,.48),(.83,.35),(.69,.34),(.61,.25),(.47,.31),
-        (.37,.23),(.27,.31),(.14,.29),(.08,.42)
-    ]
+    c.setFillColor(colors.HexColor("#B8D9D4")); c.roundRect(x,y,w,h,3*mm,stroke=0,fill=1)
+    # coste organiche, senza geometria pixel
     p=c.beginPath()
-    p.moveTo(x+pts[0][0]*w,y+pts[0][1]*h)
-    for px,py in pts[1:]: p.lineTo(x+px*w,y+py*h)
+    p.moveTo(x+.08*w,y+.47*h)
+    p.curveTo(x+.08*w,y+.70*h,x+.23*w,y+.82*h,x+.39*w,y+.75*h)
+    p.curveTo(x+.49*w,y+.88*h,x+.63*w,y+.79*h,x+.69*w,y+.69*h)
+    p.curveTo(x+.82*w,y+.72*h,x+.90*w,y+.59*h,x+.82*w,y+.49*h)
+    p.curveTo(x+.91*w,y+.38*h,x+.79*w,y+.27*h,x+.66*w,y+.31*h)
+    p.curveTo(x+.56*w,y+.20*h,x+.43*w,y+.28*h,x+.35*w,y+.34*h)
+    p.curveTo(x+.23*w,y+.27*h,x+.10*w,y+.33*h,x+.08*w,y+.47*h)
     p.close()
-    c.setFillColor(colors.HexColor("#78A95C"))
-    c.setStrokeColor(colors.HexColor("#315B43"))
+    c.setFillColor(colors.HexColor("#78A966")); c.setStrokeColor(colors.HexColor("#527A55")); c.setLineWidth(.8)
     c.drawPath(p,stroke=1,fill=1)
-
-    # penisole / isole orientali e meridionali
-    c.setFillColor(colors.HexColor("#6F9F58"))
-    for px,py,rw,rh in ((.86,.64,.07,.10),(.91,.48,.05,.07),(.76,.16,.07,.07),(.57,.13,.05,.05),(.35,.13,.05,.04)):
-        c.roundRect(x+px*w,y+py*h,rw*w,rh*h,1*mm,stroke=0,fill=1)
-    # montagna centrale / vulcano
-    c.setFillColor(colors.HexColor("#7C6A4D"))
-    q=c.beginPath(); q.moveTo(x+.42*w,y+.52*h); q.lineTo(x+.49*w,y+.69*h); q.lineTo(x+.56*w,y+.52*h); q.close()
-    c.drawPath(q,stroke=0,fill=1)
-    c.setFillColor(colors.HexColor("#D7D8B6")); c.circle(x+.49*w,y+.62*h,1.5*mm,stroke=0,fill=1)
-
-    # rotte principali
-    c.setStrokeColor(colors.HexColor("#E9E0A7")); c.setLineWidth(1.4)
-    routes=[((.16,.42),(.29,.39),(.38,.48),(.49,.50)),((.49,.50),(.63,.43),(.76,.46),(.86,.53)),
-            ((.30,.39),(.31,.62),(.43,.66),(.55,.62)),((.55,.62),(.68,.70),(.80,.64),(.88,.55))]
+    # boschi e rilievi
+    c.setFillColor(colors.Color(.20,.43,.25,alpha=.22))
+    for px,py,r in ((.23,.55,.07),(.31,.64,.06),(.62,.59,.07),(.70,.48,.06)):
+        c.circle(x+px*w,y+py*h,r*w,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#8B7657"))
+    q=c.beginPath(); q.moveTo(x+.42*w,y+.46*h); q.lineTo(x+.49*w,y+.70*h); q.lineTo(x+.57*w,y+.45*h); q.close(); c.drawPath(q,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#D7D2B0")); c.circle(x+.49*w,y+.62*h,1.4*mm,stroke=0,fill=1)
+    # isole
+    c.setFillColor(colors.HexColor("#70A060"))
+    for px,py,r in ((.88,.61,.035),(.91,.45,.027),(.77,.17,.035),(.59,.14,.022),(.36,.15,.024)):
+        c.circle(x+px*w,y+py*h,max(1.4*mm,r*w),stroke=0,fill=1)
+    # rotte morbide
+    c.setStrokeColor(colors.HexColor("#F2E7B0")); c.setLineWidth(1.3)
+    routes=[((.15,.43),(.29,.40),(.48,.51),(.66,.44),(.85,.53)),((.29,.40),(.31,.63),(.49,.65),(.68,.69),(.84,.61))]
     for r in routes:
         p=c.beginPath(); p.moveTo(x+r[0][0]*w,y+r[0][1]*h)
         for px,py in r[1:]: p.lineTo(x+px*w,y+py*h)
         c.drawPath(p,stroke=1,fill=0)
-
-    # città
-    cities=[(.16,.42),(.30,.39),(.31,.62),(.43,.66),(.49,.50),(.55,.62),(.63,.43),(.68,.70),(.76,.46),(.80,.64),(.86,.53)]
-    for i,(px,py) in enumerate(cities):
-        c.setFillColor(colors.HexColor("#F5F0C8") if i%3 else colors.HexColor("#D8584D"))
-        c.rect(x+px*w-1.2*mm,y+py*h-1.2*mm,2.4*mm,2.4*mm,stroke=0,fill=1)
-    c.setFillColor(colors.HexColor("#173C35")); c.setFont(TESTO_B,6.2)
-    c.drawString(x+4*mm,y+h-7*mm,"HOENN / POKENAV")
+    # città: cerchi, non quadratini
+    for i,(px,py) in enumerate(((.15,.43),(.29,.40),(.31,.63),(.49,.51),(.49,.65),(.66,.44),(.68,.69),(.84,.61),(.85,.53))):
+        c.setFillColor(colors.HexColor("#C9564A") if i in (2,6) else colors.HexColor("#FFF3C9"))
+        c.setStrokeColor(colors.HexColor("#355F4E")); c.circle(x+px*w,y+py*h,1.4*mm,stroke=1,fill=1)
+    c.setFillColor(colors.HexColor("#355F4E")); c.setFont(TESTO_B,5.8); c.drawString(x+4*mm,y+h-6*mm,"HOENN")
     c.restoreState()
 
 def _art_ui(c, x, y, w, h, kind="pokedex"):
