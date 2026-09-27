@@ -14,14 +14,21 @@ def _normalize(plan,region):
   if hero: used.add(hero.lower())
   p.update(page=i,hero_pokemon=hero,secondary_pokemon=list(p.get("secondary_pokemon") or [])); out.append(p)
  plan["pages"]=out; return plan
-def genera_piano(issue_number,region="hoenn"):
+def genera_piano(issue_number,region="hoenn",available_pokemon=None,content_titles=None):
  fallback=_local_plan(issue_number,region); key=os.getenv("GEMINI_API_KEY")
  if not key: return fallback
  try:
   from google import genai
   from google.genai import types
   client=genai.Client(api_key=key)
-  prompt=f"""Sei l'art director di POKEPUTZU WEEKLY, magazine settimanale Pokémon TCG. Numero {issue_number}, regione protagonista {region}. Progetta esattamente 7 pagine con linguaggio visivo Pokémon portatile 2002-2008: mappe, Pokédex, schermate battaglia, pannelli dati e magazine editoriale. Il Pokémon è protagonista visivo. Varia le composizioni, non ripetere hero Pokémon e usa solo asset concettuali locali. Solo JSON conforme allo schema."""
+  elenco=", ".join(available_pokemon or [])
+  contenuti="; ".join(content_titles or [])
+  prompt=f"""Sei l'art director di POKEPUTZU WEEKLY, magazine settimanale Pokémon TCG. Numero {issue_number}, regione protagonista {region}.
+Progetta esattamente 7 pagine con linguaggio visivo Pokémon portatile 2002-2008: mappe, Pokédex, schermate battaglia, pannelli dati e magazine editoriale.
+Il Pokémon deve essere protagonista visivo, grande e associato alla pagina. Varia le composizioni e non ripetere hero Pokémon.
+ASSET POKÉMON DISPONIBILI: {elenco}
+CONTENUTI EDITORIALI: {contenuti}
+Scegli gli hero solo dagli asset disponibili. Usa mappe/UI dichiarate dal sistema. Solo JSON conforme allo schema."""
   r=client.models.generate_content(model=MODEL,contents=prompt,config=types.GenerateContentConfig(response_mime_type="application/json",response_schema=SCHEMA,temperature=0.7))
   return _normalize(json.loads(r.text),region)
  except Exception as e:
