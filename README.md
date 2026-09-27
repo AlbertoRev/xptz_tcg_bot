@@ -1,3 +1,4 @@
+[README.md](https://github.com/user-attachments/files/32701875/README.md)
 # Bot TCG – report e alert su Telegram
 
 Ogni giorno salva i prezzi di tutto il catalogo Cardmarket di Pokémon, One Piece e Dragon Ball e ti manda gli alert.
@@ -119,3 +120,9 @@ Per modificarlo: apri il file su GitHub → icona della matita → cambia il val
 Se un giorno vuoi il prezzo reale delle copie in italiano calcolato in automatico, crea una chiave su cardmarketapi.com
 e aggiungila come segreto `CMAPI_KEY`. Il bot la usa da solo, al massimo 8 verifiche al giorno.
 Senza chiave tutto funziona lo stesso, con la verifica manuale tramite i link.
+
+## Immagini decorative della rivista
+
+La rivista prepara automaticamente un **kit grafico diverso ogni settimana** nella cartella `assets/` prima di creare il PDF. Il kit contiene Pokémon, Poké Ball, strumenti e sprite di allenatori; non devi caricare immagini a mano su GitHub e la cartella resta esclusa dal repository.
+
+Pokémon, Poké Ball e strumenti vengono scelti dagli sprite pubblici di PokéAPI. Per la categoria allenatori viene usato il repository di sprite di Pokémon Showdown, perché il repository sprite di PokéAPI non espone una collezione trainer equivalente. Il PDF continua a essere generato anche se una singola immagine non è disponibile.
