@@ -656,6 +656,16 @@ def _pagina_interna(c, doc, ctx):
     # piccoli elementi illustrati solo nella fascia sicura superiore/destra.
     hero=plan.get("hero_asset")
     if hero and page in (3,4,6): _immagine_asset(c,hero,W-18*mm,H-33*mm,31*mm)
+    # Terzo inferiore = scena illustrata, non spazio residuo.
+    scene_y=13*mm
+    p=c.beginPath(); p.moveTo(0,scene_y); p.lineTo(W,scene_y); p.lineTo(W,83*mm); p.lineTo(0,67*mm); p.close()
+    c.setFillColor(colors.Color(.05,.34,.68,alpha=.12)); c.drawPath(p,stroke=0,fill=1)
+    hero=plan.get("hero_asset") or _mondo_asset(ctx,"pokemon",max(0,page-1))
+    trainer=_mondo_asset(ctx,"allenatori",page-2); ball=_mondo_asset(ctx,"pokeball",page-2); item=_mondo_asset(ctx,"oggetti",page-2)
+    if hero: _immagine_asset(c,hero,W-50*mm,47*mm,78*mm)
+    if trainer and page in (2,4,6): _immagine_asset(c,trainer,29*mm,43*mm,55*mm)
+    if ball and page in (2,3,5): _immagine_asset(c,ball,22*mm,25*mm,25*mm)
+    if item and page in (3,5,6): _immagine_asset(c,item,55*mm,27*mm,28*mm)
     # footer chiaro e marchio costante.
     c.setFillColor(colors.Color(1,1,1,alpha=.90)); c.rect(0,0,W,10*mm,stroke=0,fill=1)
     _logo(c,MARGINE,5.8*mm,39*mm,compact=True)
@@ -788,7 +798,7 @@ def crea(percorso, ctx, compact=False):
     profile=_layout_profile(ctx,compact); ctx["_layout_profile"]=profile; st=_stili(); g=ctx["principale"]
     doc=BaseDocTemplate(percorso,pagesize=A4,title=f"{TESTATA} n. {ctx['numero']}",
         leftMargin=MARGINE,rightMargin=MARGINE,topMargin=25*mm,bottomMargin=15*mm)
-    frame=Frame(MARGINE,15*mm,LARGHEZZA,H-41*mm,id="testo",leftPadding=0,rightPadding=0,topPadding=3*mm,bottomPadding=2*mm)
+    frame=Frame(MARGINE,86*mm,LARGHEZZA,H-112*mm,id="testo",leftPadding=0,rightPadding=0,topPadding=3*mm,bottomPadding=2*mm)
     retro=Frame(MARGINE+7*mm,H-151*mm,LARGHEZZA-14*mm,78*mm,id="retro",leftPadding=0,rightPadding=0)
     doc.addPageTemplates([
         PageTemplate(id="copertina",frames=[Frame(0,0,W,H,id="cover")],onPage=lambda c,d:_copertina(c,ctx)),
@@ -817,11 +827,11 @@ def crea(percorso, ctx, compact=False):
     E += [Rubrica("Annunci e segnali","Cosa succede questa settimana",BLU),Spacer(1,2)]
     for n in g.get("notizie",[])[:3]:
         E += [Paragraph(f'<font name="{TESTO_B}">{_t(n.get("titolo",""))}</font><br/><font size="7">{_t(n.get("fonte",""))} · {_t(n.get("data",""))}</font>',st["p"]),Spacer(1,3)]
-    E += [PokemonHero(ctx,indice=2,altezza=42*mm),PageBreak()]
+    E += [PageBreak()]
 
     # P4 ANALISI — protagonista + dati principali + interpretazione.
     E += [Rubrica("Carta / prodotto protagonista",focus.get("titolo","Analisi della settimana"),ROSSO),Spacer(1,3),
-          PokemonHero(ctx,indice=3,altezza=58*mm),Spacer(1,4)]
+          Spacer(1,2)]
     tops=_top_rows(g,"singola",3)
     if tops:
         rows=[["Prodotto","Prezzo","Periodo","Variazione"]]
@@ -834,7 +844,7 @@ def crea(percorso, ctx, compact=False):
     # P5 FOCUS COLLEZIONE — selezione visiva e occasioni.
     E += [Rubrica("Le icone di Hoenn","Focus collezione",BLU),Spacer(1,3),
           Paragraph("Una selezione compatta dei segnali più interessanti emersi dai dati di questa settimana.",st["occhiello"]),
-          Spacer(1,4),PokemonHero(ctx,indice=4,altezza=64*mm),Spacer(1,5)]
+          Spacer(1,4)]
     if g.get("occasioni"):
         rows=[["Prodotto","Offerta","Tendenza","Sconto"]]
         for o in g["occasioni"][:5]:
