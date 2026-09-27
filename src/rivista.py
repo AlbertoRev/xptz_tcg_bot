@@ -482,9 +482,9 @@ def _copertina(c, ctx):
     titolo = Paragraph(_t(ctx["apertura"]["titolo"]), ParagraphStyle("ct2", fontName=TITOLO, fontSize=15, leading=17.5, textColor=INCHIOSTRO))
     sotto = Paragraph(_t(ctx["apertura"]["sottotitolo"]), ParagraphStyle("cs2", fontName=TESTO, fontSize=8.6, leading=10.5, textColor=GRIGIO))
     area_t=KeepInFrame(pw-14*mm,40*mm,[titolo],mode="shrink")
-    _,ht=area_t.wrap(pw-14*mm,40*mm); area_t.drawOn(c,x0+7*mm,y0+ph-24*mm-ht)
+    area_t.canv=c; _,ht=area_t.wrap(pw-14*mm,40*mm); area_t.drawOn(c,x0+7*mm,y0+ph-24*mm-ht)
     area_s=KeepInFrame(pw-14*mm,18*mm,[sotto],mode="shrink")
-    _,hs=area_s.wrap(pw-14*mm,18*mm); area_s.drawOn(c,x0+7*mm,y0+7*mm)
+    area_s.canv=c; _,hs=area_s.wrap(pw-14*mm,18*mm); area_s.drawOn(c,x0+7*mm,y0+7*mm)
     # colonna visuale dedicata: mappa e Pokémon non possono sovrapporsi ai dati
     _art_map(c, W-69*mm, H-87*mm, 52*mm, 38*mm, ctx["numero"])
     hero=(_art_piano(ctx,1).get("hero_asset") or _mondo_asset(ctx,"pokemon",0))
