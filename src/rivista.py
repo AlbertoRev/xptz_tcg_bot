@@ -312,17 +312,17 @@ class Rubrica(Flowable):
     def __init__(self, occhiello, titolo, colore=ROSSO):
         super().__init__(); self.occhiello=occhiello.upper(); self.titolo=titolo; self.colore=colore
     def wrap(self,aw,ah):
-        self.w=max(20*mm,aw); return self.w,22*mm
+        self.w=max(20*mm,aw); return self.w,20*mm
     def draw(self):
         c=self.canv
         # ombra corta + card bianca
-        c.setFillColor(colors.Color(.08,.16,.26,alpha=.13)); c.roundRect(1.2*mm,.2*mm,self.w-1.2*mm,18.5*mm,3*mm,stroke=0,fill=1)
+        c.setFillColor(colors.Color(.08,.16,.26,alpha=.13)); c.roundRect(1.2*mm,.2*mm,self.w-1.2*mm,17*mm,3*mm,stroke=0,fill=1)
         c.setFillColor(BIANCO); c.roundRect(0,1.4*mm,self.w-1.2*mm,18.5*mm,3*mm,stroke=0,fill=1)
         c.setFillColor(SOLE); c.roundRect(0,1.4*mm,5*mm,18.5*mm,2.5*mm,stroke=0,fill=1)
-        c.setFillColor(ROSSO); c.roundRect(7*mm,14.2*mm,30*mm,5.2*mm,2.6*mm,stroke=0,fill=1)
-        c.setFillColor(BIANCO); c.setFont(TESTO_B,5.8); c.drawCentredString(22*mm,16.0*mm,self.occhiello[:28])
+        c.setFillColor(ROSSO); c.roundRect(7*mm,12.7*mm,30*mm,5.2*mm,2.6*mm,stroke=0,fill=1)
+        c.setFillColor(BIANCO); c.setFont(TESTO_B,5.8); c.drawCentredString(22*mm,14.5*mm,self.occhiello[:28])
         p=Paragraph(_t(self.titolo),ParagraphStyle("rubrica_pop",fontName=TITOLO,fontSize=17,leading=17.2,textColor=BLU,alignment=0))
-        k=KeepInFrame(self.w-18*mm,10*mm,[p],mode="shrink"); k.canv=c; k.wrap(self.w-18*mm,10*mm); k.drawOn(c,10*mm,3.2*mm)
+        k=KeepInFrame(self.w-18*mm,9*mm,[p],mode="shrink"); k.canv=c; k.wrap(self.w-18*mm,9*mm); k.drawOn(c,10*mm,2.8*mm)
 
 class Fumetto(Flowable):
     """Box dialogo GBA con ritratto allenatore."""
@@ -626,7 +626,7 @@ def _pagina_interna(c, doc, ctx):
     c.saveState()
     page=doc.page
     # Hoenn è l'ambiente comune di tutte le rubriche; varia solo l'intensità del velo.
-    _sfondo_mappa(c,.095,"#F2F0E7")
+    _sfondo_mappa(c,.145,"#FFFDF4")
     accent="#8FA984"
 
     # barra titolo
@@ -847,7 +847,10 @@ def crea(percorso, ctx):
 
     # 7. Quarta di copertina: come leggere la rivista
     E += [NextPageTemplate("retro"), PageBreak(), Rubrica("Metodo", "Come leggere la rivista", colors.HexColor("#568D55")), Spacer(1, 3)]
+    note=[]
+    retro_st=ParagraphStyle("retro_note",parent=st["p"],fontSize=9.3,leading=11.4)
     for nota in ctx["note_metodo"]:
-        E.append(Paragraph(f'<font color="#568D55" name="{SOTTO}">›</font>  {_t(nota)}', st["p"]))
-        E.append(Spacer(1, 4))
+        note.append(Paragraph(f'<font color="#F04E45" name="{SOTTO}">›</font>  {_t(nota)}',retro_st))
+        note.append(Spacer(1,2.5))
+    E.append(KeepInFrame(LARGHEZZA,82*mm,note,mode="shrink"))
     doc.build(E)
