@@ -54,7 +54,7 @@ COLORE_STATO = {"caldo": colors.HexColor("#8A4F3D"), "tiepido": colors.HexColor(
 W, H = A4
 MARGINE = 17 * mm
 LARGHEZZA = W - 2 * MARGINE
-TESTATA = "IL COLLEZIONISTA"
+TESTATA = "POKEPUTZU WEEKLY"
 ASSET_DIR = Path(__file__).resolve().parent.parent / "assets"
 
 
@@ -360,7 +360,7 @@ class Decoro(Flowable):
             nome = _mondo_asset(self.ctx, gruppo, self.seme + k)
             if nome:
                 x = LARGHEZZA * (0.30 + 0.20 * k)
-                larghezza = 13 * mm if gruppo == "allenatori" else 9 * mm
+                larghezza = 24 * mm if gruppo == "allenatori" else 15 * mm
                 _immagine_asset(c, nome, x, self.altezza / 2, larghezza)
 
 
@@ -455,7 +455,7 @@ def _copertina(c, ctx):
     c.drawRightString(W - MARGINE, H - 12 * mm, f"N. {ctx['numero']} · {ctx['data_lunga'].upper()}")
 
     # cartuccia / scheda principale
-    x0, y0, pw, ph = MARGINE, H - 132 * mm, 116 * mm, 91 * mm
+    x0, y0, pw, ph = MARGINE, H - 132 * mm, 112 * mm, 91 * mm
     c.setFillColor(colors.HexColor("#173C35"))
     c.roundRect(x0, y0, pw, ph, 3 * mm, stroke=0, fill=1)
     c.setFillColor(colors.HexColor("#EFF3D8"))
@@ -471,10 +471,15 @@ def _copertina(c, ctx):
     titolo.drawOn(c, x0 + 7 * mm, y0 + ph - 25 * mm - ht)
     _, hs = sotto.wrap(pw - 14 * mm, 28 * mm)
     sotto.drawOn(c, x0 + 7 * mm, y0 + 8 * mm + hs)
+    # colonna visuale dedicata: mappa e Pokémon non possono sovrapporsi ai dati
+    _art_map(c, W-69*mm, H-87*mm, 52*mm, 38*mm, ctx["numero"])
+    hero=(_art_piano(ctx,1).get("hero_asset") or _mondo_asset(ctx,"pokemon",0))
+    if hero:
+        _immagine_asset(c,hero,W-42*mm,H-133*mm,54*mm)
 
     # KPI come menu di stato, non adesivi
     ky = y0 - 30 * mm
-    kw = (LARGHEZZA - 6 * mm) / 4
+    kw = (112 * mm - 6 * mm) / 4
     for i, (numero, etichetta) in enumerate(ctx["kpi"]):
         x = MARGINE + i * (kw + 2 * mm)
         c.setFillColor(colors.HexColor("#173C35"))
@@ -486,11 +491,11 @@ def _copertina(c, ctx):
         c.drawCentredString(x + kw/2, ky + 5 * mm, etichetta.upper())
 
     # indice stile Pokédex/menu
-    sy = ky - 65 * mm
+    sy = ky - 67 * mm
     c.setFillColor(colors.HexColor("#173C35"))
-    c.roundRect(MARGINE, sy, LARGHEZZA, 58 * mm, 3 * mm, stroke=0, fill=1)
+    c.roundRect(MARGINE, sy, 112 * mm, 60 * mm, 3 * mm, stroke=0, fill=1)
     c.setFillColor(colors.HexColor("#EFF3D8"))
-    c.roundRect(MARGINE + 3 * mm, sy + 3 * mm, LARGHEZZA - 6 * mm, 52 * mm, 2 * mm, stroke=0, fill=1)
+    c.roundRect(MARGINE + 3 * mm, sy + 3 * mm, 106 * mm, 54 * mm, 2 * mm, stroke=0, fill=1)
     c.setFillColor(colors.HexColor("#355F4E"))
     c.setFont(SOTTO, 9)
     c.drawString(MARGINE + 7 * mm, sy + 45 * mm, "INDICE / HOENN DATA")
@@ -515,25 +520,59 @@ def _art_piano(ctx, numero):
     return next((p for p in pages if p.get("page")==numero), {})
 
 def _art_map(c, x, y, w, h, seed=1):
+    """Mappa editoriale di Hoenn: sagoma ispirata alla geografia RSE, con mare, isole, città e rotte."""
     c.saveState()
-    c.setFillColor(colors.HexColor("#E7F0D0"))
-    c.setStrokeColor(colors.HexColor("#2F5D50"))
-    c.setLineWidth(1.2)
-    c.roundRect(x, y, w, h, 4*mm, stroke=1, fill=1)
-    c.setStrokeColor(colors.HexColor("#78A77A"))
-    c.setLineWidth(1.4)
-    for k in range(5):
-        p=c.beginPath()
-        p.moveTo(x+5*mm, y+(8+k*8)*mm)
-        p.curveTo(x+w*.28,y+(4+k*9)*mm,x+w*.65,y+(14+k*7)*mm,x+w-5*mm,y+(6+k*9)*mm)
+    c.setFillColor(colors.HexColor("#9BC9C5"))
+    c.setStrokeColor(colors.HexColor("#173C35"))
+    c.setLineWidth(1.1)
+    c.roundRect(x, y, w, h, 2*mm, stroke=1, fill=1)
+    # mare a pixel / scanline
+    c.setStrokeColor(colors.Color(1,1,1,alpha=.20))
+    c.setLineWidth(.35)
+    yy=y+3*mm
+    while yy<y+h-3*mm:
+        c.line(x+3*mm,yy,x+w-3*mm,yy); yy+=3*mm
+
+    # continente principale di Hoenn, forma semplificata ma riconoscibile
+    pts=[
+        (.08,.63),(.18,.76),(.34,.79),(.42,.69),(.54,.72),(.61,.84),(.73,.78),
+        (.82,.64),(.76,.54),(.88,.48),(.83,.35),(.69,.34),(.61,.25),(.47,.31),
+        (.37,.23),(.27,.31),(.14,.29),(.08,.42)
+    ]
+    p=c.beginPath()
+    p.moveTo(x+pts[0][0]*w,y+pts[0][1]*h)
+    for px,py in pts[1:]: p.lineTo(x+px*w,y+py*h)
+    p.close()
+    c.setFillColor(colors.HexColor("#78A95C"))
+    c.setStrokeColor(colors.HexColor("#315B43"))
+    c.drawPath(p,stroke=1,fill=1)
+
+    # penisole / isole orientali e meridionali
+    c.setFillColor(colors.HexColor("#6F9F58"))
+    for px,py,rw,rh in ((.86,.64,.07,.10),(.91,.48,.05,.07),(.76,.16,.07,.07),(.57,.13,.05,.05),(.35,.13,.05,.04)):
+        c.roundRect(x+px*w,y+py*h,rw*w,rh*h,1*mm,stroke=0,fill=1)
+    # montagna centrale / vulcano
+    c.setFillColor(colors.HexColor("#7C6A4D"))
+    q=c.beginPath(); q.moveTo(x+.42*w,y+.52*h); q.lineTo(x+.49*w,y+.69*h); q.lineTo(x+.56*w,y+.52*h); q.close()
+    c.drawPath(q,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#D7D8B6")); c.circle(x+.49*w,y+.62*h,1.5*mm,stroke=0,fill=1)
+
+    # rotte principali
+    c.setStrokeColor(colors.HexColor("#E9E0A7")); c.setLineWidth(1.4)
+    routes=[((.16,.42),(.29,.39),(.38,.48),(.49,.50)),((.49,.50),(.63,.43),(.76,.46),(.86,.53)),
+            ((.30,.39),(.31,.62),(.43,.66),(.55,.62)),((.55,.62),(.68,.70),(.80,.64),(.88,.55))]
+    for r in routes:
+        p=c.beginPath(); p.moveTo(x+r[0][0]*w,y+r[0][1]*h)
+        for px,py in r[1:]: p.lineTo(x+px*w,y+py*h)
         c.drawPath(p,stroke=1,fill=0)
-    c.setFillColor(colors.HexColor("#2F7D55"))
-    rnd=random.Random(seed)
-    for _ in range(8):
-        c.circle(x+rnd.uniform(7,w/mm-7)*mm,y+rnd.uniform(7,h/mm-7)*mm,1.2*mm,stroke=0,fill=1)
-    c.setFillColor(colors.HexColor("#214A3A"))
-    c.setFont(TESTO_B,6.5)
-    c.drawString(x+5*mm,y+h-8*mm,"HOENN MAP")
+
+    # città
+    cities=[(.16,.42),(.30,.39),(.31,.62),(.43,.66),(.49,.50),(.55,.62),(.63,.43),(.68,.70),(.76,.46),(.80,.64),(.86,.53)]
+    for i,(px,py) in enumerate(cities):
+        c.setFillColor(colors.HexColor("#F5F0C8") if i%3 else colors.HexColor("#D8584D"))
+        c.rect(x+px*w-1.2*mm,y+py*h-1.2*mm,2.4*mm,2.4*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#173C35")); c.setFont(TESTO_B,6.2)
+    c.drawString(x+4*mm,y+h-7*mm,"HOENN / POKENAV")
     c.restoreState()
 
 def _art_ui(c, x, y, w, h, kind="pokedex"):
@@ -567,40 +606,58 @@ def _art_overlay(c, ctx, page):
 
 def _pagina_interna(c, doc, ctx):
     c.saveState()
-    # carta/griglia da manuale di gioco
-    c.setFillColor(colors.HexColor("#F2F0DC"))
-    c.rect(0, 0, W, H, stroke=0, fill=1)
-    c.setStrokeColor(colors.Color(0.2, 0.35, 0.25, alpha=0.08))
-    c.setLineWidth(0.35)
-    passo = 5 * mm
-    x = 0
-    while x <= W:
-        c.line(x, 0, x, H); x += passo
-    # barra superiore fissa
-    c.setFillColor(colors.HexColor("#173C35"))
-    c.rect(0, H - 17 * mm, W, 17 * mm, stroke=0, fill=1)
-    c.setFillColor(colors.HexColor("#79B86B"))
-    c.rect(0, H - 19 * mm, W, 2 * mm, stroke=0, fill=1)
-    c.setFillColor(BIANCO)
-    c.setFont(SOTTO, 10)
-    c.drawString(MARGINE, H - 11 * mm, "POKEPUTZU WEEKLY")
-    c.setFont(TESTO_B, 7.5)
-    c.setFillColor(colors.HexColor("#DCEBCB"))
-    c.drawRightString(W - MARGINE, H - 10.5 * mm, f"N.{ctx['numero']} · {ctx['data_lunga']} · P.{doc.page}")
+    page=doc.page
+    # Ogni rubrica ha un ambiente Hoenn distinto, molto tenue per mantenere leggibili i dati.
+    temi={
+        2:("#E7E6C8","#C7D79A","route"), 3:("#D8E8E1","#9BC9C5","sea"),
+        4:("#EEE1C8","#D2B477","volcano"), 5:("#DDE7D2","#A9C58E","forest"),
+        6:("#E5E1D1","#B9C7B2","city")
+    }
+    bg,accent,kind=temi.get(page,("#E8E5D5","#B7C7A5","route"))
+    c.setFillColor(colors.HexColor(bg)); c.rect(0,0,W,H,stroke=0,fill=1)
+    # texture ambientale, non una griglia neutra
+    c.setFillColor(colors.HexColor(accent))
+    if kind=="sea":
+        for k in range(12):
+            yy=18*mm+k*18*mm
+            c.setStrokeColor(colors.Color(.20,.45,.48,alpha=.13)); c.setLineWidth(1)
+            c.arc(-10*mm,yy,W*.55,yy+8*mm,0,180); c.arc(W*.45,yy,W+10*mm,yy+8*mm,0,180)
+    elif kind=="volcano":
+        for k in range(7):
+            xx=10*mm+k*34*mm
+            p=c.beginPath(); p.moveTo(xx,10*mm); p.lineTo(xx+20*mm,42*mm); p.lineTo(xx+40*mm,10*mm); p.close()
+            c.setFillColor(colors.Color(.45,.32,.20,alpha=.07)); c.drawPath(p,stroke=0,fill=1)
+    elif kind=="forest":
+        for k in range(18):
+            xx=(8+k*13)*mm; yy=(18+(k%4)*49)*mm
+            c.setFillColor(colors.Color(.18,.42,.23,alpha=.07)); c.circle(xx,yy,10*mm,stroke=0,fill=1)
+    elif kind=="city":
+        for k in range(8):
+            c.setFillColor(colors.Color(.25,.35,.30,alpha=.055)); c.rect((8+k*27)*mm,12*mm,(16+(k%3)*5)*mm,(38+(k%4)*13)*mm,stroke=0,fill=1)
+    else:
+        p=c.beginPath(); p.moveTo(0,30*mm); p.curveTo(W*.25,55*mm,W*.55,18*mm,W,48*mm); p.lineTo(W,0); p.lineTo(0,0); p.close()
+        c.setFillColor(colors.Color(.30,.50,.25,alpha=.08)); c.drawPath(p,stroke=0,fill=1)
 
-    plan = _art_piano(ctx, doc.page)
-    # Hero di pagina nel margine alto destro: completamente dentro il foglio
-    # e fuori dalla cornice di testo, così non copre rubriche o tabelle.
-    asset = plan.get("hero_asset")
+    # barra titolo
+    c.setFillColor(colors.HexColor("#173C35")); c.rect(0,H-18*mm,W,18*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor(accent)); c.rect(0,H-20*mm,W,2*mm,stroke=0,fill=1)
+    c.setFillColor(BIANCO); c.setFont(SOTTO,11); c.drawString(MARGINE,H-11.5*mm,"POKEPUTZU WEEKLY")
+    c.setFont(TESTO_B,7.5); c.setFillColor(colors.HexColor("#DCEBCB"))
+    c.drawRightString(W-MARGINE,H-11*mm,f"N.{ctx['numero']} · {ctx['data_lunga']} · P.{page}")
+
+    plan=_art_piano(ctx,page)
+    asset=plan.get("hero_asset")
+    # area hero riservata nel margine alto destro, 30 mm: grande ma non entra nel frame testo
     if asset:
-        _immagine_asset(c, asset, W - 10 * mm, H - 34 * mm, 18 * mm)
-    # footer essenziale
-    c.setFillColor(colors.HexColor("#173C35"))
-    c.rect(0, 0, W, 9 * mm, stroke=0, fill=1)
-    c.setFillColor(colors.HexColor("#DCEBCB"))
-    c.setFont(TESTO_B, 6.5)
-    c.drawString(MARGINE, 3.2 * mm, (plan.get("layout") or "editorial").upper())
-    c.drawRightString(W - MARGINE, 3.2 * mm, str(doc.page))
+        _immagine_asset(c,asset,W-20*mm,H-39*mm,30*mm)
+    # piccolo badge PokéNav nel margine, senza invadere il contenuto
+    if page in (3,5):
+        _art_map(c,W-50*mm,10*mm,34*mm,22*mm,page)
+
+    c.setFillColor(colors.HexColor("#173C35")); c.rect(0,0,W,9*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#DCEBCB")); c.setFont(TESTO_B,6.5)
+    c.drawString(MARGINE,3.2*mm,(plan.get("layout") or "editorial").upper())
+    c.drawRightString(W-MARGINE,3.2*mm,str(page))
     c.restoreState()
 
 
@@ -702,8 +759,8 @@ def crea(percorso, ctx):
     st = _stili()
     g = ctx["principale"]
     doc = BaseDocTemplate(percorso, pagesize=A4, title=f"{TESTATA} n. {ctx['numero']}",
-                          leftMargin=MARGINE, rightMargin=MARGINE, topMargin=24 * mm, bottomMargin=18 * mm)
-    cornice = Frame(MARGINE, 18 * mm, LARGHEZZA, H - 43 * mm, id="testo", leftPadding=0, rightPadding=0)
+                          leftMargin=MARGINE, rightMargin=MARGINE, topMargin=34 * mm, bottomMargin=18 * mm)
+    cornice = Frame(MARGINE, 18 * mm, LARGHEZZA, H - 54 * mm, id="testo", leftPadding=0, rightPadding=0)
     cornice_retro = Frame(MARGINE + 7 * mm, H - 186 * mm, LARGHEZZA - 14 * mm, 114 * mm, id="retro",
                           leftPadding=0, rightPadding=0)
     doc.addPageTemplates([
