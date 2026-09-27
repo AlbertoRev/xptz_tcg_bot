@@ -30,17 +30,17 @@ TITOLO, SOTTO, TESTO, TESTO_B = F["Testata"], F["Titolo"], F["Corpo"], F["CorpoB
 
 # ---------- palette giocosa ----------
 INCHIOSTRO = colors.HexColor("#17263A")
-CIELO = colors.HexColor("#32B7E8")
+CIELO = colors.HexColor("#59B9E8")
 SOLE = colors.HexColor("#FFD84A")
-ROSSO = colors.HexColor("#F04E45")
-VERDE = colors.HexColor("#42A85A")
-PRATO = colors.HexColor("#80C85A")
-VIOLA = colors.HexColor("#8B62D9")
-ARANCIO = colors.HexColor("#FF9D3C")
-BLU = colors.HexColor("#2366B1")
+ROSSO = colors.HexColor("#E84B3C")
+VERDE = colors.HexColor("#38A866")
+PRATO = colors.HexColor("#74BE68")
+VIOLA = colors.HexColor("#5869C9")
+ARANCIO = colors.HexColor("#F3A43B")
+BLU = colors.HexColor("#1769B0")
 CARTA = colors.HexColor("#FFFDF4")
-CREMA = colors.HexColor("#FFF3C8")
-PASTELLO = colors.HexColor("#F2F8FF")
+CREMA = colors.HexColor("#FFF5D6")
+PASTELLO = colors.HexColor("#F4F8FC")
 VERDE_SCURO = colors.HexColor("#23794A")     # per le scritte verdi su fondo bianco
 GRIGIO = colors.HexColor("#526173")
 BIANCO = colors.white
@@ -317,46 +317,44 @@ def _trainer_vector(c,x,y,s=1):
 
 # ---------- flowable ----------
 class Rubrica(Flowable):
-    """Titolo da magazine: fascia colorata, gerarchia forte, centratura ottica."""
+    """Intestazione content-driven: il box segue il testo, non viceversa."""
     def __init__(self, occhiello, titolo, colore=ROSSO):
         super().__init__(); self.occhiello=occhiello.upper(); self.titolo=titolo; self.colore=colore
     def wrap(self,aw,ah):
-        self.w=max(20*mm,aw); return self.w,20*mm
+        self.w=max(40*mm,aw)
+        self.p=Paragraph(_t(self.titolo),ParagraphStyle("rubrica_dynamic",fontName=TITOLO,fontSize=16.2,leading=17.2,textColor=BLU,alignment=TA_CENTER))
+        _,self.th=self.p.wrap(self.w-18*mm,ah)
+        self.h=max(17*mm,self.th+11*mm)
+        return self.w,self.h
     def draw(self):
         c=self.canv
-        # ombra corta + card bianca
-        c.setFillColor(colors.Color(.08,.16,.26,alpha=.13)); c.roundRect(1.2*mm,.2*mm,self.w-1.2*mm,17*mm,3*mm,stroke=0,fill=1)
-        c.setFillColor(BIANCO); c.roundRect(0,1.4*mm,self.w-1.2*mm,18.5*mm,3*mm,stroke=0,fill=1)
-        c.setFillColor(SOLE); c.roundRect(0,1.4*mm,5*mm,18.5*mm,2.5*mm,stroke=0,fill=1)
-        c.setFillColor(ROSSO); c.roundRect(7*mm,12.7*mm,30*mm,5.2*mm,2.6*mm,stroke=0,fill=1)
-        c.setFillColor(BIANCO); c.setFont(TESTO_B,5.8); c.drawCentredString(22*mm,14.5*mm,self.occhiello[:28])
-        p=Paragraph(_t(self.titolo),ParagraphStyle("rubrica_pop",fontName=TITOLO,fontSize=17,leading=17.2,textColor=BLU,alignment=0))
-        k=KeepInFrame(self.w-18*mm,9*mm,[p],mode="shrink"); k.canv=c; k.wrap(self.w-18*mm,9*mm); k.drawOn(c,10*mm,2.8*mm)
+        c.setFillColor(colors.Color(.05,.15,.30,alpha=.12)); c.roundRect(1*mm,0,self.w-2*mm,self.h-1*mm,3*mm,stroke=0,fill=1)
+        c.setFillColor(BIANCO); c.setStrokeColor(colors.HexColor("#72B7E4")); c.setLineWidth(.8)
+        c.roundRect(0,1*mm,self.w-2*mm,self.h-1*mm,3*mm,stroke=1,fill=1)
+        # occhiello dimensionato sul testo
+        ow=max(29*mm,min(48*mm,pdfmetrics.stringWidth(self.occhiello,TESTO_B,6)*1.18+8*mm))
+        c.setFillColor(ROSSO); c.roundRect((self.w-ow)/2,self.h-7.3*mm,ow,5.7*mm,2.8*mm,stroke=0,fill=1)
+        c.setFillColor(BIANCO); c.setFont(TESTO_B,6); c.drawCentredString(self.w/2,self.h-5.45*mm,self.occhiello[:34])
+        self.p.drawOn(c,9*mm,4.2*mm)
 
 class Fumetto(Flowable):
-    """Box dialogo GBA con ritratto allenatore."""
-
-    def __init__(self, testo, st, ctx=None, indice=0):
-        super().__init__()
-        self.par = Paragraph(_t(testo), st["fumetto"])
-        self.ctx = ctx or {}
-        self.indice = indice
-
-    def wrap(self, aw, ah):
-        self.larg_box = LARGHEZZA - 40 * mm
-        _, self.alt_testo = self.par.wrap(self.larg_box - 10 * mm, ah)
-        self.altezza = max(self.alt_testo + 10 * mm, 39 * mm)
-        return LARGHEZZA, self.altezza
-
+    """Callout con box alto esattamente quanto richiede il testo."""
+    def __init__(self,testo,st,ctx=None,indice=0):
+        super().__init__(); self.par=Paragraph(_t(testo),st["fumetto"]); self.ctx=ctx or {}; self.indice=indice
+    def wrap(self,aw,ah):
+        self.w=max(70*mm,aw); self.larg_box=self.w-38*mm
+        _,self.alt_testo=self.par.wrap(self.larg_box-12*mm,ah)
+        self.altezza=max(30*mm,self.alt_testo+12*mm)
+        return self.w,self.altezza
     def draw(self):
-        c = self.canv
+        c=self.canv; h=self.altezza-2*mm; x=38*mm
         trainer=_mondo_asset(self.ctx,"allenatori",self.indice)
-        if trainer: _immagine_asset(c,trainer,17*mm,self.altezza/2,40*mm)
-        x, y, h = 38 * mm, 2 * mm, self.altezza - 4 * mm
-        _panel(c,x,y,self.larg_box,h,3*mm,.90,"#9AAEA3")
-        c.setFillColor(colors.HexColor("#5F8B73")); c.roundRect(x,y,3*mm,h,1.5*mm,stroke=0,fill=1)
-        box=KeepInFrame(self.larg_box-10*mm,h-6*mm,[self.par],mode="shrink")
-        box.canv=c; box.wrap(self.larg_box-10*mm,h-6*mm); box.drawOn(c,x+5*mm,y+3*mm)
+        if trainer: _immagine_asset(c,trainer,17*mm,self.altezza/2,min(36*mm,self.altezza*.92))
+        _panel(c,x,1*mm,self.larg_box,h,3*mm,.96,"#72B7E4")
+        c.setFillColor(SOLE); c.roundRect(x,1*mm,3*mm,h,1.5*mm,stroke=0,fill=1)
+        # centratura verticale reale del paragrafo
+        py=1*mm+(h-self.alt_testo)/2
+        self.par.drawOn(c,x+6*mm,py)
 
 class PokemonHero(Flowable):
     """Feature illustrata: artwork grandi in uno spazio realmente riservato."""
@@ -404,7 +402,7 @@ def _tabella(dati, larghezze, colore=colors.HexColor("#2366B1"), allinea_destra_
     t = Table(dati, colWidths=larghezze, repeatRows=1)
     stile = [
         ("FONTNAME", (0, 0), (-1, 0), SOTTO), ("FONTSIZE", (0, 0), (-1, 0), 7.8),
-        ("TEXTCOLOR", (0, 0), (-1, 0), _su(colore)), ("BACKGROUND", (0, 0), (-1, 0), colore),
+        ("TEXTCOLOR", (0, 0), (-1, 0), _su(colore)), ("BACKGROUND", (0, 0), (-1, 0), colore), ("ALIGN", (0,0), (-1,0), "CENTER"),
         ("FONTNAME", (0, 1), (-1, -1), TESTO), ("FONTSIZE", (0, 1), (-1, -1), 7.8),
         ("TEXTCOLOR", (0, 1), (-1, -1), INCHIOSTRO),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
