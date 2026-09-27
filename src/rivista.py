@@ -16,7 +16,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
-from reportlab.platypus import (BaseDocTemplate, CondPageBreak, Flowable, Frame, KeepTogether, NextPageTemplate,
+from reportlab.platypus import (BaseDocTemplate, CondPageBreak, Flowable, Frame, KeepTogether, KeepInFrame, NextPageTemplate,
                                 PageBreak, PageTemplate, Paragraph, Spacer, Table, TableStyle)
 
 import config as C
@@ -315,8 +315,10 @@ class Rubrica(Flowable):
         c.setFont(SOTTO, 7.5)
         c.drawString(5 * mm, 10 * mm, self.occhiello)
         c.setFillColor(BIANCO)
-        c.setFont(TITOLO, 17)
-        c.drawString(5 * mm, 4.2 * mm, self.titolo)
+        fs=17
+        while fs>10 and pdfmetrics.stringWidth(self.titolo,TITOLO,fs)>LARGHEZZA-10*mm: fs-=.5
+        c.setFont(TITOLO,fs)
+        c.drawString(5*mm,4.2*mm,self.titolo)
 
 class Fumetto(Flowable):
     """Box dialogo GBA con ritratto allenatore."""
@@ -476,12 +478,12 @@ def _copertina(c, ctx):
     c.setFillColor(BIANCO)
     c.setFont(SOTTO, 8)
     c.drawString(x0 + 7 * mm, y0 + ph - 12 * mm, "IN PRIMO PIANO")
-    titolo = Paragraph(_t(ctx["apertura"]["titolo"]), ParagraphStyle("ct2", fontName=TITOLO, fontSize=16.5, leading=19, textColor=INCHIOSTRO))
-    sotto = Paragraph(_t(ctx["apertura"]["sottotitolo"]), ParagraphStyle("cs2", fontName=TESTO, fontSize=9.5, leading=12, textColor=GRIGIO))
-    _, ht = titolo.wrap(pw - 14 * mm, 42 * mm)
-    titolo.drawOn(c, x0 + 7 * mm, y0 + ph - 25 * mm - ht)
-    _, hs = sotto.wrap(pw - 14 * mm, 28 * mm)
-    sotto.drawOn(c, x0 + 7 * mm, y0 + 8 * mm + hs)
+    titolo = Paragraph(_t(ctx["apertura"]["titolo"]), ParagraphStyle("ct2", fontName=TITOLO, fontSize=15, leading=17.5, textColor=INCHIOSTRO))
+    sotto = Paragraph(_t(ctx["apertura"]["sottotitolo"]), ParagraphStyle("cs2", fontName=TESTO, fontSize=8.6, leading=10.5, textColor=GRIGIO))
+    area_t=KeepInFrame(pw-14*mm,40*mm,[titolo],mode="shrink")
+    _,ht=area_t.wrap(pw-14*mm,40*mm); area_t.drawOn(c,x0+7*mm,y0+ph-24*mm-ht)
+    area_s=KeepInFrame(pw-14*mm,18*mm,[sotto],mode="shrink")
+    _,hs=area_s.wrap(pw-14*mm,18*mm); area_s.drawOn(c,x0+7*mm,y0+7*mm)
     # colonna visuale dedicata: mappa e Pokémon non possono sovrapporsi ai dati
     _art_map(c, W-69*mm, H-87*mm, 52*mm, 38*mm, ctx["numero"])
     hero=(_art_piano(ctx,1).get("hero_asset") or _mondo_asset(ctx,"pokemon",0))
@@ -513,7 +515,7 @@ def _copertina(c, ctx):
     yy = sy + 37 * mm
     for k, (titolo_r, descrizione) in enumerate(ctx["sommario"], 1):
         c.setFillColor(INCHIOSTRO); c.setFont(TESTO_B, 8.2)
-        c.drawString(MARGINE + 8 * mm, yy, f"{k:02d}  {titolo_r[:34]}")
+        c.drawString(MARGINE + 8 * mm, yy, f"{k:02d}  {titolo_r[:27]}")
         yy -= 6.3 * mm
 
     c.setFillColor(colors.HexColor("#173C35"))
