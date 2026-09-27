@@ -465,7 +465,7 @@ def _copertina(c, ctx):
     c.setFillColor(BIANCO)
     c.setFont(SOTTO, 8)
     c.drawString(x0 + 7 * mm, y0 + ph - 12 * mm, "IN PRIMO PIANO")
-    titolo = Paragraph(_t(ctx["apertura"]["titolo"]), ParagraphStyle("ct2", fontName=TITOLO, fontSize=18, leading=21, textColor=INCHIOSTRO))
+    titolo = Paragraph(_t(ctx["apertura"]["titolo"]), ParagraphStyle("ct2", fontName=TITOLO, fontSize=16.5, leading=19, textColor=INCHIOSTRO))
     sotto = Paragraph(_t(ctx["apertura"]["sottotitolo"]), ParagraphStyle("cs2", fontName=TESTO, fontSize=9.5, leading=12, textColor=GRIGIO))
     _, ht = titolo.wrap(pw - 14 * mm, 42 * mm)
     titolo.drawOn(c, x0 + 7 * mm, y0 + ph - 25 * mm - ht)
@@ -649,7 +649,7 @@ def _pagina_interna(c, doc, ctx):
     asset=plan.get("hero_asset")
     # area hero riservata nel margine alto destro, 30 mm: grande ma non entra nel frame testo
     if asset:
-        _immagine_asset(c,asset,W-22*mm,H-43*mm,34*mm)
+        _immagine_asset(c,asset,W-13*mm,H-33*mm,22*mm)
     # piccolo badge PokéNav nel margine, senza invadere il contenuto
     if page in (3,5):
         _art_map(c,W-50*mm,10*mm,34*mm,22*mm,page)
@@ -838,7 +838,7 @@ def crea(percorso, ctx):
 
     # 5. Occasioni
     if g["occasioni"]:
-        E += [PageBreak(), Rubrica("Affari", "Le occasioni della settimana", colors.HexColor("#8A7545")),
+        E += [Spacer(1, 6), CondPageBreak(80 * mm), Rubrica("Affari", "Le occasioni della settimana", colors.HexColor("#8A7545")),
               Paragraph(_t("Sigillato con un'offerta molto sotto il prezzo di tendenza."), st["occhiello"]),
               Spacer(1, 4),
               Fumetto("Occhio: l'offerta più bassa può essere in un'altra lingua o rovinata. Apri il link e "
@@ -851,7 +851,7 @@ def crea(percorso, ctx):
 
     # 6. Notizie
     if g["notizie"]:
-        E += [PageBreak(), Rubrica("Attualità", "Dal mondo Pokémon", colors.HexColor("#356B66")), Spacer(1, 3)]
+        E += [Spacer(1, 10), CondPageBreak(45 * mm), Rubrica("Attualità", "Dal mondo Pokémon", colors.HexColor("#356B66")), Spacer(1, 3)]
         for k, n in enumerate(g["notizie"]):
             E.append(Paragraph(f'<font color="{HEX[k % 5]}" name="{SOTTO}" size="8">'
                                f'{_t((n.get("fonte") or "").upper())}  ·  {_t(n["data"])}</font><br/>'
