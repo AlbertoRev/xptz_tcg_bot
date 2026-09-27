@@ -47,8 +47,9 @@ LEGNO = colors.HexColor("#C8792B")
 LEGNO_SCURO = colors.HexColor("#9C5A1C")
 ARCOBALENO = [ROSSO, ARANCIO, SOLE, VERDE, CIELO, VIOLA]
 HEX = ["#1F5B4A", "#568D55", "#2F7D55", "#356B66", "#6D8452"]
-COLORE_STATO = {"caldo": ROSSO, "tiepido": ARANCIO, "freddo": BLU, "in arrivo": VERDE,
-                "da valutare": VIOLA, "nessun dato": GRIGIO}
+COLORE_STATO = {"caldo": colors.HexColor("#8A4F3D"), "tiepido": colors.HexColor("#9A7540"),
+                "freddo": colors.HexColor("#356B66"), "in arrivo": colors.HexColor("#2F7D55"),
+                "da valutare": colors.HexColor("#6D8452"), "nessun dato": colors.HexColor("#66736B")}
 
 W, H = A4
 MARGINE = 17 * mm
@@ -281,7 +282,7 @@ def _stili():
         "nota": ParagraphStyle("n", fontName=TESTO, fontSize=8.5, leading=11.5, textColor=GRIGIO),
         "sotto": ParagraphStyle("s", fontName=SOTTO, fontSize=14, leading=17, textColor=INCHIOSTRO,
                                 spaceBefore=8, spaceAfter=4, keepWithNext=1),
-        "box_titolo": ParagraphStyle("bt", fontName=TITOLO, fontSize=24, leading=28, textColor=ROSSO),
+        "box_titolo": ParagraphStyle("bt", fontName=TITOLO, fontSize=22, leading=26, textColor=colors.HexColor("#173C35")),
         "box_nome": ParagraphStyle("bn", fontName=SOTTO, fontSize=11.5, leading=14, textColor=INCHIOSTRO),
     }
 
@@ -647,7 +648,7 @@ def _box_200(car, st):
              Paragraph(f'<link href="{escape(x["link"])}" color="#2B2D42">{_t(x["nome"][:70])}</link>',
                        st["box_nome"]),
              Paragraph(f"{_eur(x['prezzo'])}", ParagraphStyle("pz", parent=st["box_nome"], alignment=2,
-                                                              textColor=ROSSO))],
+                                                              textColor=colors.HexColor("#8A4F3D"))],
             ["", Paragraph(_t("Perché: " + x["perche"]), st["cella"]), ""],
             ["", Paragraph(_t("Rischio: " + x["rischio"]), ParagraphStyle("rs", parent=st["cella"],
                                                                           textColor=GRIGIO)), ""],
@@ -662,13 +663,13 @@ def _box_200(car, st):
         righe.append([Paragraph(f"<b>Totale: {_eur(car['speso'])}</b>  ·  restano {_eur(car['residuo'])}",
                                 ParagraphStyle("tot", parent=st["p"], fontName=TESTO_B))])
     for n in car["note"]:
-        righe.append([Paragraph(_t(n), ParagraphStyle("bn2", parent=st["p"], textColor=ROSSO))])
+        righe.append([Paragraph(_t(n), ParagraphStyle("bn2", parent=st["p"], textColor=colors.HexColor("#8A4F3D")))])
     righe.append([Paragraph(_t("Proposta automatica, non consulenza finanziaria. Il ragionamento completo è "
                                "nell'analisi di Claude della domenica."), st["nota"])])
     box = Table(righe, colWidths=[LARGHEZZA])
-    box.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), CREMA),
-                             ("ROUNDEDCORNERS", [12, 12, 12, 12]),
-                             ("BOX", (0, 0), (-1, -1), 2.5, SOLE),
+    box.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#E6EDD4")),
+                             ("ROUNDEDCORNERS", [4, 4, 4, 4]),
+                             ("BOX", (0, 0), (-1, -1), 2.0, colors.HexColor("#173C35")),
                              ("LEFTPADDING", (0, 0), (-1, -1), 9), ("RIGHTPADDING", (0, 0), (-1, -1), 9),
                              ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4)]))
     return KeepTogether([box])
