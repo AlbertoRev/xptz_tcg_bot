@@ -266,7 +266,7 @@ def _mondo_tramonto(c, ctx=None):
         c.line(0, yy, W, yy)
     _art_map(c, MARGINE, 22 * mm, 72 * mm, 48 * mm, 71)
     hero = (_art_piano(ctx, 7).get("hero_asset") if ctx else None) or _mondo_asset(ctx, "pokemon", 6)
-    _immagine_asset(c, hero, W - 47 * mm, 49 * mm, 70 * mm)
+    _immagine_asset(c, hero, W - 43 * mm, 46 * mm, 82 * mm)
 
 
 # ---------- stili ----------
@@ -647,12 +647,17 @@ def _pagina_interna(c, doc, ctx):
 
     plan=_art_piano(ctx,page)
     asset=plan.get("hero_asset")
-    # area hero riservata nel margine alto destro, 30 mm: grande ma non entra nel frame testo
     if asset:
-        _immagine_asset(c,asset,W-13*mm,H-33*mm,22*mm)
-    # piccolo badge PokéNav nel margine, senza invadere il contenuto
-    if page in (3,5):
-        _art_map(c,W-50*mm,10*mm,34*mm,22*mm,page)
+        if page == 2:
+            _immagine_asset(c,asset,W-38*mm,54*mm,54*mm)
+        elif page == 6:
+            _immagine_asset(c,asset,W-40*mm,50*mm,58*mm)
+        else:
+            _immagine_asset(c,asset,W-13*mm,H-33*mm,22*mm)
+    if page == 2:
+        _art_map(c,MARGINE,22*mm,55*mm,38*mm,page)
+    elif page == 6:
+        _art_map(c,MARGINE,20*mm,52*mm,36*mm,page)
 
     c.setFillColor(colors.HexColor("#173C35")); c.rect(0,0,W,9*mm,stroke=0,fill=1)
     c.setFillColor(colors.HexColor("#DCEBCB")); c.setFont(TESTO_B,6.5)
