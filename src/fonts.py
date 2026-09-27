@@ -1,60 +1,18 @@
-"""Font della rivista: scaricati da Google Fonts (licenze libere OFL/Apache) al primo uso.
-
-Se il download non riesce, la rivista usa i font di sistema: il PDF viene creato comunque.
-"""
-import os
-from pathlib import Path
-
-import requests
+"""Tipografia editoriale pulita, senza estetica pixel/cartoon."""
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+import os
 
-BASE = "https://raw.githubusercontent.com/google/fonts/main/"
-SCELTI = {
-    "Testata": "ofl/pressstart2p/PressStart2P-Regular.ttf",
-    "Titolo": "ofl/quantico/Quantico-Bold.ttf",
-    "Corpo": "ofl/ibmplexsans/IBMPlexSans-Regular.ttf",
-    "CorpoB": "ofl/ibmplexsans/IBMPlexSans-Bold.ttf",
-}
-RISERVA = {"Testata": "DejaVuSans-Bold.ttf", "Titolo": "DejaVuSans-Bold.ttf",
-           "Corpo": "DejaVuSans.ttf", "CorpoB": "DejaVuSans-Bold.ttf"}
-RISERVA_BASE = {"Testata": "Helvetica-Bold", "Titolo": "Helvetica-Bold", "Corpo": "Helvetica", "CorpoB": "Helvetica-Bold"}
-CARTELLA = Path("font_cache")
-CARTELLE_SISTEMA = ("/usr/share/fonts/truetype/dejavu/", "/usr/share/fonts/dejavu/")
-
-
-def _sistema(file):
-    for base in CARTELLE_SISTEMA:
-        if os.path.exists(base + file):
-            return base + file
-    return None
-
+SYSTEM="/usr/share/fonts/truetype/dejavu"
+def _reg(alias, filename, fallback):
+    path=os.path.join(SYSTEM,filename)
+    if os.path.exists(path):
+        pdfmetrics.registerFont(TTFont(alias,path))
+        return alias
+    return fallback
 
 def carica():
-    nomi = {}
-    for nome, percorso in SCELTI.items():
-        locale = CARTELLA / Path(percorso).name
-        try:
-            if not locale.exists():
-                CARTELLA.mkdir(exist_ok=True)
-                r = requests.get(BASE + percorso, timeout=60)
-                r.raise_for_status()
-                locale.write_bytes(r.content)
-            pdfmetrics.registerFont(TTFont(nome, str(locale)))
-            nomi[nome] = nome
-            continue
-        except Exception:
-            pass
-        file = _sistema(RISERVA[nome])
-        if file:
-            pdfmetrics.registerFont(TTFont(nome + "R", file))
-            nomi[nome] = nome + "R"
-        else:
-            nomi[nome] = RISERVA_BASE[nome]
-    simboli = _sistema("DejaVuSans.ttf")
-    if simboli:
-        pdfmetrics.registerFont(TTFont("Simboli", simboli))
-        nomi["Simboli"] = "Simboli"
-    else:
-        nomi["Simboli"] = "Helvetica"
-    return nomi
+    regular=_reg("PokeBody","DejaVuSans.ttf","Helvetica")
+    bold=_reg("PokeBold","DejaVuSans-Bold.ttf","Helvetica-Bold")
+    condensed=_reg("PokeTitle","DejaVuSansCondensed-Bold.ttf","Helvetica-Bold")
+    return {"Testata":condensed,"Titolo":condensed,"Corpo":regular,"CorpoB":bold,"Simboli":regular}
