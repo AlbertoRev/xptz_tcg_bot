@@ -153,7 +153,7 @@ def _apertura(g):
             "sottotitolo": "Pochi movimenti rilevanti: il bot sta ancora accumulando storico."}
 
 
-def settimanale():
+def settimanale(invia_telegram=True):
     oggi = dt.date.today()
     numero = storage.leggi_json("numero_rivista.json", {"numero": 0})["numero"] + 1
     # Prepara subito gli asset: così un eventuale problema grafico è evidente
@@ -219,9 +219,16 @@ def settimanale():
     ctx["pokemon_mondo"] = pokemon_mondo
     rivista.crea(percorso_pdf, ctx)
     storage.scrivi_json("riepilogo/ultimo.json", report.dati_per_claude(ctx))
-    telegram.documento(percorso_pdf, f"Il Collezionista n. {numero} - {ctx['data_lunga']}")
-    storage.scrivi_json("numero_rivista.json", {"numero": numero})
-    print(f"Rivista n. {numero} inviata")
+    if invia_telegram:
+        telegram.documento(percorso_pdf, f"Il Collezionista n. {numero} - {ctx['data_lunga']}")
+        storage.scrivi_json("numero_rivista.json", {"numero": numero})
+        print(f"Rivista n. {numero} inviata")
+    else:
+        print(f"Rivista n. {numero} generata in {percorso_pdf}")
+
+
+def prova_rivista():
+    settimanale(invia_telegram=False)
 
 
 def prova_grafica():
