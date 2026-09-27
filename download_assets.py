@@ -215,7 +215,8 @@ def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
     for nome, url, slug in _candidati_item(rng, BALL_POOL, "ball"):
         percorso = ASSET_DIR / nome
         if _download(url, percorso):
-            _polish_asset(percorso)\n            manifest["pokeball"].append(nome)
+            _polish_asset(percorso)
+            manifest["pokeball"].append(nome)
         if len(manifest["pokeball"]) >= 4:
             break
 
@@ -223,7 +224,8 @@ def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
     for nome, url, slug in _candidati_item(rng, ITEM_POOL, "item"):
         percorso = ASSET_DIR / nome
         if _download(url, percorso):
-            _polish_asset(percorso)\n            manifest["oggetti"].append(nome)
+            _polish_asset(percorso)
+            manifest["oggetti"].append(nome)
         if len(manifest["oggetti"]) >= 6:
             break
 
