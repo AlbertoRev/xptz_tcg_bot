@@ -207,6 +207,12 @@ def settimanale():
                        ("Occasioni e attualità", "affari da controllare e notizie")]
     ctx["sintesi"] = report.sintesi_righe(ctx)
     ctx["note_metodo"] = report.NOTE_METODO
+    titoli_art = [x[0] for x in ctx["sommario"]] + [ctx["apertura"]["titolo"]]
+    piano = art_director.genera_piano(numero, "hoenn", pokemon_mondo.get("pokemon", []), titoli_art)
+    assets_poke = list(pokemon_mondo.get("pokemon", []))
+    for i, pagina in enumerate(piano.get("pages", [])):
+        pagina["hero_asset"] = assets_poke[i % len(assets_poke)] if assets_poke else None
+    ctx["art_direction"] = piano
 
     Path("output").mkdir(exist_ok=True)
     percorso_pdf = f"output/Il_Collezionista_n{numero}_{oggi.isoformat()}.pdf"
