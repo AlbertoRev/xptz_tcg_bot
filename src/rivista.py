@@ -260,7 +260,16 @@ def _mondo_tramonto(c, ctx=None):
     c.saveState(); c.setFillColor(colors.Color(.08,.20,.17,alpha=.76)); c.rect(0,0,W,H,stroke=0,fill=1); c.restoreState()
     hero=(_art_piano(ctx,7).get("hero_asset") if ctx else None) or _mondo_asset(ctx,"pokemon",6)
     c.setFillAlpha(1)
-    if hero: _immagine_asset(c,hero,W-45*mm,50*mm,82*mm)
+    if hero: _immagine_asset(c,hero,W-43*mm,53*mm,86*mm)
+    # Ensemble finale: artwork veri, distribuiti nel grande spazio negativo.
+    support=_mondo_asset(ctx,"pokemon",5)
+    trainer=_mondo_asset(ctx,"allenatori",1)
+    ball=_mondo_asset(ctx,"pokeball",1)
+    item=_mondo_asset(ctx,"oggetti",1)
+    if support and support != hero: _immagine_asset(c,support,34*mm,64*mm,52*mm)
+    if trainer: _immagine_asset(c,trainer,35*mm,132*mm,53*mm)
+    if ball: _immagine_asset(c,ball,W-31*mm,137*mm,31*mm)
+    if item: _immagine_asset(c,item,W-32*mm,105*mm,34*mm)
 
 # ---------- stili ----------
 
@@ -484,6 +493,12 @@ def _copertina(c, ctx):
     # Artwork protagonista più grande, libero sul fondo-mappa.
     hero=(_art_piano(ctx,1).get("hero_asset") or _mondo_asset(ctx,"pokemon",0))
     if hero: _immagine_asset(c,hero,W-35*mm,H-119*mm,72*mm)
+    # Secondo piano illustrato: riempie la colonna destra senza competere col protagonista.
+    support=_mondo_asset(ctx,"pokemon",1)
+    if support and support != hero: _immagine_asset(c,support,W-23*mm,H-181*mm,42*mm)
+    ball=_mondo_asset(ctx,"pokeball",0); item=_mondo_asset(ctx,"oggetti",0)
+    if ball: _immagine_asset(c,ball,W-63*mm,H-168*mm,27*mm)
+    if item: _immagine_asset(c,item,W-27*mm,H-214*mm,30*mm)
 
     # KPI: quattro pillole editoriali chiare, non blocchi scuri.
     ky=y0-29*mm; kw=(119*mm-9*mm)/4
