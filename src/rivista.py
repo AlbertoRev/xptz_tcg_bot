@@ -47,7 +47,7 @@ BIANCO = colors.white
 LEGNO = colors.HexColor("#C8792B")
 LEGNO_SCURO = colors.HexColor("#9C5A1C")
 ARCOBALENO = [ROSSO, ARANCIO, SOLE, VERDE, CIELO, VIOLA]
-HEX = ["#1F5B4A", "#568D55", "#2F7D55", "#356B66", "#6D8452"]
+HEX = ["#2366B1", "#F04E45", "#42A85A", "#8B62D9", "#FF9D3C"]
 COLORE_STATO = {"caldo": colors.HexColor("#8A4F3D"), "tiepido": colors.HexColor("#9A7540"),
                 "freddo": colors.HexColor("#356B66"), "in arrivo": colors.HexColor("#2F7D55"),
                 "da valutare": colors.HexColor("#6D8452"), "nessun dato": colors.HexColor("#66736B")}
@@ -251,9 +251,9 @@ def _panel(c,x,y,w,h,r=3*mm,alpha=.94,stroke="#8CB5D9"):
     c.restoreState()
 
 def _mondo_giorno(c, ctx=None):
-    _sfondo_mappa(c,.16,"#F2EFE2")
-    c.setFillColor(colors.HexColor("#315E51")); c.rect(0,H-19*mm,W,19*mm,stroke=0,fill=1)
-    c.setFillColor(colors.HexColor("#91AD83")); c.rect(0,H-20.5*mm,W,1.5*mm,stroke=0,fill=1)
+    _sfondo_mappa(c,.24,"#FFFDF4")
+    c.setFillColor(BLU); c.rect(0,H-19*mm,W,19*mm,stroke=0,fill=1)
+    c.setFillColor(SOLE); c.rect(0,H-21*mm,W,2*mm,stroke=0,fill=1)
 
 def _mondo_tramonto(c, ctx=None):
     _sfondo_mappa(c,.14,"#29453E")
@@ -407,7 +407,7 @@ def _tabella(dati, larghezze, colore=colors.HexColor("#2366B1"), allinea_destra_
     if allinea_destra_da is not None:
         stile.append(("ALIGN", (allinea_destra_da, 1), (-1, -1), "RIGHT"))
     for i in range(1, len(dati)):
-        stile.append(("BACKGROUND", (0, i), (-1, i), colors.Color(.98,.975,.94,alpha=.90) if i % 2 else colors.Color(.92,.94,.88,alpha=.90)))
+        stile.append(("BACKGROUND", (0, i), (-1, i), colors.Color(.98,.985,1,alpha=.94) if i % 2 else colors.Color(.92,.96,1,alpha=.94)))
     t.setStyle(TableStyle(stile))
     return t
 
