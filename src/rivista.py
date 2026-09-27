@@ -297,29 +297,17 @@ def _trainer_vector(c,x,y,s=1):
 
 # ---------- flowable ----------
 class Rubrica(Flowable):
-    """Intestazione editoriale ispirata alle interfacce di gioco, senza stile pixel."""
-
+    """Intestazione editoriale con testo sempre contenuto nel riquadro."""
     def __init__(self, occhiello, titolo, colore=ROSSO):
-        super().__init__()
-        self.occhiello, self.titolo, self.colore = occhiello.upper(), titolo, colore
-
-    def wrap(self, *_):
-        return LARGHEZZA, 18 * mm
-
+        super().__init__(); self.occhiello=occhiello.upper(); self.titolo=titolo; self.colore=colore
+    def wrap(self,*_): return LARGHEZZA,19*mm
     def draw(self):
-        c = self.canv
-        c.setFillColor(colors.HexColor("#173C35"))
-        c.roundRect(0, 2 * mm, LARGHEZZA, 14 * mm, 2 * mm, stroke=0, fill=1)
-        c.setFillColor(colors.HexColor("#8CCB78"))
-        c.rect(0, 13.5 * mm, LARGHEZZA, 2.5 * mm, stroke=0, fill=1)
-        c.setFillColor(colors.HexColor("#DCEBCB"))
-        c.setFont(SOTTO, 7.5)
-        c.drawString(5 * mm, 10 * mm, self.occhiello)
-        c.setFillColor(BIANCO)
-        fs=17
-        while fs>10 and pdfmetrics.stringWidth(self.titolo,TITOLO,fs)>LARGHEZZA-10*mm: fs-=.5
-        c.setFont(TITOLO,fs)
-        c.drawString(5*mm,4.2*mm,self.titolo)
+        c=self.canv
+        c.setFillColor(colors.HexColor("#173C35")); c.roundRect(0,2*mm,LARGHEZZA,15*mm,2*mm,stroke=0,fill=1)
+        c.setFillColor(colors.HexColor("#79A86E")); c.rect(0,14.5*mm,LARGHEZZA,2.5*mm,stroke=0,fill=1)
+        c.setFillColor(colors.HexColor("#DCEBCB")); c.setFont(TESTO_B,6.6); c.drawString(5*mm,11.1*mm,self.occhiello[:42])
+        p=Paragraph(_t(self.titolo),ParagraphStyle("rubrica_fit",fontName=TITOLO,fontSize=15.5,leading=16.5,textColor=BIANCO))
+        k=KeepInFrame(LARGHEZZA-10*mm,8*mm,[p],mode="shrink"); k.canv=c; k.wrap(LARGHEZZA-10*mm,8*mm); k.drawOn(c,5*mm,3.1*mm)
 
 class Fumetto(Flowable):
     """Box dialogo GBA con ritratto allenatore."""
@@ -345,7 +333,8 @@ class Fumetto(Flowable):
         c.roundRect(x, y, self.larg_box, h, 2 * mm, stroke=0, fill=1)
         c.setFillColor(colors.HexColor("#E7F0D0"))
         c.roundRect(x + 2 * mm, y + 2 * mm, self.larg_box - 4 * mm, h - 4 * mm, 1 * mm, stroke=0, fill=1)
-        self.par.drawOn(c, x + 5 * mm, y + (h - self.alt_testo) / 2)
+        box=KeepInFrame(self.larg_box-10*mm,h-6*mm,[self.par],mode="shrink")
+        box.canv=c; box.wrap(self.larg_box-10*mm,h-6*mm); box.drawOn(c,x+5*mm,y+3*mm)
 
 class PokemonHero(Flowable):
     """Illustrazione Pokémon grande dentro il normale flusso: non può coprire testo o tabelle."""
@@ -391,10 +380,10 @@ def _tabella(dati, larghezze, colore=colors.HexColor("#2F5D50"), allinea_destra_
     stile = [
         ("FONTNAME", (0, 0), (-1, 0), SOTTO), ("FONTSIZE", (0, 0), (-1, 0), 9),
         ("TEXTCOLOR", (0, 0), (-1, 0), _su(colore)), ("BACKGROUND", (0, 0), (-1, 0), colore),
-        ("FONTNAME", (0, 1), (-1, -1), TESTO), ("FONTSIZE", (0, 1), (-1, -1), 8.6),
+        ("FONTNAME", (0, 1), (-1, -1), TESTO), ("FONTSIZE", (0, 1), (-1, -1), 8.1),
         ("TEXTCOLOR", (0, 1), (-1, -1), INCHIOSTRO),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("TOPPADDING", (0, 0), (-1, -1), 3.5), ("BOTTOMPADDING", (0, 0), (-1, -1), 3.5),
+        ("TOPPADDING", (0, 0), (-1, -1), 2.8), ("BOTTOMPADDING", (0, 0), (-1, -1), 2.8),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),
         ("BOX", (0, 0), (-1, -1), 1.2, colore),
     ]
