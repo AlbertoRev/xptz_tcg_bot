@@ -22,9 +22,9 @@ ASSET_DIR = ROOT / "assets"
 POKEAPI_RAW = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites"
 TRAINERCARDS_ITEMS_RAW = "https://raw.githubusercontent.com/jonbarrow/trainercards.studio/master/public/images/items"
 TRAINER_ART_POOL = [
-    ("may", "https://archives.bulbagarden.net/wiki/Special:Redirect/file/Spr_Masters_May_Sygna_2.png"),
-    ("lyra", "https://archives.bulbagarden.net/wiki/Special:Redirect/file/Spr_Masters_Lyra_2.png"),
-    ("looker", "https://archives.bulbagarden.net/wiki/Special:Redirect/file/Spr_Masters_Looker_2.png"),
+    ("may", "May Torchic Pokémon Center Trainer artwork.png"),
+    ("brendan", "Ruby Sapphire Brendan.png"),
+    ("steven", "Steven Stone M8 JN.png"),
 ]
 
 # Poké Ball e varianti: tutte arrivano dagli sprite item di PokéAPI.
@@ -96,6 +96,24 @@ def _download(url: str, percorso: Path) -> bool:
         except OSError:
             pass
         print(f"Asset non disponibile ({url}): {exc}")
+        return False
+
+
+def _download_mediawiki(titolo: str, percorso: Path) -> bool:
+    """Risoluzione via API MediaWiki: evita redirect HTML e recupera il PNG originale."""
+    try:
+        import urllib.parse
+        api="https://archives.bulbagarden.net/w/api.php?"+urllib.parse.urlencode({
+            "action":"query","format":"json","prop":"imageinfo","iiprop":"url","titles":"File:"+titolo
+        })
+        req=urllib.request.Request(api,headers={"User-Agent":"Mozilla/5.0 POKEPUTZU-WEEKLY/1.0"})
+        with urllib.request.urlopen(req,timeout=30) as r:
+            data=json.loads(r.read().decode("utf-8"))
+        page=next(iter(data["query"]["pages"].values()))
+        url=page["imageinfo"][0]["url"]
+        return _download(url,percorso)
+    except Exception as exc:
+        print(f"Artwork trainer non disponibile ({titolo}): {exc}")
         return False
 
 
