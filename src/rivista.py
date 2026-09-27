@@ -244,7 +244,7 @@ def _mondo_tramonto(c, ctx=None):
     c.setFillColor(colors.HexColor("#2E6757")); c.rect(0,0,W,34*mm,stroke=0,fill=1)
     c.setFillColor(colors.Color(.55,.78,.62,alpha=.08)); c.circle(W*.18,H*.20,48*mm,stroke=0,fill=1)
     c.setFillColor(colors.Color(.25,.58,.60,alpha=.08)); c.circle(W*.82,H*.15,58*mm,stroke=0,fill=1)
-    _art_map(c,MARGINE,20*mm,72*mm,48*mm,71)
+    _art_map(c,MARGINE,18*mm,88*mm,55*mm,71)
     hero=(_art_piano(ctx,7).get("hero_asset") if ctx else None) or _mondo_asset(ctx,"pokemon",6)
     c.setFillAlpha(1)
     c.saveState(); c.setFillColor(colors.Color(1,1,1,alpha=.14)); c.circle(W-43*mm,46*mm,38*mm,stroke=0,fill=1); c.restoreState()
@@ -358,7 +358,7 @@ class PokemonHero(Flowable):
         c.saveState(); c.setFillColor(colors.Color(.25,.55,.58,alpha=.10)); c.circle(LARGHEZZA*.76,self.altezza*.50,25*mm,stroke=0,fill=1); c.restoreState()
         asset=_mondo_asset(self.ctx,"pokemon",self.indice)
         if asset: _immagine_asset(c,asset,LARGHEZZA*.76,self.altezza*.50,46*mm)
-        _art_map(c,8*mm,8*mm,58*mm,self.altezza-16*mm,self.indice+1)
+        _art_map(c,6*mm,7*mm,82*mm,self.altezza-14*mm,self.indice+1)
 
 class Decoro(Flowable):
     """Separatore essenziale: una riga di inventario, senza stelline o ornamenti cartoon."""
@@ -486,7 +486,7 @@ def _copertina(c, ctx):
     area_s=KeepInFrame(pw-14*mm,18*mm,[sotto],mode="shrink")
     area_s.canv=c; _,hs=area_s.wrap(pw-14*mm,18*mm); area_s.drawOn(c,x0+7*mm,y0+7*mm)
     # colonna visuale dedicata: mappa e Pokémon non possono sovrapporsi ai dati
-    _art_map(c, W-69*mm, H-87*mm, 52*mm, 38*mm, ctx["numero"])
+    _art_map(c,W-79*mm,H-91*mm,64*mm,46*mm,ctx["numero"])
     hero=(_art_piano(ctx,1).get("hero_asset") or _mondo_asset(ctx,"pokemon",0))
     if hero:
         _immagine_asset(c,hero,W-42*mm,H-133*mm,54*mm)
@@ -541,7 +541,7 @@ def _topographic_map_path():
     # batimetria/texture acqua
     noise=PILImage.effect_noise((300,190),18).resize((Wm,Hm),PILImage.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(5))
     tint=PILImage.new("RGB",(Wm,Hm),(120,170,182)); sea=PILImage.blend(sea,tint,.12)
-    sea=PILImage.blend(sea,noise.convert("RGB"),.045)
+    sea=PILImage.blend(sea,noise.convert("RGB"),.085)
     mask=PILImage.new("L",(Wm,Hm),0); d=ImageDraw.Draw(mask)
     coast=[(75,350),(105,235),(215,160),(360,170),(455,110),(565,150),(650,105),(755,160),(835,235),(985,245),(1045,335),(980,415),(1040,500),(910,565),(785,545),(700,625),(575,585),(470,625),(365,555),(250,590),(135,505)]
     d.polygon(coast,fill=255)
@@ -549,7 +549,7 @@ def _topographic_map_path():
     mask=mask.filter(ImageFilter.GaussianBlur(8))
     elev=PILImage.effect_noise((300,190),42).resize((Wm,Hm),PILImage.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(10))
     low=PILImage.new("RGB",(Wm,Hm),(157,174,112)); high=PILImage.new("RGB",(Wm,Hm),(105,126,83))
-    terrain=PILImage.blend(low,high,.28); terrain=PILImage.blend(terrain,elev.convert("RGB"),.10)
+    terrain=PILImage.blend(low,high,.28); terrain=PILImage.blend(terrain,elev.convert("RGB"),.18)
     sea.paste(terrain,(0,0),mask)
     dr=ImageDraw.Draw(sea,"RGBA")
     # catena montuosa centrale con ombreggiatura naturale
@@ -563,9 +563,18 @@ def _topographic_map_path():
     # strade e rotte sottili
     routes=[[(155,390),(310,410),(510,360),(735,420),(965,350)],[(310,410),(335,255),(555,245),(770,215),(1010,235)]]
     for pts in routes:
-        dr.line(pts,fill=(248,232,190,230),width=8,joint="curve"); dr.line(pts,fill=(176,151,111,150),width=2,joint="curve")
+        dr.line(pts,fill=(214,196,158,170),width=4,joint="curve"); dr.line(pts,fill=(150,132,103,115),width=1,joint="curve")
     for x0,y0 in [(155,390),(310,410),(335,255),(510,360),(555,245),(735,420),(770,215),(965,350),(1010,235)]:
         dr.ellipse((x0-9,y0-9,x0+9,y0+9),fill=(245,239,216,255),outline=(69,91,74,255),width=3)
+    dr.line([(540,245),(520,330),(465,405),(400,475)],fill=(80,145,168,190),width=5)
+    dr.line([(705,250),(740,330),(820,390),(900,430)],fill=(80,145,168,170),width=4)
+    labels=[(130,420,"Petalburg"),(295,430,"Mauville"),(300,235,"Rustboro"),(500,390,"Mt. Chimney"),(735,445,"Lilycove"),(925,365,"Mossdeep")]
+    for lx,ly,tx in labels:
+        dr.rounded_rectangle((lx-5,ly-17,lx+8+len(tx)*7,ly+5),6,fill=(244,240,218,185))
+        dr.text((lx,ly-14),tx,fill=(48,65,58,230))
+    dr.polygon([(1110,80),(1122,115),(1098,115)],fill=(47,67,62,230)); dr.text((1107,50),"N",fill=(47,67,62,255))
+    dr.line((55,700,210,700),fill=(48,65,58,220),width=4); dr.line((55,692,55,708),fill=(48,65,58,220),width=3); dr.line((210,692,210,708),fill=(48,65,58,220),width=3)
+    dr.text((92,710),"100 km",fill=(48,65,58,230))
     dr.text((42,35),"HOENN · CARTA FISICA",fill=(42,65,61,255))
     sea.save(out,"PNG")
     return out
