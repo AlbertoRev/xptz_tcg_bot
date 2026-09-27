@@ -93,6 +93,9 @@ def classifiche(df, slug, link):
             out[tipo][str(p)] = {
                 "rialzi": [_riga(r, i, p, slug, link) for i, r in su.iterrows()],
                 "ribassi": [_riga(r, i, p, slug, link) for i, r in giu.iterrows()],
+                # se nessun prodotto è in calo: i più deboli del periodo, per non lasciare vuota la tabella
+                "piu_deboli": [] if len(giu) else [_riga(r, i, p, slug, link)
+                                                   for i, r in el.nsmallest(n, col).iterrows()],
                 "fonte": "storico" if (el[f"f{p}"] == "storico").any() else ("stima" if len(el) else "n.d."),
             }
     return out
