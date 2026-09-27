@@ -211,7 +211,7 @@ def settimanale(invia_telegram=True):
     piano = art_director.genera_piano(numero, "hoenn", pokemon_mondo.get("pokemon", []), titoli_art)
     assets_poke = list(pokemon_mondo.get("pokemon", []))
     for i, pagina in enumerate(piano.get("pages", [])):
-        pagina["hero_asset"] = assets_poke[i % len(assets_poke)] if assets_poke else None
+        pagina["hero_asset"] = assets_poke[i] if i < len(assets_poke) else None
     ctx["art_direction"] = piano
 
     Path("output").mkdir(exist_ok=True)
