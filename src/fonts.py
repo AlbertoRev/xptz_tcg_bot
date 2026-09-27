@@ -11,10 +11,10 @@ from reportlab.pdfbase.ttfonts import TTFont
 
 BASE = "https://raw.githubusercontent.com/google/fonts/main/"
 SCELTI = {
-    "Testata": "apache/luckiestguy/LuckiestGuy-Regular.ttf",   # testata in stile cartone animato
-    "Titolo": "ofl/lilitaone/LilitaOne-Regular.ttf",            # titoli tondeggianti
-    "Corpo": "ofl/comicneue/ComicNeue-Regular.ttf",             # testo
-    "CorpoB": "ofl/comicneue/ComicNeue-Bold.ttf",               # testo in grassetto
+    "Testata": "ofl/pressstart2p/PressStart2P-Regular.ttf",
+    "Titolo": "ofl/quantico/Quantico-Bold.ttf",
+    "Corpo": "ofl/ibmplexsans/IBMPlexSans-Regular.ttf",
+    "CorpoB": "ofl/ibmplexsans/IBMPlexSans-Bold.ttf",
 }
 RISERVA = {"Testata": "DejaVuSans-Bold.ttf", "Titolo": "DejaVuSans-Bold.ttf",
            "Corpo": "DejaVuSans.ttf", "CorpoB": "DejaVuSans-Bold.ttf"}
