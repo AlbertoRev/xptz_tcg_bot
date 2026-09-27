@@ -99,6 +99,17 @@ def _download(url: str, percorso: Path) -> bool:
         return False
 
 
+def _download_wikidex(titolo: str, percorso: Path) -> bool:
+    try:
+        import urllib.parse
+        api=WIKIDEX_API+"?"+urllib.parse.urlencode({"action":"query","format":"json","prop":"imageinfo","iiprop":"url","titles":"Archivo:"+titolo})
+        req=urllib.request.Request(api,headers={"User-Agent":"Mozilla/5.0 POKEPUTZU-WEEKLY/1.0"})
+        with urllib.request.urlopen(req,timeout=30) as r: data=json.loads(r.read().decode("utf-8"))
+        page=next(iter(data["query"]["pages"].values())); url=page["imageinfo"][0]["url"]
+        return _download(url,percorso)
+    except Exception as exc:
+        print(f"Artwork WikiDex non disponibile ({titolo}): {exc}"); return False
+
 def _download_mediawiki(titolo: str, percorso: Path) -> bool:
     """Risoluzione via API MediaWiki: evita redirect HTML e recupera il PNG originale."""
     try:
@@ -171,11 +182,15 @@ def _candidati_pokemon(rng: random.Random, quanti: int):
 
 
 def _candidati_item(rng: random.Random, piscina, prefisso: str):
-    slugs=list(piscina); rng.shuffle(slugs)
+    mapping=BALL_ART if prefisso=="ball" else ITEM_ART
+    slugs=list(mapping); rng.shuffle(slugs)
     for slug in slugs:
-        nome=f"{prefisso}_{slug}.png"
-        # Trainer Cards Studio conserva immagini item più grandi/pulite del vecchio sprite 24–30 px.
-        yield nome, f"{TRAINERCARDS_ITEMS_RAW}/{slug}.png", slug
+        yield f"{prefisso}_{slug}.png", "wikidex:"+mapping[slug], slug
+
+def _candidati_trainer(rng: random.Random):
+    candidati=list(TRAINER_WIKIDEX); rng.shuffle(candidati)
+    for nome,titolo in candidati:
+        yield f"trainer_{nome}.png", "wikidex:"+titolo, nome
 
 def _candidati_trainer(rng: random.Random):
     candidati=list(TRAINER_ART_POOL); rng.shuffle(candidati)
