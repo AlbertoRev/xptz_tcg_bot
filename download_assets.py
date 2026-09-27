@@ -20,11 +20,7 @@ def scarica_immagini_pokemon():
         "assets/venusaur.png": "https://upload.wikimedia.org/wikipedia/it/a/a3/Venusaur.png",
         "assets/mewtwo.png": "https://upload.wikimedia.org/wikipedia/it/c/c8/Mewtwo.png",
         "assets/rayquaza.png": "https://upload.wikimedia.org/wikipedia/it/e/e5/Rayquaza.png",
-        
-        # Sfondo naturale (per prima e ultima pagina)
-        "assets/sfondo_natura.png": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
-    }
-    
+           
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
     
     for percorso, url in immagini.items():
