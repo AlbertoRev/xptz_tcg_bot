@@ -521,7 +521,10 @@ def _art_piano(ctx, numero):
     return next((p for p in pages if p.get("page")==numero), {})
 
 def _topographic_map_path():
-    """Carta fisica di Hoenn con rilievo, hillshade e batimetria; nessuna geometria pixel."""
+    """Mappa illustrata di Hoenn; fallback locale a rilievo."""
+    realistic=ASSET_DIR/"hoenn_realistic.png"
+    if realistic.exists() and realistic.stat().st_size > 10000:
+        return realistic
     out=ASSET_DIR/"hoenn_topographic.png"
     ASSET_DIR.mkdir(parents=True,exist_ok=True)
     Wm,Hm=1600,1000
