@@ -731,6 +731,16 @@ def _tabella_classifica(titolo, righe, colore):
     return KeepTogether([_tabella(dati, larghezze, colore)])
 
 
+def _layout_profile(ctx, compact=False):
+    """Seleziona densità/template dai contenuti reali."""
+    g=ctx["principale"]; score=len(ctx.get("sintesi",[]))*2+len(g.get("radar",[]))*3+len(g.get("previsioni",[]))*2+len(g.get("occasioni",[]))*2
+    for tipo in ("sigillato","singola"):
+        for periodo in C.PERIODI:
+            blocco=(g.get("classifiche",{}).get(tipo,{}) or {}).get(str(periodo),{})
+            score+=len(blocco.get("rialzi",[]))+len(blocco.get("ribassi",[]))
+    mode="data-heavy" if score>52 else ("balanced" if score>24 else "visual")
+    return {"mode":mode,"compact":compact,"space":3 if compact else (5 if mode=="data-heavy" else 7),"hero":43*mm if compact else (48*mm if mode=="data-heavy" else 58*mm)}
+
 def crea(percorso, ctx):
     st = _stili()
     g = ctx["principale"]
@@ -834,7 +844,7 @@ def crea(percorso, ctx):
                                f'<link href="{escape(n["link"])}" color="#2B2D42">'
                                f'<font name="{TESTO_B}">{_t(n["titolo"])}</font></link>', st["p"]))
             E.append(Spacer(1, 6))
-    E += [Spacer(1, 8), PokemonHero(ctx, indice=5, altezza=50*mm)]
+    E += [Spacer(1, 8), PokemonHero(ctx, indice=5, altezza=profile["hero"])]
 
     # 7. Quarta di copertina: come leggere la rivista
     E += [NextPageTemplate("retro"), PageBreak(), Rubrica("Metodo", "Come leggere la rivista", BLU), Spacer(1, 3)]
