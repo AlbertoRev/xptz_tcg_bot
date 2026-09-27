@@ -1,7 +1,7 @@
 """Art director Gemini per POKEPUTZU WEEKLY."""
 import json, os
 from pathlib import Path
-MODEL=os.getenv("GEMINI_MODEL","gemini-2.5-flash-lite")
+MODEL=os.getenv("GEMINI_MODEL","gemini-3.5-flash-lite")
 SCHEMA={"type":"object","properties":{"region":{"type":"string"},"visual_direction":{"type":"string"},"palette":{"type":"array","items":{"type":"string"}},"pages":{"type":"array","items":{"type":"object","properties":{"page":{"type":"integer"},"layout":{"type":"string"},"hero_pokemon":{"type":"string"},"secondary_pokemon":{"type":"array","items":{"type":"string"}},"map":{"type":"string"},"ui":{"type":"string"},"notes":{"type":"string"}},"required":["page","layout","hero_pokemon","secondary_pokemon","map","ui","notes"]}}},"required":["region","visual_direction","palette","pages"]}
 def _local_plan(issue_number,region,available_pokemon=None):
  layouts=[("cover","hoenn_map_01","pokedex"),("editorial","hoenn_map_02","dialogue"),("radar","hoenn_map_03","battle"),("thermometer","hoenn_map_01","trainer_card"),("market","hoenn_map_02","pokedex"),("deals_news","hoenn_map_03","dialogue"),("back_cover","hoenn_map_01","menu")]
