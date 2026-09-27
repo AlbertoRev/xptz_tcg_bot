@@ -671,13 +671,9 @@ def _retro(c, ctx):
     c.setFont(TITOLO, 31)
     c.drawString(MARGINE, H - 31 * mm, "SALVATAGGIO COMPLETATO")
     c.setFont(SOTTO, 12)
-    c.setFillColor(colors.HexColor("#B9DBA5"))
+    c.setFillColor(colors.HexColor("#FFD84A"))
     c.drawString(MARGINE, H - 42 * mm, f"POKEPUTZU WEEKLY N.{ctx['numero']} · PROSSIMO NUMERO {ctx['prossima']}")
-    # pannello metodo
-    c.setFillColor(colors.HexColor("#102D28"))
-    c.roundRect(MARGINE, H - 172 * mm, LARGHEZZA, 108 * mm, 3 * mm, stroke=0, fill=1)
-    c.setFillColor(colors.HexColor("#EFF3D8"))
-    c.roundRect(MARGINE + 3 * mm, H - 169 * mm, LARGHEZZA - 6 * mm, 102 * mm, 2 * mm, stroke=0, fill=1)
+    # Nessun pannello fisso: i flowable sottostanti seguono l’altezza reale del testo.
     c.restoreState()
 
 
@@ -717,7 +713,7 @@ def _box_200(car, st):
                                     ("BACKGROUND", (0, 0), (-1, -1), BIANCO),
                                     ("ROUNDEDCORNERS", [6, 6, 6, 6]),
                                     ("BOX", (0, 0), (-1, -1), 1, BLU),
-                                    ("TOPPADDING", (0, 0), (-1, -1), 3), ("BOTTOMPADDING", (0, 0), (-1, -1), 3)]))
+                                    ("TOPPADDING", (0, 0), (-1, -1), 2), ("BOTTOMPADDING", (0, 0), (-1, -1), 2)]))
         righe.append([scheda])
     if car["proposte"]:
         righe.append([Paragraph(f"<b>Totale: {_eur(car['speso'])}</b>  ·  restano {_eur(car['residuo'])}",
@@ -727,11 +723,11 @@ def _box_200(car, st):
     righe.append([Paragraph(_t("Proposta automatica, non consulenza finanziaria. Il ragionamento completo è "
                                "nell'analisi di Claude della domenica."), st["nota"])])
     box = Table(righe, colWidths=[LARGHEZZA])
-    box.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#E6EDD4")),
+    box.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FFFFFF")),
                              ("ROUNDEDCORNERS", [4, 4, 4, 4]),
-                             ("BOX", (0, 0), (-1, -1), 2.0, colors.HexColor("#173C35")),
-                             ("LEFTPADDING", (0, 0), (-1, -1), 9), ("RIGHTPADDING", (0, 0), (-1, -1), 9),
-                             ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4)]))
+                             ("BOX", (0, 0), (-1, -1), 1.2, BLU),
+                             ("LEFTPADDING", (0, 0), (-1, -1), 7), ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+                             ("TOPPADDING", (0, 0), (-1, -1), 2.5), ("BOTTOMPADDING", (0, 0), (-1, -1), 2.5)]))
     return KeepTogether([box])
 
 
@@ -764,7 +760,7 @@ def crea(percorso, ctx):
     doc = BaseDocTemplate(percorso, pagesize=A4, title=f"{TESTATA} n. {ctx['numero']}",
                           leftMargin=MARGINE, rightMargin=MARGINE, topMargin=24 * mm, bottomMargin=18 * mm)
     cornice = Frame(MARGINE, 18 * mm, LARGHEZZA, H - 43 * mm, id="testo", leftPadding=0, rightPadding=0)
-    cornice_retro = Frame(MARGINE + 7 * mm, H - 166 * mm, LARGHEZZA - 14 * mm, 96 * mm, id="retro",
+    cornice_retro = Frame(MARGINE + 7 * mm, H - 151 * mm, LARGHEZZA - 14 * mm, 78 * mm, id="retro",
                           leftPadding=0, rightPadding=0)
     doc.addPageTemplates([
         PageTemplate(id="copertina", frames=[Frame(0, 0, W, H, id="vuota")],
