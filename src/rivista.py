@@ -362,7 +362,7 @@ class Decoro(Flowable):
     def draw(self):
         c=self.canv
         c.setFillColor(colors.HexColor("#DCE7CF")); c.roundRect(0,2*mm,LARGHEZZA,self.altezza-4*mm,3*mm,stroke=0,fill=1)
-        specs=(("pokeball",.32,18*mm),("oggetti",.50,18*mm),("allenatori",.70,27*mm))
+        specs=(("pokeball",.30,23*mm),("oggetti",.50,23*mm),("allenatori",.72,34*mm))
         for k,(gruppo,px,size) in enumerate(specs):
             asset=_mondo_asset(self.ctx,gruppo,self.seme+k)
             if asset: _immagine_asset(c,asset,LARGHEZZA*px,self.altezza/2,size)
@@ -475,10 +475,10 @@ def _copertina(c, ctx):
     area_s=KeepInFrame(pw-14*mm,18*mm,[sotto],mode="shrink")
     area_s.canv=c; _,hs=area_s.wrap(pw-14*mm,18*mm); area_s.drawOn(c,x0+7*mm,y0+7*mm)
     # colonna visuale dedicata: mappa e Pokémon non possono sovrapporsi ai dati
-    _art_map(c,W-79*mm,H-91*mm,64*mm,46*mm,ctx["numero"])
+    _art_map(c,W-83*mm,H-96*mm,68*mm,52*mm,ctx["numero"])
     hero=(_art_piano(ctx,1).get("hero_asset") or _mondo_asset(ctx,"pokemon",0))
     if hero:
-        _immagine_asset(c,hero,W-42*mm,H-133*mm,54*mm)
+        _immagine_asset(c,hero,W-40*mm,H-139*mm,58*mm)
 
     # KPI come menu di stato, non adesivi
     ky = y0 - 30 * mm
