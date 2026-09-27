@@ -506,7 +506,7 @@ def _copertina(c, ctx):
     _mondo_giorno(c, ctx)
     # Kit grafico della settimana: Ball in testata + Pokémon protagonista + allenatore.
     _immagine_asset(c, _mondo_asset(ctx, "pokeball", 0), W - 24 * mm, H - 36 * mm, 15 * mm, angolo=12)
-    _immagine_asset(c, _mondo_asset(ctx, "pokemon", 0), W - MARGINE - 22 * mm, H - 91 * mm, 30 * mm, angolo=6)
+    _immagine_asset(c, ((_art_piano(ctx, 1).get("hero_asset")) or _mondo_asset(ctx, "pokemon", 0)), W - MARGINE - 30 * mm, H - 105 * mm, 55 * mm, angolo=5)
     _immagine_asset(c, _mondo_asset(ctx, "allenatori", 0), MARGINE + 14 * mm, H - 91 * mm, 27 * mm, angolo=-5)
     colore_tema = _mondo_colore(ctx, "#EF476F")
 
@@ -621,6 +621,61 @@ def _copertina(c, ctx):
     c.restoreState()
 
 
+def _art_piano(ctx, numero):
+    pages=((ctx or {}).get("art_direction") or {}).get("pages") or []
+    return next((p for p in pages if p.get("page")==numero), {})
+
+def _art_map(c, x, y, w, h, seed=1):
+    c.saveState()
+    c.setFillColor(colors.HexColor("#E7F0D0"))
+    c.setStrokeColor(colors.HexColor("#2F5D50"))
+    c.setLineWidth(1.2)
+    c.roundRect(x, y, w, h, 4*mm, stroke=1, fill=1)
+    c.setStrokeColor(colors.HexColor("#78A77A"))
+    c.setLineWidth(1.4)
+    for k in range(5):
+        p=c.beginPath()
+        p.moveTo(x+5*mm, y+(8+k*8)*mm)
+        p.curveTo(x+w*.28,y+(4+k*9)*mm,x+w*.65,y+(14+k*7)*mm,x+w-5*mm,y+(6+k*9)*mm)
+        c.drawPath(p,stroke=1,fill=0)
+    c.setFillColor(colors.HexColor("#2F7D55"))
+    rnd=random.Random(seed)
+    for _ in range(8):
+        c.circle(x+rnd.uniform(7,w/mm-7)*mm,y+rnd.uniform(7,h/mm-7)*mm,1.2*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#214A3A"))
+    c.setFont(TESTO_B,6.5)
+    c.drawString(x+5*mm,y+h-8*mm,"HOENN MAP")
+    c.restoreState()
+
+def _art_ui(c, x, y, w, h, kind="pokedex"):
+    c.saveState()
+    c.setFillColor(colors.HexColor("#263238"))
+    c.roundRect(x,y,w,h,3*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#BFE8C0"))
+    c.roundRect(x+3*mm,y+3*mm,w-6*mm,h-6*mm,2*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#214A3A"))
+    c.setFont(SOTTO,6.5)
+    c.drawString(x+6*mm,y+h-9*mm,kind.upper())
+    c.setStrokeColor(colors.HexColor("#5E9273"))
+    for i in range(3):
+        c.line(x+6*mm,y+h-(14+i*6)*mm,x+w-6*mm,y+h-(14+i*6)*mm)
+    c.restoreState()
+
+def _art_overlay(c, ctx, page):
+    plan=_art_piano(ctx,page)
+    if not plan:
+        return
+    _art_map(c,W-58*mm,H-54*mm,44*mm,30*mm,page)
+    _art_ui(c,MARGINE,H-48*mm,40*mm,23*mm,plan.get("ui","pokedex"))
+    asset=plan.get("hero_asset")
+    if asset:
+        _immagine_asset(c,asset,W-20*mm,H/2+8*mm,42*mm,angolo=5 if page%2 else -5)
+    c.setFillColor(colors.Color(1,1,1,alpha=.82))
+    c.roundRect(MARGINE+45*mm,H-19*mm,72*mm,8*mm,2*mm,stroke=0,fill=1)
+    c.setFillColor(INCHIOSTRO)
+    c.setFont(SOTTO,7)
+    c.drawString(MARGINE+48*mm,H-16*mm,f"{plan.get('layout','editorial').upper()} · {plan.get('hero_pokemon','POKEMON').upper()}")
+
 def _pagina_interna(c, doc, ctx):
     c.saveState()
     colore_tema = _mondo_colore(ctx, "#118AB2")
@@ -684,6 +739,7 @@ def _pagina_interna(c, doc, ctx):
         _immagine_asset(c, pokemon, W - 8 * mm, H / 2 + 4 * mm, 19 * mm, angolo=8)
         _immagine_asset(c, ball, 8 * mm, H - 27 * mm, 12 * mm, angolo=-10)
         _immagine_asset(c, item, 9 * mm, H / 2 - 5 * mm, 10 * mm, angolo=-8)
+    _art_overlay(c, ctx, doc.page)
     c.restoreState()
 
 
