@@ -649,7 +649,7 @@ def _pagina_interna(c, doc, ctx):
     asset=plan.get("hero_asset")
     # area hero riservata nel margine alto destro, 30 mm: grande ma non entra nel frame testo
     if asset:
-        _immagine_asset(c,asset,W-20*mm,H-39*mm,30*mm)
+        _immagine_asset(c,asset,W-13*mm,H-31*mm,20*mm)
     # piccolo badge PokéNav nel margine, senza invadere il contenuto
     if page in (3,5):
         _art_map(c,W-50*mm,10*mm,34*mm,22*mm,page)
@@ -759,8 +759,8 @@ def crea(percorso, ctx):
     st = _stili()
     g = ctx["principale"]
     doc = BaseDocTemplate(percorso, pagesize=A4, title=f"{TESTATA} n. {ctx['numero']}",
-                          leftMargin=MARGINE, rightMargin=MARGINE, topMargin=34 * mm, bottomMargin=18 * mm)
-    cornice = Frame(MARGINE, 18 * mm, LARGHEZZA, H - 54 * mm, id="testo", leftPadding=0, rightPadding=0)
+                          leftMargin=MARGINE, rightMargin=MARGINE, topMargin=24 * mm, bottomMargin=18 * mm)
+    cornice = Frame(MARGINE, 18 * mm, LARGHEZZA, H - 43 * mm, id="testo", leftPadding=0, rightPadding=0)
     cornice_retro = Frame(MARGINE + 7 * mm, H - 186 * mm, LARGHEZZA - 14 * mm, 114 * mm, id="retro",
                           leftPadding=0, rightPadding=0)
     doc.addPageTemplates([
