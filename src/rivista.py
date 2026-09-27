@@ -648,8 +648,11 @@ def _pagina_interna(c, doc, ctx):
     c.setFillColor(colors.HexColor("#0E4C91")); c.drawPath(p,stroke=0,fill=1)
     p=c.beginPath(); p.moveTo(0,H-14*mm); p.lineTo(W,H-20*mm); p.lineTo(W,H-23*mm); p.lineTo(0,H-17*mm); p.close()
     c.setFillColor(SOLE); c.drawPath(p,stroke=0,fill=1)
-    c.setFillColor(BIANCO); c.setFont(TITOLO,14); c.drawString(MARGINE,H-11.5*mm,(plan.get("layout") or "POKEPUTZU").replace("_"," ").upper())
-    c.setFont(TESTO_B,6.8); c.drawRightString(W-MARGINE,H-10.5*mm,f"N.{ctx['numero']} · {ctx['data_lunga']} · P.{page}")
+    titles={2:("MERCATO","ANDAMENTI, TREND E OPPORTUNITÀ"),3:("NOVITÀ","TUTTE LE NEWS DAL MONDO POKÉMON TCG"),4:("ANALISI","APPROFONDIMENTI E STRATEGIE"),5:("FOCUS COLLEZIONE","LE CARTE E I PRODOTTI DA TENERE D'OCCHIO"),6:("GUIDA MERCATO","CONSIGLI PRATICI PER COLLEZIONISTI")}
+    titolo,sottotitolo=titles.get(page,("POKEPUTZU WEEKLY","IL MAGAZINE SETTIMANALE"))
+    c.setFillColor(BIANCO); c.setFont(TITOLO,19 if page!=5 else 16); c.drawString(MARGINE,H-11.2*mm,titolo)
+    c.setFont(TESTO_B,6.3); c.drawString(MARGINE+2*mm,H-16.3*mm,sottotitolo)
+    c.drawRightString(W-MARGINE,H-10.5*mm,f"N.{ctx['numero']} · P.{page}")
     # piccoli elementi illustrati solo nella fascia sicura superiore/destra.
     hero=plan.get("hero_asset")
     if hero and page in (3,4,6): _immagine_asset(c,hero,W-18*mm,H-33*mm,31*mm)
