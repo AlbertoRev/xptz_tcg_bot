@@ -245,7 +245,7 @@ def _mondo_tramonto(c, ctx=None):
     c.setFillColor(colors.Color(.25,.58,.60,alpha=.08)); c.circle(W*.82,H*.15,58*mm,stroke=0,fill=1)
     _art_map(c,MARGINE,20*mm,72*mm,48*mm,71)
     hero=(_art_piano(ctx,7).get("hero_asset") if ctx else None) or _mondo_asset(ctx,"pokemon",6)
-    _immagine_asset(c,hero,W-43*mm,46*mm,76*mm)
+    c.setFillColor(colors.Color(1,1,1,alpha=.14)); c.circle(W-43*mm,46*mm,38*mm,stroke=0,fill=1)\n    _immagine_asset(c,hero,W-43*mm,46*mm,76*mm)
 
 
 # ---------- stili ----------
@@ -270,6 +270,27 @@ def _stile_tag(colore):
     return ParagraphStyle("tg", fontName=SOTTO, fontSize=7.8, leading=9.5, textColor=_su(colore),
                           alignment=TA_CENTER)
 
+
+def _pokeball_vector(c,x,y,r=7*mm):
+    c.saveState(); c.setStrokeColor(colors.HexColor("#263238")); c.setLineWidth(1.2)
+    c.setFillColor(colors.HexColor("#D9534F")); c.wedge(x-r,y-r,x+r,y+r,0,180,stroke=0,fill=1)
+    c.setFillColor(BIANCO); c.wedge(x-r,y-r,x+r,y+r,180,180,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#263238")); c.rect(x-r,y-1.2*mm,2*r,2.4*mm,stroke=0,fill=1)
+    c.setFillColor(BIANCO); c.circle(x,y,2.5*mm,stroke=1,fill=1); c.restoreState()
+
+def _item_vector(c,x,y,s=1):
+    c.saveState(); c.setFillColor(colors.HexColor("#5B9DB0")); c.setStrokeColor(colors.HexColor("#315D68")); c.setLineWidth(1)
+    p=c.beginPath(); p.moveTo(x,y+8*mm*s); p.curveTo(x+8*mm*s,y+4*mm*s,x+7*mm*s,y-5*mm*s,x,y-8*mm*s)
+    p.curveTo(x-7*mm*s,y-5*mm*s,x-8*mm*s,y+4*mm*s,x,y+8*mm*s); p.close(); c.drawPath(p,stroke=1,fill=1)
+    c.setStrokeColor(colors.Color(1,1,1,alpha=.55)); c.line(x-2*mm*s,y+4*mm*s,x+2*mm*s,y-4*mm*s); c.restoreState()
+
+def _trainer_vector(c,x,y,s=1):
+    c.saveState(); c.setFillColor(colors.HexColor("#D9B08C")); c.circle(x,y+7*mm*s,4*mm*s,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#355F4E")); c.roundRect(x-5*mm*s,y-8*mm*s,10*mm*s,12*mm*s,2*mm*s,stroke=0,fill=1)
+    c.setStrokeColor(colors.HexColor("#355F4E")); c.setLineWidth(2.2*s)
+    c.line(x-3*mm*s,y-8*mm*s,x-6*mm*s,y-15*mm*s); c.line(x+3*mm*s,y-8*mm*s,x+6*mm*s,y-15*mm*s)
+    c.setFillColor(colors.HexColor("#B84A45")); c.wedge(x-5*mm*s,y+5*mm*s,x+5*mm*s,y+13*mm*s,0,180,stroke=0,fill=1)
+    c.restoreState()
 
 # ---------- flowable ----------
 class Rubrica(Flowable):
@@ -335,12 +356,10 @@ class Decoro(Flowable):
         c = self.canv
         c.setFillColor(colors.HexColor("#D6E4C5"))
         c.roundRect(0, 2 * mm, LARGHEZZA, self.altezza - 4 * mm, 2 * mm, stroke=0, fill=1)
-        for k, gruppo in enumerate(("pokeball", "oggetti", "allenatori")):
-            nome = _mondo_asset(self.ctx, gruppo, self.seme + k)
-            if nome:
-                x = LARGHEZZA * (0.30 + 0.20 * k)
-                larghezza = 32 * mm if gruppo == "allenatori" else 22 * mm
-                _immagine_asset(c, nome, x, self.altezza / 2, larghezza)
+        cy=self.altezza/2
+        _pokeball_vector(c,LARGHEZZA*.36,cy,6.5*mm)
+        _item_vector(c,LARGHEZZA*.50,cy,.85)
+        _trainer_vector(c,LARGHEZZA*.65,cy,.72)
 
 
 def _tag(testo, colore, larghezza=21 * mm):
