@@ -340,10 +340,8 @@ class Fumetto(Flowable):
         trainer=_mondo_asset(self.ctx,"allenatori",self.indice)
         if trainer: _immagine_asset(c,trainer,17*mm,self.altezza/2,40*mm)
         x, y, h = 38 * mm, 2 * mm, self.altezza - 4 * mm
-        c.setFillColor(colors.HexColor("#173C35"))
-        c.roundRect(x, y, self.larg_box, h, 2 * mm, stroke=0, fill=1)
-        c.setFillColor(colors.HexColor("#E7F0D0"))
-        c.roundRect(x + 2 * mm, y + 2 * mm, self.larg_box - 4 * mm, h - 4 * mm, 1 * mm, stroke=0, fill=1)
+        _panel(c,x,y,self.larg_box,h,3*mm,.90,"#9AAEA3")
+        c.setFillColor(colors.HexColor("#5F8B73")); c.roundRect(x,y,3*mm,h,1.5*mm,stroke=0,fill=1)
         box=KeepInFrame(self.larg_box-10*mm,h-6*mm,[self.par],mode="shrink")
         box.canv=c; box.wrap(self.larg_box-10*mm,h-6*mm); box.drawOn(c,x+5*mm,y+3*mm)
 
