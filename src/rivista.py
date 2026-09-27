@@ -6,7 +6,7 @@ generica rimane nel PDF: ogni elemento ornamentale appartiene al mondo Pokémon.
 """
 import math
 import random
-from pathlib import Path
+from pathlib import Path\nfrom PIL import Image as PILImage, ImageDraw, ImageFilter
 from xml.sax.saxutils import escape
 
 from reportlab.graphics.shapes import Drawing, Line, Rect, String
@@ -530,53 +530,51 @@ def _art_piano(ctx, numero):
     pages=((ctx or {}).get("art_direction") or {}).get("pages") or []
     return next((p for p in pages if p.get("page")==numero), {})
 
+def _topographic_map_path():
+    """Genera una carta fisica raster ad alta risoluzione, riutilizzata nel numero."""
+    out=ASSET_DIR/"hoenn_topographic.png"
+    if out.exists(): return out
+    ASSET_DIR.mkdir(parents=True,exist_ok=True)
+    Wm,Hm=1200,760
+    sea=PILImage.new("RGB",(Wm,Hm),(154,195,204))
+    # batimetria/texture acqua
+    noise=PILImage.effect_noise((300,190),18).resize((Wm,Hm),PILImage.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(5))
+    tint=PILImage.new("RGB",(Wm,Hm),(120,170,182)); sea=PILImage.blend(sea,tint,.12)
+    sea=PILImage.blend(sea,noise.convert("RGB"),.045)
+    mask=PILImage.new("L",(Wm,Hm),0); d=ImageDraw.Draw(mask)
+    coast=[(75,350),(105,235),(215,160),(360,170),(455,110),(565,150),(650,105),(755,160),(835,235),(985,245),(1045,335),(980,415),(1040,500),(910,565),(785,545),(700,625),(575,585),(470,625),(365,555),(250,590),(135,505)]
+    d.polygon(coast,fill=255)
+    for box in ((1010,210,1080,270),(1080,340,1125,385),(890,650,955,700),(690,655,745,700),(405,660,455,695)): d.ellipse(box,fill=255)
+    mask=mask.filter(ImageFilter.GaussianBlur(8))
+    elev=PILImage.effect_noise((300,190),42).resize((Wm,Hm),PILImage.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(10))
+    low=PILImage.new("RGB",(Wm,Hm),(157,174,112)); high=PILImage.new("RGB",(Wm,Hm),(105,126,83))
+    terrain=PILImage.blend(low,high,.28); terrain=PILImage.blend(terrain,elev.convert("RGB"),.10)
+    sea.paste(terrain,(0,0),mask)
+    dr=ImageDraw.Draw(sea,"RGBA")
+    # catena montuosa centrale con ombreggiatura naturale
+    for cx,cy,rx,ry in ((555,330,150,115),(620,315,105,85),(470,360,95,70)):
+        dr.ellipse((cx-rx,cy-ry,cx+rx,cy+ry),fill=(95,91,72,45))
+        dr.ellipse((cx-rx*.65,cy-ry*.65,cx+rx*.65,cy+ry*.65),outline=(105,96,75,95),width=3)
+        dr.ellipse((cx-rx*.40,cy-ry*.40,cx+rx*.40,cy+ry*.40),outline=(115,104,81,90),width=2)
+    # foreste
+    for cx,cy,rx,ry in ((280,315,115,80),(330,220,85,65),(760,325,120,78),(835,430,95,60)):
+        dr.ellipse((cx-rx,cy-ry,cx+rx,cy+ry),fill=(52,103,65,48))
+    # strade e rotte sottili
+    routes=[[(155,390),(310,410),(510,360),(735,420),(965,350)],[(310,410),(335,255),(555,245),(770,215),(1010,235)]]
+    for pts in routes:
+        dr.line(pts,fill=(248,232,190,230),width=8,joint="curve"); dr.line(pts,fill=(176,151,111,150),width=2,joint="curve")
+    for x0,y0 in [(155,390),(310,410),(335,255),(510,360),(555,245),(735,420),(770,215),(965,350),(1010,235)]:
+        dr.ellipse((x0-9,y0-9,x0+9,y0+9),fill=(245,239,216,255),outline=(69,91,74,255),width=3)
+    dr.text((42,35),"HOENN · CARTA FISICA",fill=(42,65,61,255))
+    sea.save(out,"PNG")
+    return out
+
 def _art_map(c,x,y,w,h,seed=1):
-    """Atlante topografico di Hoenn: resa naturale, senza estetica da videogioco."""
+    path=_topographic_map_path()
     c.saveState()
-    c.setFillColor(colors.HexColor("#B7D4D8")); c.roundRect(x,y,w,h,2.5*mm,stroke=0,fill=1)
-    # mare: fasce batimetriche morbide
-    for k,col in enumerate(("#A9CCD2","#9FC4CB","#94BBC4")):
-        c.setStrokeColor(colors.HexColor(col)); c.setLineWidth(.7)
-        inset=(3+k*2)*mm; c.roundRect(x+inset,y+inset,w-2*inset,h-2*inset,6*mm,stroke=1,fill=0)
-    # massa terrestre con curve Bezier
-    p=c.beginPath(); p.moveTo(x+.07*w,y+.46*h)
-    p.curveTo(x+.08*w,y+.67*h,x+.19*w,y+.80*h,x+.36*w,y+.76*h)
-    p.curveTo(x+.45*w,y+.86*h,x+.57*w,y+.82*h,x+.64*w,y+.70*h)
-    p.curveTo(x+.76*w,y+.75*h,x+.88*w,y+.66*h,x+.84*w,y+.54*h)
-    p.curveTo(x+.93*w,y+.45*h,x+.83*w,y+.31*h,x+.68*w,y+.33*h)
-    p.curveTo(x+.59*w,y+.22*h,x+.46*w,y+.27*h,x+.36*w,y+.35*h)
-    p.curveTo(x+.24*w,y+.27*h,x+.10*w,y+.32*h,x+.07*w,y+.46*h); p.close()
-    c.setFillColor(colors.HexColor("#A7B982")); c.setStrokeColor(colors.HexColor("#6E8062")); c.setLineWidth(1)
-    c.drawPath(p,stroke=1,fill=1)
-    # fasce di vegetazione
-    c.setFillColor(colors.Color(.22,.42,.24,alpha=.18))
-    for px,py,rx,ry in ((.23,.56,.11,.10),(.33,.65,.09,.08),(.65,.58,.12,.09),(.72,.45,.09,.08)):
-        c.ellipse(x+(px-rx)*w,y+(py-ry)*h,x+(px+rx)*w,y+(py+ry)*h,stroke=0,fill=1)
-    # rilievi e curve di livello
-    c.setStrokeColor(colors.HexColor("#8E8066")); c.setLineWidth(.55)
-    for scale in (1.0,.78,.56):
-        q=c.beginPath(); q.moveTo(x+(.39+.04*(1-scale))*w,y+.48*h)
-        q.curveTo(x+.43*w,y+(.70-.05*(1-scale))*h,x+.54*w,y+(.73-.05*(1-scale))*h,x+.59*w,y+.48*h)
-        c.drawPath(q,stroke=1,fill=0)
-    c.setFillColor(colors.HexColor("#78664F"))
-    q=c.beginPath(); q.moveTo(x+.43*w,y+.49*h); q.lineTo(x+.50*w,y+.70*h); q.lineTo(x+.57*w,y+.49*h); q.close(); c.drawPath(q,stroke=0,fill=1)
-    c.setFillColor(colors.HexColor("#D7D0B4")); c.circle(x+.50*w,y+.64*h,1.4*mm,stroke=0,fill=1)
-    # arcipelago
-    c.setFillColor(colors.HexColor("#9FAF7A"))
-    for px,py,rx,ry in ((.88,.60,.035,.025),(.91,.45,.025,.018),(.77,.17,.035,.022),(.59,.14,.025,.016),(.36,.15,.026,.016)):
-        c.ellipse(x+(px-rx)*w,y+(py-ry)*h,x+(px+rx)*w,y+(py+ry)*h,stroke=0,fill=1)
-    # rete stradale/rotte
-    c.setStrokeColor(colors.HexColor("#F5E8C5")); c.setLineWidth(1.5)
-    for route in [((.14,.44),(.29,.41),(.48,.51),(.66,.44),(.84,.54)),((.29,.41),(.31,.63),(.49,.65),(.68,.68),(.84,.61))]:
-        q=c.beginPath(); q.moveTo(x+route[0][0]*w,y+route[0][1]*h)
-        for px,py in route[1:]: q.lineTo(x+px*w,y+py*h)
-        c.drawPath(q,stroke=1,fill=0)
-    # centri abitati
-    for i,(px,py) in enumerate(((.14,.44),(.29,.41),(.31,.63),(.49,.51),(.49,.65),(.66,.44),(.68,.68),(.84,.61),(.84,.54))):
-        c.setFillColor(colors.HexColor("#B9564D") if i in (2,6) else colors.HexColor("#F5F0DA"))
-        c.setStrokeColor(colors.HexColor("#596C58")); c.circle(x+px*w,y+py*h,1.25*mm,stroke=1,fill=1)
-    c.setFillColor(colors.HexColor("#344B45")); c.setFont(TESTO_B,5.5)
-    c.drawString(x+4*mm,y+h-6*mm,"HOENN · CARTA TOPOGRAFICA")
+    c.setFillColor(colors.HexColor("#E9EEE7")); c.roundRect(x-1.2*mm,y-1.2*mm,w+2.4*mm,h+2.4*mm,2.8*mm,stroke=0,fill=1)
+    c.drawImage(str(path),x,y,w,h,preserveAspectRatio=False,mask="auto")
+    c.setStrokeColor(colors.HexColor("#71847A")); c.setLineWidth(.7); c.roundRect(x,y,w,h,2*mm,stroke=1,fill=0)
     c.restoreState()
 
 def _art_ui(c, x, y, w, h, kind="pokedex"):
