@@ -29,20 +29,20 @@ F = fonts.carica()
 TITOLO, SOTTO, TESTO, TESTO_B = F["Testata"], F["Titolo"], F["Corpo"], F["CorpoB"]
 
 # ---------- palette giocosa ----------
-INCHIOSTRO = colors.HexColor("#24332F")
-CIELO = colors.HexColor("#8EB9B2")
-SOLE = colors.HexColor("#D8C78D")
-ROSSO = colors.HexColor("#A85D52")
-VERDE = colors.HexColor("#5F9478")
-PRATO = colors.HexColor("#86A86F")
-VIOLA = colors.HexColor("#7B718A")
-ARANCIO = colors.HexColor("#B98B62")
-BLU = colors.HexColor("#4D8790")
-CARTA = colors.HexColor("#F4F1E6")
-CREMA = colors.HexColor("#ECE7D5")
-PASTELLO = colors.HexColor("#E9E7DC")
-VERDE_SCURO = colors.HexColor("#356B58")     # per le scritte verdi su fondo bianco
-GRIGIO = colors.HexColor("#65716D")
+INCHIOSTRO = colors.HexColor("#17263A")
+CIELO = colors.HexColor("#32B7E8")
+SOLE = colors.HexColor("#FFD84A")
+ROSSO = colors.HexColor("#F04E45")
+VERDE = colors.HexColor("#42A85A")
+PRATO = colors.HexColor("#80C85A")
+VIOLA = colors.HexColor("#8B62D9")
+ARANCIO = colors.HexColor("#FF9D3C")
+BLU = colors.HexColor("#2366B1")
+CARTA = colors.HexColor("#FFFDF4")
+CREMA = colors.HexColor("#FFF3C8")
+PASTELLO = colors.HexColor("#F2F8FF")
+VERDE_SCURO = colors.HexColor("#23794A")     # per le scritte verdi su fondo bianco
+GRIGIO = colors.HexColor("#526173")
 BIANCO = colors.white
 LEGNO = colors.HexColor("#C8792B")
 LEGNO_SCURO = colors.HexColor("#9C5A1C")
@@ -241,7 +241,7 @@ def _sfondo_mappa(c, alpha=.12, wash="#F1EFE4"):
         c.setFillAlpha(1)
     except Exception:
         pass
-    c.setFillColor(colors.Color(0.96,0.95,0.90,alpha=.62)); c.rect(0,0,W,H,stroke=0,fill=1)
+    c.setFillColor(colors.Color(1,1,.98,alpha=.48)); c.rect(0,0,W,H,stroke=0,fill=1)
     c.restoreState()
 
 def _panel(c,x,y,w,h,r=3*mm,alpha=.92,stroke="#7A9186"):
@@ -273,9 +273,9 @@ def _stili():
         "cella": ParagraphStyle("c", fontName=TESTO, fontSize=8.6, leading=10.4, textColor=INCHIOSTRO),
         "cella_b": ParagraphStyle("cb", fontName=TESTO_B, fontSize=8.6, leading=10.4, textColor=INCHIOSTRO),
         "nota": ParagraphStyle("n", fontName=TESTO, fontSize=8.5, leading=11.5, textColor=GRIGIO),
-        "sotto": ParagraphStyle("s", fontName=SOTTO, fontSize=14, leading=17, textColor=INCHIOSTRO,
+        "sotto": ParagraphStyle("s", fontName=TITOLO, fontSize=15.5, leading=18, textColor=BLU,
                                 spaceBefore=8, spaceAfter=4, keepWithNext=1),
-        "box_titolo": ParagraphStyle("bt", fontName=TITOLO, fontSize=22, leading=26, textColor=colors.HexColor("#173C35")),
+        "box_titolo": ParagraphStyle("bt", fontName=TITOLO, fontSize=23, leading=25, textColor=BLU),
         "box_nome": ParagraphStyle("bn", fontName=SOTTO, fontSize=11.5, leading=14, textColor=INCHIOSTRO),
     }
 
@@ -626,8 +626,8 @@ def _pagina_interna(c, doc, ctx):
     accent="#8FA984"
 
     # barra titolo
-    c.setFillColor(colors.HexColor("#315E51")); c.rect(0,H-16*mm,W,16*mm,stroke=0,fill=1)
-    c.setFillColor(colors.HexColor(accent)); c.rect(0,H-17.5*mm,W,1.5*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#2366B1")); c.rect(0,H-16*mm,W,16*mm,stroke=0,fill=1)
+    c.setFillColor(SOLE); c.rect(0,H-18*mm,W,2*mm,stroke=0,fill=1)
     c.setFillColor(BIANCO); c.setFont(SOTTO,11); c.drawString(MARGINE,H-10.5*mm,"POKEPUTZU WEEKLY")
     c.setFont(TESTO_B,7.5); c.setFillColor(colors.HexColor("#DCEBCB"))
     c.drawRightString(W-MARGINE,H-11*mm,f"N.{ctx['numero']} · {ctx['data_lunga']} · P.{page}")
