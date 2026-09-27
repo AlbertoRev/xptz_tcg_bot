@@ -761,120 +761,101 @@ def _layout_profile(ctx, compact=False):
     mode="data-heavy" if score>52 else ("balanced" if score>24 else "visual")
     return {"mode":mode,"compact":compact,"space":3 if compact else (5 if mode=="data-heavy" else 7),"hero":43*mm if compact else (48*mm if mode=="data-heavy" else 58*mm)}
 
+def _top_rows(g, tipo, limite=5):
+    """Top movimenti reali, compatti per una pagina magazine."""
+    out=[]
+    cl=g.get("classifiche",{}).get(tipo,{})
+    for periodo in C.PERIODI:
+        blocco=cl.get(str(periodo),{})
+        for direzione,segno in (("rialzi",1),("ribassi",-1)):
+            for r in blocco.get(direzione,[])[:limite]:
+                var=r.get("variazioni",{}).get(str(periodo),0)
+                out.append((abs(var),r,periodo,var))
+    out.sort(key=lambda x:x[0],reverse=True)
+    return out[:limite]
+
+def _market_table(g, st):
+    su=_top_rows(g,"singola",4); sig=_top_rows(g,"sigillato",4)
+    rows=[["Movimento","Prodotto","Prezzo","Var."]]
+    for _,r,p,v in (su+sig)[:7]:
+        rows.append([Paragraph("IN SALITA" if v>=0 else "IN DISCESA",st["cella_b"]),
+                     Paragraph(_t(r.get("nome","—")),st["cella"]),
+                     _eur(r.get("prezzo",0)),_perc(v)])
+    return _tabella(rows,[27*mm,91*mm,28*mm,30*mm],BLU)
+
 def crea(percorso, ctx, compact=False):
-    profile = _layout_profile(ctx, compact)
-    ctx["_layout_profile"] = profile
-    st = _stili()
-    g = ctx["principale"]
-    doc = BaseDocTemplate(percorso, pagesize=A4, title=f"{TESTATA} n. {ctx['numero']}",
-                          leftMargin=MARGINE, rightMargin=MARGINE, topMargin=24 * mm, bottomMargin=18 * mm)
-    cornice = Frame(MARGINE, 18 * mm, LARGHEZZA, H - 43 * mm, id="testo", leftPadding=0, rightPadding=0)
-    cornice_retro = Frame(MARGINE + 7 * mm, H - 151 * mm, LARGHEZZA - 14 * mm, 78 * mm, id="retro",
-                          leftPadding=0, rightPadding=0)
+    """Sette template verticali espliciti, modellati sulla reference editoriale."""
+    profile=_layout_profile(ctx,compact); ctx["_layout_profile"]=profile; st=_stili(); g=ctx["principale"]
+    doc=BaseDocTemplate(percorso,pagesize=A4,title=f"{TESTATA} n. {ctx['numero']}",
+        leftMargin=MARGINE,rightMargin=MARGINE,topMargin=25*mm,bottomMargin=15*mm)
+    frame=Frame(MARGINE,15*mm,LARGHEZZA,H-41*mm,id="testo",leftPadding=0,rightPadding=0,topPadding=3*mm,bottomPadding=2*mm)
+    retro=Frame(MARGINE+7*mm,H-151*mm,LARGHEZZA-14*mm,78*mm,id="retro",leftPadding=0,rightPadding=0)
     doc.addPageTemplates([
-        PageTemplate(id="copertina", frames=[Frame(0, 0, W, H, id="vuota")],
-                     onPage=lambda c, d: _copertina(c, ctx)),
-        PageTemplate(id="interna", frames=[cornice], onPage=lambda c, d: _pagina_interna(c, d, ctx)),
-        PageTemplate(id="retro", frames=[cornice_retro], onPage=lambda c, d: _retro(c, ctx)),
-    ])
-    E = [NextPageTemplate("interna"), Spacer(1, 1), PageBreak()]
+        PageTemplate(id="copertina",frames=[Frame(0,0,W,H,id="cover")],onPage=lambda c,d:_copertina(c,ctx)),
+        PageTemplate(id="interna",frames=[frame],onPage=lambda c,d:_pagina_interna(c,d,ctx)),
+        PageTemplate(id="retro",frames=[retro],onPage=lambda c,d:_retro(c,ctx))])
+    E=[NextPageTemplate("interna"),Spacer(1,1),PageBreak()]
 
-    # 1. La settimana in breve + 200 euro
-    E += [Rubrica("Editoriale", "La settimana in breve", BLU), Spacer(1, 3)]
-    for k, riga in enumerate(ctx["sintesi"]):
-        E.append(Paragraph(f'<font color="{HEX[k % 5]}" name="{SOTTO}">»</font>  {_t(riga)}', st["p"]))
-        E.append(Spacer(1, 2.5))
-    E += [Spacer(1, 6), Fumetto(_battuta_iniziale(ctx), st, ctx, indice=0), Spacer(1, 6),
-          _box_200(g["carrello"], st), Spacer(1, 6), Decoro(ctx, seme=ctx["numero"])]
+    # P2 MERCATO — intro + movimenti + focus, come la reference.
+    E += [Rubrica("L'andamento generale","Mercato della settimana",BLU),Spacer(1,3)]
+    for r in ctx.get("sintesi",[])[:3]:
+        E += [Paragraph("»  "+_t(r),st["p"]),Spacer(1,2)]
+    E += [Spacer(1,3),_market_table(g,st),Spacer(1,5)]
+    focus=ctx.get("apertura",{})
+    E += [Rubrica("Focus settimanale",focus.get("titolo","Il punto sul mercato"),ROSSO),
+          Paragraph(_t(focus.get("sottotitolo","")),st["p"]),Spacer(1,4),
+          PokemonHero(ctx,indice=1,altezza=38*mm),NextPageTemplate("interna"),PageBreak()]
 
-    # 2. Radar uscite
-    E += [Spacer(1, 6), CondPageBreak(60 * mm), Rubrica("Radar", "Le uscite in arrivo", BLU),
-          Paragraph(_t("Date di uscita trovate nelle notizie delle ultime settimane (siti ufficiali, italiani e "
-                       "internazionali) per i prossimi 60 giorni. Più fonti = più interesse. Controlla sempre la "
-                       "data sul link."), st["occhiello"]), Spacer(1, 5)]
-    if g["radar"]:
-        dati = [["Data", "Uscita", "Fonte", "Fonti", "Mercato"]]
-        for u in g["radar"]:
-            d = u["data"]
-            dati.append([Paragraph(f"{d[8:10]}/{d[5:7]}", st["cella_b"]),
-                         _link(u["titolo"], u["link"], st["cella"], 110), Paragraph(_t(u["fonte"]), st["cella"]),
-                         str(u["citazioni"]), _stato(u["mercato"])])
-        E.append(_tabella(dati, [15 * mm, 88 * mm, 30 * mm, 12 * mm, 31 * mm], BLU, allinea_destra_da=None))
+    # P3 NOVITÀ — uscite, annunci, notizie.
+    E += [Rubrica("Nuove uscite in arrivo","Radar Pokémon TCG",ROSSO),Spacer(1,3)]
+    if g.get("radar"):
+        rows=[["Data","Uscita","Mercato"]]
+        for u in g["radar"][:4]:
+            d=u.get("data",""); rows.append([d[8:10]+"/"+d[5:7] if len(d)>=10 else "—",
+                Paragraph(_t(u.get("titolo","")),st["cella"]),_stato(u.get("mercato","radar"))])
+        E += [_tabella(rows,[23*mm,116*mm,37*mm],ROSSO),Spacer(1,5)]
+    E += [Rubrica("Annunci e segnali","Cosa succede questa settimana",BLU),Spacer(1,2)]
+    for n in g.get("notizie",[])[:3]:
+        E += [Paragraph(f'<font name="{TESTO_B}">{_t(n.get("titolo",""))}</font><br/><font size="7">{_t(n.get("fonte",""))} · {_t(n.get("data",""))}</font>',st["p"]),Spacer(1,3)]
+    E += [PokemonHero(ctx,indice=2,altezza=42*mm),PageBreak()]
+
+    # P4 ANALISI — protagonista + dati principali + interpretazione.
+    E += [Rubrica("Carta / prodotto protagonista",focus.get("titolo","Analisi della settimana"),ROSSO),Spacer(1,3),
+          PokemonHero(ctx,indice=3,altezza=58*mm),Spacer(1,4)]
+    tops=_top_rows(g,"singola",3)
+    if tops:
+        rows=[["Prodotto","Prezzo","Periodo","Variazione"]]
+        for _,r,p,v in tops: rows.append([Paragraph(_t(r.get("nome","")),st["cella"]),_eur(r.get("prezzo",0)),f"{p}g",_perc(v)])
+        E += [_tabella(rows,[86*mm,30*mm,25*mm,35*mm],BLU),Spacer(1,5)]
+    E += [Rubrica("Perché è importante","Lettura del dato",SOLE),
+          Paragraph(_t(focus.get("sottotitolo","Il movimento va letto insieme a disponibilità, ristampe e profondità dello storico.")),st["p"]),
+          Spacer(1,4),Fumetto(_battuta_iniziale(ctx),st,ctx,indice=0),PageBreak()]
+
+    # P5 FOCUS COLLEZIONE — selezione visiva e occasioni.
+    E += [Rubrica("Le icone di Hoenn","Focus collezione",BLU),Spacer(1,3),
+          Paragraph("Una selezione compatta dei segnali più interessanti emersi dai dati di questa settimana.",st["occhiello"]),
+          Spacer(1,4),PokemonHero(ctx,indice=4,altezza=64*mm),Spacer(1,5)]
+    if g.get("occasioni"):
+        rows=[["Prodotto","Offerta","Tendenza","Sconto"]]
+        for o in g["occasioni"][:5]:
+            rows.append([Paragraph(_t(o.get("nome","")),st["cella"]),_eur(o.get("prezzo_minimo",0)),_eur(o.get("prezzo_tendenza",0)),_perc(-o.get("sconto",0))])
+        E += [_tabella(rows,[98*mm,27*mm,27*mm,24*mm],ARANCIO),Spacer(1,5)]
     else:
-        E.append(Paragraph("Nessuna data di uscita trovata nelle notizie di questa settimana.", st["nota"]))
+        E += [Rubrica("Perché collezionare","Qualità prima della quantità",ROSSO),
+              Paragraph("Questa settimana non emergono occasioni abbastanza forti: meglio osservare il mercato che riempire la pagina con falsi affari.",st["p"])]
+    E += [PageBreak()]
 
-    # 3. Termometro delle novità
-    E += [Spacer(1, 10), CondPageBreak(60 * mm), Rubrica("Previsioni", "Il termometro delle novità", colors.HexColor("#6D8452")),
-          Paragraph(_t(f"Sigillato comparso su Cardmarket negli ultimi {C.PREVISIONI_GIORNI} giorni: prevendite, "
-                       "prodotti in arrivo e appena usciti. Caldo = prezzo in salita o poche offerte sotto la "
-                       "tendenza. Freddo = prezzo in calo o molte offerte scontate. In arrivo = ancora nessuna "
-                       "vendita."), st["occhiello"]), Spacer(1, 5)]
-    if g["previsioni"]:
-        dati = [["Prodotto", "Listato", "Prezzo", "Variaz.", "Stato", "Perché"]]
-        for p in g["previsioni"]:
-            a = p["aggiunto"]
-            dati.append([_link(p["nome"], p["link"], st["cella"], 55), f"{a[8:10]}/{a[5:7]}", _eur(p["prezzo"]),
-                         _perc(p["variazione"]), _stato(p["stato"]), Paragraph(_t(p["motivo"]), st["cella"])])
-        E.append(_tabella(dati, [50 * mm, 13 * mm, 19 * mm, 15 * mm, 25 * mm, 54 * mm], colors.HexColor("#6D8452")))
-    else:
-        E.append(Paragraph("Nessun prodotto sigillato nuovo nel periodo.", st["nota"]))
+    # P6 GUIDA MERCATO — strategia, rischio, allenatore.
+    E += [Rubrica("Strategia della settimana","Guida mercato",BLU),Spacer(1,4),
+          _box_200(g.get("carrello",[]),st),Spacer(1,6),
+          Fumetto("Monitora prima di comprare: confronta storico, lingua, condizioni e disponibilità. Un prezzo basso da solo non è ancora un'occasione.",st,ctx,indice=1),
+          Spacer(1,6),Rubrica("Livello di rischio","Come leggere i segnali",ROSSO)]
+    for nota in ctx.get("note_metodo",[])[:4]:
+        E += [Paragraph("✓  "+_t(nota),st["p"]),Spacer(1,2.5)]
+    E += [NextPageTemplate("retro"),PageBreak()]
 
-    # 4. Il borsino
-    E += [Spacer(1, 10), CondPageBreak(110 * mm), Rubrica("Mercato", "Il borsino della settimana", VERDE),
-          Paragraph(_t("Chi sale e chi scende. Prezzo = tendenza Cardmarket. * = stima dal primo giorno, "
-                       "sostituita dallo storico reale man mano che si accumula."), st["occhiello"])]
-    for tipo, nome_tipo in (("sigillato", "Sigillato"), ("singola", "Carte singole")):
-        cl = g["classifiche"][tipo]
-        periodo = _periodo_grafico(cl)
-        E.append(Paragraph(nome_tipo, st["sotto"]))
-        if periodo is None:
-            E.append(Paragraph("Dati non ancora sufficienti.", st["nota"]))
-            continue
-        c = cl[str(periodo)]
-        grafico = _grafico(c["rialzi"] + c["ribassi"], periodo, f"Maggiori movimenti a {periodo} giorni")
-        if grafico:
-            E += [grafico, Spacer(1, 6)]
-        for p in C.PERIODI:
-            c = cl[str(p)]
-            if c["rialzi"]:
-                E += [_tabella_classifica(f"Rialzi a {p} giorni", c["rialzi"], VERDE), Spacer(1, 6)]
-            if c["ribassi"]:
-                E += [_tabella_classifica(f"Ribassi a {p} giorni", c["ribassi"], ROSSO), Spacer(1, 6)]
-            elif c.get("piu_deboli"):
-                E += [_tabella_classifica(f"Più deboli a {p} giorni (nessun calo)", c["piu_deboli"], ARANCIO),
-                      Spacer(1, 6)]
-
-    # 5. Occasioni
-    if g["occasioni"]:
-        E += [Spacer(1, 6), CondPageBreak(80 * mm), Rubrica("Affari", "Le occasioni della settimana", ARANCIO),
-              Paragraph(_t("Sigillato con un'offerta molto sotto il prezzo di tendenza."), st["occhiello"]),
-              Spacer(1, 4),
-              Fumetto("Occhio: l'offerta più bassa può essere in un'altra lingua o rovinata. Apri il link e "
-                      "filtra l'italiano prima di comprare!", st, ctx, indice=1), Spacer(1, 5)]
-        dati = [["Prodotto", "Offerta", "Tendenza", "Sconto"]]
-        for o in g["occasioni"]:
-            dati.append([_link(o["nome"], o["link"], st["cella"], 80), _eur(o["prezzo_minimo"]),
-                         _eur(o["prezzo_tendenza"]), _perc(-o["sconto"])])
-        E.append(_tabella(dati, [104 * mm, 24 * mm, 24 * mm, 24 * mm], ARANCIO))
-
-    # 6. Notizie
-    if g["notizie"]:
-        E += [Spacer(1, 10), CondPageBreak(45 * mm), Rubrica("Attualità", "Dal mondo Pokémon", BLU), Spacer(1, 3)]
-        for k, n in enumerate(g["notizie"]):
-            E.append(Paragraph(f'<font color="{HEX[k % 5]}" name="{SOTTO}" size="8">'
-                               f'{_t((n.get("fonte") or "").upper())}  ·  {_t(n["data"])}</font><br/>'
-                               f'<link href="{escape(n["link"])}" color="#2B2D42">'
-                               f'<font name="{TESTO_B}">{_t(n["titolo"])}</font></link>', st["p"]))
-            E.append(Spacer(1, 6))
-    E += [Spacer(1, 8), PokemonHero(ctx, indice=5, altezza=profile["hero"])]
-
-    # 7. Quarta di copertina: come leggere la rivista
-    E += [NextPageTemplate("retro"), PageBreak(), Rubrica("Metodo", "Come leggere la rivista", BLU), Spacer(1, 3)]
-    note=[]
-    retro_st=ParagraphStyle("retro_note",parent=st["p"],fontSize=9.3,leading=11.4,textColor=BIANCO)
-    for nota in ctx["note_metodo"]:
-        note.append(Paragraph(f'<font color="#FFD84A" name="{SOTTO}">›</font>  {_t(nota)}',retro_st))
-        note.append(Spacer(1,2.5))
-    # Nessuna altezza imposta: ReportLab usa esattamente la somma delle note.
-    E.extend(note)
+    # P7 SALUTO — quarta illustrata, poche note e nessuna tabella.
+    E += [Rubrica("Alla prossima settimana","Continueremo a seguire il mercato",BLU),Spacer(1,3)]
+    E += [Paragraph("POKEPUTZU WEEKLY torna con nuovi movimenti, uscite, opportunità e approfondimenti dal mondo Pokémon TCG.",ParagraphStyle("bye",parent=st["p"],fontSize=10,leading=13,textColor=BIANCO))]
     doc.build(E)
+
