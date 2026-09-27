@@ -103,6 +103,18 @@ def _download(url: str, percorso: Path) -> bool:
         return False
 
 
+def _download_wikimedia(titolo: str, percorso: Path) -> bool:
+    """Scarica il file originale da Wikimedia Commons tramite API."""
+    try:
+        import urllib.parse
+        api="https://commons.wikimedia.org/w/api.php?"+urllib.parse.urlencode({"action":"query","format":"json","prop":"imageinfo","iiprop":"url","titles":"File:"+titolo})
+        req=urllib.request.Request(api,headers={"User-Agent":"POKEPUTZU-WEEKLY/1.0"})
+        with urllib.request.urlopen(req,timeout=30) as r: data=json.loads(r.read().decode("utf-8"))
+        page=next(iter(data["query"]["pages"].values())); url=page["imageinfo"][0]["url"]
+        return _download(url,percorso)
+    except Exception as exc:
+        print(f"Mappa Wikimedia non disponibile ({titolo}): {exc}"); return False
+
 def _download_wikidex(titolo: str, percorso: Path) -> bool:
     try:
         import urllib.parse
@@ -215,6 +227,11 @@ def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
         "oggetti": [],
         "allenatori": [],
     }
+
+    # Mappa Hoenn su rilievo reale di Kyūshū (Wikimedia Commons); il renderer ha comunque un fallback locale.
+    map_path=ASSET_DIR/"hoenn_realistic.png"
+    if _download_wikimedia("HoennMap.png",map_path):
+        manifest["map"]=map_path.name
 
     # 7 Pokémon grandi: uno diverso per ciascuna pagina della rivista.
     for nome, url in _candidati_pokemon(rng, 10):
