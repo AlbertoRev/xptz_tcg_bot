@@ -338,7 +338,7 @@ class Fumetto(Flowable):
     def draw(self):
         c = self.canv
         trainer=_mondo_asset(self.ctx,"allenatori",self.indice)
-        if trainer: _immagine_asset(c,trainer,16*mm,self.altezza/2,36*mm)
+        if trainer: _immagine_asset(c,trainer,17*mm,self.altezza/2,40*mm)
         x, y, h = 38 * mm, 2 * mm, self.altezza - 4 * mm
         c.setFillColor(colors.HexColor("#173C35"))
         c.roundRect(x, y, self.larg_box, h, 2 * mm, stroke=0, fill=1)
@@ -361,7 +361,7 @@ class PokemonHero(Flowable):
         trainer=_mondo_asset(self.ctx,"allenatori",self.indice)
         if ball: _immagine_asset(c,ball,LARGHEZZA*.16,self.altezza*.64,28*mm)
         if item: _immagine_asset(c,item,LARGHEZZA*.30,self.altezza*.34,30*mm)
-        if trainer: _immagine_asset(c,trainer,LARGHEZZA*.88,self.altezza*.52,43*mm)
+        if trainer: _immagine_asset(c,trainer,LARGHEZZA*.88,self.altezza*.52,47*mm)
 
 class Decoro(Flowable):
     """Separatore essenziale: una riga di inventario, senza stelline o ornamenti cartoon."""
@@ -392,11 +392,11 @@ def _tag(testo, colore, larghezza=21 * mm):
 def _tabella(dati, larghezze, colore=colors.HexColor("#587C6B"), allinea_destra_da=1):
     t = Table(dati, colWidths=larghezze, repeatRows=1)
     stile = [
-        ("FONTNAME", (0, 0), (-1, 0), SOTTO), ("FONTSIZE", (0, 0), (-1, 0), 9),
+        ("FONTNAME", (0, 0), (-1, 0), SOTTO), ("FONTSIZE", (0, 0), (-1, 0), 7.8),
         ("TEXTCOLOR", (0, 0), (-1, 0), _su(colore)), ("BACKGROUND", (0, 0), (-1, 0), colore),
-        ("FONTNAME", (0, 1), (-1, -1), TESTO), ("FONTSIZE", (0, 1), (-1, -1), 8.1),
+        ("FONTNAME", (0, 1), (-1, -1), TESTO), ("FONTSIZE", (0, 1), (-1, -1), 7.8),
         ("TEXTCOLOR", (0, 1), (-1, -1), INCHIOSTRO),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),\n        ("LEFTPADDING", (0, 0), (-1, -1), 3), ("RIGHTPADDING", (0, 0), (-1, -1), 3),
         ("TOPPADDING", (0, 0), (-1, -1), 2.8), ("BOTTOMPADDING", (0, 0), (-1, -1), 2.8),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),
         ("BOX", (0, 0), (-1, -1), 1.2, colore),
