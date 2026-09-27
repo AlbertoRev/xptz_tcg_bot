@@ -30,6 +30,8 @@ jobs:
         run: sudo apt-get install -y fonts-dejavu-core > /dev/null
       - name: Installa le librerie
         run: pip install -r requirements.txt
+      - name: Scarica Immagini Pokemon
+        run: python download_assets.py
       - name: Esegui
         run: python main.py settimanale
       - name: Salva i dati nel repository
