@@ -3,15 +3,19 @@
   python main.py setup         -> riconosce i giochi su Cardmarket e manda un messaggio di prova
   python main.py giornaliero   -> salva i prezzi del giorno e manda gli alert
   python main.py settimanale   -> salva i prezzi (se mancano) e manda il report completo
+  python main.py prova_grafica -> prova il nuovo art director Gemini senza inviare PDF
 """
 import datetime as dt
 import html
+import json
 import sys
+import unicodedata
 from pathlib import Path
 
 import config as C
 from download_assets import scarica_immagini_pokemon
-from src import analysis, cardmarket, news, report, rivista, storage, telegram, verify
+from src import card_images, editorial, product_images
+from src import analysis, art_director, cardmarket, editorial_news, news, pdf_qa, report, rivista, storage, telegram, verify
 
 LINGUE_IT = {"italian": "italiano", "english": "inglese", "japanese": "giapponese"}
 
@@ -146,12 +150,44 @@ def _apertura(g):
                 "sottotitolo": f"{p['motivo'].capitalize()}. Prezzo attuale {report._eur(p['prezzo'])}."}
     if g["radar"]:
         u = g["radar"][0]
-        return {"titolo": u["titolo"], "sottotitolo": f"Fonte: {u['fonte']}."}
+        titolo=u["titolo"].strip();fonte=u["fonte"].strip()
+        for separatore in (" - "," | "," — "):
+            suffix=separatore+fonte
+            if titolo.casefold().endswith(suffix.casefold()):
+                titolo=titolo[:-len(suffix)].strip()
+                break
+        return {"titolo": titolo, "sottotitolo": f"Fonte: {fonte}."}
     return {"titolo": "Settimana tranquilla sul mercato Pokémon",
             "sottotitolo": "Pochi movimenti rilevanti: il bot sta ancora accumulando storico."}
 
 
-def settimanale():
+def _visual_copertina(titolo, assets):
+    """Choose a visual setting from the actual lead story, with a local fallback."""
+    plain="".join(ch for ch in unicodedata.normalize("NFKD",titolo.lower())
+                  if not unicodedata.combining(ch))
+    pokemon=assets.get("pokemon") or []
+    def find(number):
+        return next((name for name in pokemon[:7] if name.startswith(f"pokemon_{number}_")),None)
+    named=(("kyogre",382),("groudon",383),("rayquaza",384),("latias",380),
+           ("latios",381),("salamence",373),("metagross",376),("absol",359))
+    match=next((number for word,number in named if word in plain and find(number)),None)
+    event=any(term in plain for term in ("popcon","evento","torneo","festival","fiera",
+                                         "community","convention","area nintendo"))
+    if match:
+        hero=find(match)
+        scene="analysis" if match in (384,380,381,373) else "cover"
+        kind="legend" if match in (382,383) else "sky"
+    elif event:
+        hero=find(380) or find(381) or find(373) or (pokemon[0] if pokemon else None)
+        scene="guide";kind="community"
+    else:
+        hero=find(382) or find(383) or (pokemon[0] if pokemon else None)
+        scene="cover";kind="market"
+    partner=(pokemon[7] if len(pokemon)>7 and kind in ("legend","market") else None)
+    return {"scene":scene,"kind":kind,"hero_asset":hero,"companion_asset":partner}
+
+
+def settimanale(invia_telegram=True):
     oggi = dt.date.today()
     numero = storage.leggi_json("numero_rivista.json", {"numero": 0})["numero"] + 1
     # Prepara subito gli asset: così un eventuale problema grafico è evidente
@@ -192,7 +228,27 @@ def settimanale():
 
     g = next(iter(ctx["giochi"].values()))
     ctx["principale"] = g
+    product_images.prepara(g.get("occasioni") or [])
+    movements = editorial._signed_movements(g, 1) + editorial._signed_movements(g, -1)
+    card_images.prepara([row[1] for row in movements])
+    cards_shown = [row[1] for row in movements]
+    products_shown = (g.get("occasioni") or [])[:4]
+    image_audit = {
+        "card_with_scan": sum(bool(r.get("immagine_carta")) for r in cards_shown),
+        "card_approximate": sum(bool(r.get("immagine_carta_riferimento", {}).get("incerto")) for r in cards_shown),
+        "card_thematic": sum(not r.get("immagine_carta") for r in cards_shown),
+        "product_exact": sum(bool(r.get("immagine_prodotto")) and not r.get("immagine_approssimata") for r in products_shown),
+        "product_approximate": sum(bool(r.get("immagine_approssimata")) for r in products_shown),
+        "product_thematic": sum(not r.get("immagine_prodotto") for r in products_shown),
+        "cards": [{"cardmarket_id": r.get("id"), "name": r.get("nome"),
+                   "scan": r.get("immagine_carta_riferimento")} for r in cards_shown],
+        "products": [{"cardmarket_id": r.get("id"), "name": r.get("nome"),
+                      "similar_photo": r.get("immagine_riferimento"),
+                      "source": r.get("fonte_immagine")} for r in products_shown],
+    }
+    ctx["image_audit"] = image_audit
     ctx["apertura"] = _apertura(g)
+    ctx["cover_visual"] = _visual_copertina(ctx["apertura"]["titolo"],pokemon_mondo)
     ctx["kpi"] = [(f"{g['monitorati']:,}".replace(",", "."), "prodotti monitorati"),
                   (sum(1 for p in g["previsioni"] if p["stato"] == "caldo"), "novità calde"),
                   (len(g["occasioni"]), "occasioni sul sigillato"),
@@ -205,15 +261,69 @@ def settimanale():
                        ("Occasioni e attualità", "affari da controllare e notizie")]
     ctx["sintesi"] = report.sintesi_righe(ctx)
     ctx["note_metodo"] = report.NOTE_METODO
+    titoli_art = [x[0] for x in ctx["sommario"]] + [ctx["apertura"]["titolo"]]
+    assets_poke = list(pokemon_mondo.get("pokemon", []))
+    # The first seven are reserved for page heroes. The cover companion and
+    # gallery use distinct assets, so an issue never repeats a Pokémon.
+    news_groups = editorial_news.group_articles(g.get("notizie") or [])
+    radar_lead = (g.get("radar") or [{}])[0].get("titolo", "")
+    piano = art_director.genera_piano(numero, "hoenn", assets_poke[:7], titoli_art,
+                                      news_groups, radar_lead)
+    g["notizie"] = editorial_news.apply_headlines(news_groups, piano)
+    lead_suggestion = str(piano.get("radar_headline") or "").strip()
+    ctx["radar_headline"] = (lead_suggestion if 8 <= len(lead_suggestion) <= 75
+                             else editorial_news.fallback_headline(radar_lead))
+    used_heroes = set()
+    # The cover hero follows the lead story. The other pages remain distinct,
+    # and Gemini directs their visual roles wherever an asset is available.
+    reserved = {}
+    if ctx["cover_visual"]["hero_asset"]: reserved[1] = ctx["cover_visual"]["hero_asset"]
+    rayquaza = next((name for name in assets_poke[:7] if name.startswith("pokemon_384_")), None)
+    if rayquaza and rayquaza != reserved.get(1): reserved[4] = rayquaza
+    reserved_names = set(reserved.values())
+    for i, pagina in enumerate(piano.get("pages", [])):
+        chosen = reserved.get(i + 1, pagina.get("hero_pokemon"))
+        if chosen not in assets_poke[:7] or chosen in used_heroes or (i + 1 not in reserved and chosen in reserved_names):
+            chosen = next((name for name in assets_poke[:7]
+                           if name not in used_heroes and name not in reserved_names), None)
+        pagina["hero_asset"] = chosen
+        if chosen: used_heroes.add(chosen)
+    ctx["art_direction"] = piano
 
     Path("output").mkdir(exist_ok=True)
-    percorso_pdf = f"output/Il_Collezionista_n{numero}_{oggi.isoformat()}.pdf"
+    percorso_pdf = f"output/POKEPUTZU_WEEKLY_n{numero}_{oggi.isoformat()}.pdf"
     ctx["pokemon_mondo"] = pokemon_mondo
-    rivista.crea(percorso_pdf, ctx)
+    rivista.crea(percorso_pdf, ctx, compact=False)
+    qa=pdf_qa.check(percorso_pdf, image_audit=image_audit)
+    if not qa["ok"]:
+        print(f"[pdf_qa] layout standard non valido: {qa['errors']} — retry compatto")
+        rivista.crea(percorso_pdf, ctx, compact=True)
+        qa=pdf_qa.check(percorso_pdf, image_audit=image_audit)
+    if not qa["ok"]:
+        raise RuntimeError(f"PDF non supera il QA: {qa['errors']}")
+    print(f"[pdf_qa] OK: {qa['pages']} pagine; profilo={ctx.get('_layout_profile',{}).get('mode')}; compact={ctx.get('_layout_profile',{}).get('compact')}")
+    Path(percorso_pdf.replace(".pdf", "_image_audit.json")).write_text(
+        json.dumps(image_audit, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    pdf_qa.render_review(percorso_pdf, "output/visual_review")
+    print(f"[image_audit] scansioni={image_audit['card_with_scan']}, foto esatte={image_audit['product_exact']}, "
+          f"foto simili={image_audit['product_approximate']}, illustrazioni={image_audit['product_thematic']}")
     storage.scrivi_json("riepilogo/ultimo.json", report.dati_per_claude(ctx))
-    telegram.documento(percorso_pdf, f"Il Collezionista n. {numero} - {ctx['data_lunga']}")
-    storage.scrivi_json("numero_rivista.json", {"numero": numero})
-    print(f"Rivista n. {numero} inviata")
+    if invia_telegram:
+        telegram.documento(percorso_pdf, f"POKEPUTZU WEEKLY n. {numero} - {ctx['data_lunga']}")
+        storage.scrivi_json("numero_rivista.json", {"numero": numero})
+        print(f"Rivista n. {numero} inviata")
+    else:
+        print(f"Rivista n. {numero} generata in {percorso_pdf}")
+
+
+def prova_rivista():
+    settimanale(invia_telegram=False)
+
+
+def prova_grafica():
+    numero = storage.leggi_json("numero_rivista.json", {"numero": 0})["numero"] + 1
+    piano = art_director.salva_piano_test(numero, "hoenn")
+    print(json.dumps(piano, ensure_ascii=False, indent=2))
 
 
 def setup():
@@ -235,7 +345,7 @@ def setup():
 
 
 if __name__ == "__main__":
-    comandi = {"setup": setup, "giornaliero": giornaliero, "settimanale": settimanale}
+    comandi = {"setup": setup, "giornaliero": giornaliero, "settimanale": settimanale, "prova_grafica": prova_grafica, "prova_rivista": prova_rivista}
     if len(sys.argv) != 2 or sys.argv[1] not in comandi:
         print(__doc__)
         sys.exit(1)

@@ -7,6 +7,8 @@ generica rimane nel PDF: ogni elemento ornamentale appartiene al mondo Pokémon.
 import math
 import random
 from pathlib import Path
+from PIL import Image as PILImage, ImageDraw, ImageFilter, ImageOps, ImageChops
+from reportlab.lib.utils import ImageReader
 from xml.sax.saxutils import escape
 
 from reportlab.graphics.shapes import Drawing, Line, Rect, String
@@ -16,7 +18,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
-from reportlab.platypus import (BaseDocTemplate, CondPageBreak, Flowable, Frame, KeepTogether, NextPageTemplate,
+from reportlab.platypus import (BaseDocTemplate, CondPageBreak, Flowable, Frame, KeepTogether, KeepInFrame, NextPageTemplate,
                                 PageBreak, PageTemplate, Paragraph, Spacer, Table, TableStyle)
 
 import config as C
@@ -28,34 +30,86 @@ F = fonts.carica()
 TITOLO, SOTTO, TESTO, TESTO_B = F["Testata"], F["Titolo"], F["Corpo"], F["CorpoB"]
 
 # ---------- palette giocosa ----------
-INCHIOSTRO = colors.HexColor("#2B2D42")
-CIELO = colors.HexColor("#4CC9F0")
-SOLE = colors.HexColor("#FFD23F")
-ROSSO = colors.HexColor("#EF476F")
-VERDE = colors.HexColor("#06D6A0")
-PRATO = colors.HexColor("#7BC950")
-VIOLA = colors.HexColor("#8338EC")
-ARANCIO = colors.HexColor("#FF8C42")
-BLU = colors.HexColor("#118AB2")
-CARTA = colors.HexColor("#FFF8E7")
-CREMA = colors.HexColor("#FFF1C9")
-PASTELLO = colors.HexColor("#FFF3DC")
-VERDE_SCURO = colors.HexColor("#03A07A")     # per le scritte verdi su fondo bianco
-GRIGIO = colors.HexColor("#6B6F80")
+INCHIOSTRO = colors.HexColor("#17263A")
+CIELO = colors.HexColor("#59B9E8")
+SOLE = colors.HexColor("#FFD84A")
+ROSSO = colors.HexColor("#E84B3C")
+VERDE = colors.HexColor("#38A866")
+PRATO = colors.HexColor("#74BE68")
+VIOLA = colors.HexColor("#5869C9")
+ARANCIO = colors.HexColor("#F3A43B")
+BLU = colors.HexColor("#1769B0")
+CARTA = colors.HexColor("#FFFDF4")
+CREMA = colors.HexColor("#FFF5D6")
+PASTELLO = colors.HexColor("#F4F8FC")
+VERDE_SCURO = colors.HexColor("#23794A")     # per le scritte verdi su fondo bianco
+GRIGIO = colors.HexColor("#526173")
 BIANCO = colors.white
 LEGNO = colors.HexColor("#C8792B")
 LEGNO_SCURO = colors.HexColor("#9C5A1C")
 ARCOBALENO = [ROSSO, ARANCIO, SOLE, VERDE, CIELO, VIOLA]
-HEX = ["#EF476F", "#FF8C42", "#06D6A0", "#118AB2", "#8338EC"]
-COLORE_STATO = {"caldo": ROSSO, "tiepido": ARANCIO, "freddo": BLU, "in arrivo": VERDE,
-                "da valutare": VIOLA, "nessun dato": GRIGIO}
+HEX = ["#2366B1", "#F04E45", "#42A85A", "#8B62D9", "#FF9D3C"]
+COLORE_STATO = {"caldo": ROSSO, "tiepido": ARANCIO,
+                "freddo": BLU, "in arrivo": VERDE,
+                "da valutare": colors.HexColor("#6D8452"), "nessun dato": colors.HexColor("#66736B")}
 
 W, H = A4
 MARGINE = 17 * mm
 LARGHEZZA = W - 2 * MARGINE
-TESTATA = "IL COLLEZIONISTA"
+TESTATA = "POKEPUTZU WEEKLY"
 ASSET_DIR = Path(__file__).resolve().parent.parent / "assets"
+BRAND_LOGO = Path(__file__).resolve().parent.parent / "brand" / "pokeputzu-weekly-logo.png"
 
+
+def _logo(c, x, y, width, compact=False):
+    """Use the supplied masthead, retaining the vector version as a fallback."""
+    if BRAND_LOGO.is_file():
+        with PILImage.open(BRAND_LOGO) as im:
+            height = width * im.height / im.width
+            c.drawImage(ImageReader(im), x, y, width, height, mask="auto")
+        return
+    font=F["Logo"]
+    letters="PokèPutzu"
+    size=max(11,width/(6.4 if compact else 5.8))
+    heights=(1.14,.86,1.03,.88,1.16,.88,.87,.86,.89)
+    lift=(0,-.025,.035,.015,0,-.02,-.015,-.018,-.01)
+    tilt=(-5,2,-3,3,-2,1,-2,2,-1)
+    glyphs=[]; cursor=0
+    for letter,factor,up,angle in zip(letters,heights,lift,tilt):
+        glyph_size=size*factor
+        glyphs.append((letter,cursor,size*up,glyph_size,angle))
+        cursor+=pdfmetrics.stringWidth(letter,font,glyph_size)*.94
+    sx=min(1.0,(width-size*.13)/cursor)
+    c.saveState();c.translate(x,y);c.rotate(-3 if not compact else 0);c.scale(sx,1)
+    c.setLineJoin(1)
+    def layer(mode,colour,line_width=0,dx=0,dy=0):
+        if mode==1:
+            c.setStrokeColor(colour);c.setLineWidth(line_width)
+        else: c.setFillColor(colour)
+        for letter,gx,gy,gsize,angle in glyphs:
+            c.saveState();c.translate(gx+dx,gy+dy);c.rotate(angle)
+            t=c.beginText(0,0);t.setFont(font,gsize);t.setTextRenderMode(mode);t.textOut(letter)
+            c.drawText(t);c.restoreState()
+    edge=max(1.2,size*.16)
+    layer(1,BIANCO,edge)
+    layer(1,colors.HexColor("#092B65"),edge*.69)
+    layer(1,colors.HexColor("#1766AD"),edge*.38)
+    layer(0,colors.HexColor("#F5A91D"),dx=0,dy=-size*.014)
+    layer(0,colors.HexColor("#FFD82E"))
+    c.restoreState()
+
+    c.saveState();c.translate(x+width*(.50 if not compact else .56),y-size*(.58 if not compact else .54))
+    c.rotate(-4 if not compact else 0)
+    bw=width*(.47 if not compact else .42);bh=max(6,size*.38)
+    p=c.beginPath()
+    for i,(px,py) in enumerate(((0,bh*.18),(bw*.09,bh*.32),(bw*.04,bh*.46),
+                                (bw*.98,bh*.50),(bw,bh*.30),(bw*.96,0),
+                                (bw*.05,-bh*.13),(bw*.10,bh*.04))):
+        (p.moveTo if i==0 else p.lineTo)(px,py)
+    p.close();c.setFillColor(colors.HexColor("#D71E36"));c.drawPath(p,fill=1,stroke=0)
+    c.setFillColor(BIANCO);c.setFont(TITOLO,max(5,size*(.29 if not compact else .24)))
+    c.drawCentredString(bw*.52,bh*.07,"WEEKLY")
+    c.restoreState()
 
 def _mondo_asset(ctx, gruppo, indice=0):
     """Restituisce un asset del kit settimanale, oppure None se non disponibile."""
@@ -227,84 +281,49 @@ def _arcobaleno(c, cx, cy, r, spessore):
 
 
 # ---------- scenari a tutta pagina ----------
-def _mondo_giorno(c, ctx=None):
-    c.linearGradient(0, H, 0, 0, (colors.HexColor("#8EDCFB"), colors.HexColor("#FFF1C1")), extend=False)
-    # sole
-    sx, sy = W - 38 * mm, H - 40 * mm
-    c.setFillColor(colors.HexColor("#FFE58A"))
-    for k in range(12):
-        a = math.radians(k * 30)
-        p = c.beginPath()
-        p.moveTo(sx + 21 * mm * math.cos(a - 0.12), sy + 21 * mm * math.sin(a - 0.12))
-        p.lineTo(sx + 31 * mm * math.cos(a), sy + 31 * mm * math.sin(a))
-        p.lineTo(sx + 21 * mm * math.cos(a + 0.12), sy + 21 * mm * math.sin(a + 0.12))
-        p.close()
-        c.drawPath(p, stroke=0, fill=1)
-    c.setFillColor(SOLE)
-    c.circle(sx, sy, 18 * mm, stroke=0, fill=1)
-    # arcobaleno dietro le colline
-    _arcobaleno(c, W * 0.42, 40 * mm, 118 * mm, 5.5 * mm)
-    # nuvole
-    for x, y, s in ((25 * mm, H - 70 * mm, 1.0), (W - 85 * mm, H - 88 * mm, 0.8), (W / 2, H - 20 * mm, 0.7)):
-        _nuvola(c, x, y, s)
-    # colline
-    _collina(c, 0, W, 62 * mm, 7 * mm, colors.HexColor("#A8DE84"), 0.5, 22 * mm)
-    _collina(c, 0, W, 44 * mm, 9 * mm, PRATO, 2.0, 28 * mm)
-    _collina(c, 0, W, 24 * mm, 6 * mm, colors.HexColor("#4FA23A"), 4.0, 18 * mm)
-    # sentiero
-    c.setFillColor(colors.HexColor("#F3D9A4"))
-    p = c.beginPath()
-    p.moveTo(W / 2 - 22 * mm, 0)
-    p.curveTo(W / 2 - 5 * mm, 18 * mm, W / 2 + 20 * mm, 28 * mm, W / 2 + 6 * mm, 46 * mm)
-    p.lineTo(W / 2 + 12 * mm, 46 * mm)
-    p.curveTo(W / 2 + 30 * mm, 28 * mm, W / 2 + 12 * mm, 16 * mm, W / 2 + 22 * mm, 0)
-    p.close()
-    c.drawPath(p, stroke=0, fill=1)
-    rnd = random.Random(7)
-    for _ in range(40):
-        _ciuffo(c, rnd.uniform(0, W), rnd.uniform(2 * mm, 20 * mm), colors.HexColor("#3A8A2E"), 0.9)
-    for _ in range(18):
-        _fiore(c, rnd.uniform(0, W), rnd.uniform(3 * mm, 18 * mm), rnd.choice([ROSSO, VIOLA, BIANCO, ARANCIO]))
-    # Pokémon e strumenti lungo i margini: restano fuori dai pannelli del contenuto.
-    _immagine_asset(c, _mondo_asset(ctx, "pokemon", 0), 19 * mm, 49 * mm, 34 * mm, angolo=-8)
-    _immagine_asset(c, _mondo_asset(ctx, "pokemon", 1), W - 19 * mm, 48 * mm, 32 * mm, angolo=7)
-    _immagine_asset(c, _mondo_asset(ctx, "oggetti", 0), 12 * mm, H - 120 * mm, 13 * mm, angolo=-12)
-    _immagine_asset(c, _mondo_asset(ctx, "pokeball", 0), W - 12 * mm, H - 122 * mm, 14 * mm, angolo=11)
-    for _ in range(14):
-        _scintilla(c, rnd.uniform(0, W), rnd.uniform(70 * mm, H), rnd.uniform(1.5, 3.5) * mm, BIANCO)
+def _sfondo_mappa(c, alpha=.12, wash="#F1EFE4"):
+    """Mappa Hoenn full-page come texture editoriale, con velo uniforme per la leggibilità."""
+    path=_topographic_map_path()
+    c.saveState()
+    c.setFillColor(colors.HexColor(wash)); c.rect(0,0,W,H,stroke=0,fill=1)
+    try:
+        c.setFillAlpha(alpha)
+        # leggero overscan: la mappa diventa ambiente, non un riquadro.
+        c.drawImage(str(path),-16*mm,-4*mm,W+32*mm,H+8*mm,preserveAspectRatio=False,mask="auto")
+        c.setFillAlpha(1)
+    except Exception:
+        pass
+    c.setFillColor(colors.Color(1,1,.98,alpha=.48)); c.rect(0,0,W,H,stroke=0,fill=1)
+    c.restoreState()
 
+def _panel(c,x,y,w,h,r=3*mm,alpha=.94,stroke="#8CB5D9"):
+    c.saveState()
+    c.setFillColor(colors.Color(1,1,1,alpha=alpha)); c.roundRect(x,y,w,h,r,stroke=0,fill=1)
+    c.setStrokeColor(colors.HexColor(stroke)); c.setLineWidth(.65); c.roundRect(x,y,w,h,r,stroke=1,fill=0)
+    c.restoreState()
+
+def _mondo_giorno(c, ctx=None):
+    _sfondo_mappa(c,.24,"#FFFDF4")
+    c.setFillColor(BLU); c.rect(0,H-19*mm,W,19*mm,stroke=0,fill=1)
+    c.setFillColor(SOLE); c.rect(0,H-21*mm,W,2*mm,stroke=0,fill=1)
 
 def _mondo_tramonto(c, ctx=None):
-    c.linearGradient(0, H, 0, 0, (colors.HexColor("#4A2A85"), colors.HexColor("#C4568A"),
-                                  colors.HexColor("#FF8C42"), colors.HexColor("#FFD27A")),
-                     positions=(0, 0.45, 0.75, 1), extend=False)
-    rnd = random.Random(11)
-    # prime stelle in alto
-    for _ in range(60):
-        c.setFillColor(colors.Color(1, 1, 1, alpha=rnd.uniform(0.3, 0.9)))
-        c.circle(rnd.uniform(0, W), rnd.uniform(H - 70 * mm, H), rnd.uniform(0.3, 1.0), stroke=0, fill=1)
-    for _ in range(6):   # solo sopra la scritta, per non coprirla
-        _scintilla(c, rnd.uniform(0, W), rnd.uniform(H - 18 * mm, H - 4 * mm), rnd.uniform(1.5, 2.8) * mm, SOLE)
-    # sole che tramonta, con alone
-    sx, sy = W * 0.62, 50 * mm
-    for r, a in ((46, 0.12), (36, 0.18), (28, 0.25)):
-        c.setFillColor(colors.Color(1, 0.85, 0.35, alpha=a))
-        c.circle(sx, sy, r * mm, stroke=0, fill=1)
-    c.setFillColor(SOLE)
-    c.circle(sx, sy, 21 * mm, stroke=0, fill=1)
-    # nuvole rosate
-    for x, y, s in ((18 * mm, 92 * mm, 0.9), (W - 60 * mm, 100 * mm, 0.7)):
-        _nuvola(c, x, y, s, colors.HexColor("#FFC6D3"))
-    # colline in controluce
-    _collina(c, 0, W, 46 * mm, 8 * mm, colors.HexColor("#7A3F7E"), 1.0, 24 * mm)
-    _collina(c, 0, W, 32 * mm, 9 * mm, colors.HexColor("#4E2F6B"), 3.0, 28 * mm)
-    _collina(c, 0, W, 16 * mm, 6 * mm, colors.HexColor("#33244F"), 5.0, 18 * mm)
-    for _ in range(30):
-        _ciuffo(c, rnd.uniform(0, W), rnd.uniform(1 * mm, 12 * mm), colors.HexColor("#271B3D"), 0.9)
-    _immagine_asset(c, _mondo_asset(ctx, "pokemon", 2), 24 * mm, 66 * mm, 35 * mm, angolo=-8)
-    _immagine_asset(c, _mondo_asset(ctx, "pokeball", 1), W - 20 * mm, 76 * mm, 14 * mm, angolo=10)
-    _immagine_asset(c, _mondo_asset(ctx, "oggetti", 1), 18 * mm, 28 * mm, 12 * mm, angolo=-10)
+    _sfondo_mappa(c,.52,"#9BD6F2")
+    c.saveState(); c.setFillColor(colors.Color(.025,.14,.32,alpha=.42)); c.rect(0,0,W,H,stroke=0,fill=1); c.restoreState()
+    hero=(_art_piano(ctx,7).get("hero_asset") if ctx else None) or _mondo_asset(ctx,"pokemon",6)
+    c.setFillAlpha(1)
+    if hero: _immagine_asset(c,hero,W-42*mm,60*mm,94*mm)
+    # Ensemble finale: artwork veri, distribuiti nel grande spazio negativo.
+    support=_mondo_asset(ctx,"pokemon",5)
+    trainer=_mondo_asset(ctx,"allenatori",1)
+    ball=_mondo_asset(ctx,"pokeball",1)
+    item=_mondo_asset(ctx,"oggetti",1)
+    if support and support != hero: _immagine_asset(c,support,35*mm,66*mm,61*mm)
+    if trainer: _immagine_asset(c,trainer,34*mm,122*mm,61*mm)
+    if ball: _immagine_asset(c,ball,W-31*mm,137*mm,31*mm)
+    if item: _immagine_asset(c,item,W-32*mm,105*mm,34*mm)
 
+# ---------- stili ----------
 
 # ---------- stili ----------
 def _stili():
@@ -315,9 +334,9 @@ def _stili():
         "cella": ParagraphStyle("c", fontName=TESTO, fontSize=8.6, leading=10.4, textColor=INCHIOSTRO),
         "cella_b": ParagraphStyle("cb", fontName=TESTO_B, fontSize=8.6, leading=10.4, textColor=INCHIOSTRO),
         "nota": ParagraphStyle("n", fontName=TESTO, fontSize=8.5, leading=11.5, textColor=GRIGIO),
-        "sotto": ParagraphStyle("s", fontName=SOTTO, fontSize=14, leading=17, textColor=INCHIOSTRO,
+        "sotto": ParagraphStyle("s", fontName=TITOLO, fontSize=15.5, leading=18, textColor=BLU,
                                 spaceBefore=8, spaceAfter=4, keepWithNext=1),
-        "box_titolo": ParagraphStyle("bt", fontName=TITOLO, fontSize=24, leading=28, textColor=ROSSO),
+        "box_titolo": ParagraphStyle("bt", fontName=TITOLO, fontSize=23, leading=25, textColor=BLU),
         "box_nome": ParagraphStyle("bn", fontName=SOTTO, fontSize=11.5, leading=14, textColor=INCHIOSTRO),
     }
 
@@ -327,77 +346,91 @@ def _stile_tag(colore):
                           alignment=TA_CENTER)
 
 
+def _pokeball_vector(c,x,y,r=7*mm):
+    c.saveState(); c.setStrokeColor(colors.HexColor("#263238")); c.setLineWidth(1.2)
+    c.setFillColor(colors.HexColor("#D9534F")); c.wedge(x-r,y-r,x+r,y+r,0,180,stroke=0,fill=1)
+    c.setFillColor(BIANCO); c.wedge(x-r,y-r,x+r,y+r,180,180,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#263238")); c.rect(x-r,y-1.2*mm,2*r,2.4*mm,stroke=0,fill=1)
+    c.setFillColor(BIANCO); c.circle(x,y,2.5*mm,stroke=1,fill=1); c.restoreState()
+
+def _item_vector(c,x,y,s=1):
+    c.saveState(); c.setFillColor(colors.HexColor("#5B9DB0")); c.setStrokeColor(colors.HexColor("#315D68")); c.setLineWidth(1)
+    p=c.beginPath(); p.moveTo(x,y+8*mm*s); p.curveTo(x+8*mm*s,y+4*mm*s,x+7*mm*s,y-5*mm*s,x,y-8*mm*s)
+    p.curveTo(x-7*mm*s,y-5*mm*s,x-8*mm*s,y+4*mm*s,x,y+8*mm*s); p.close(); c.drawPath(p,stroke=1,fill=1)
+    c.setStrokeColor(colors.Color(1,1,1,alpha=.55)); c.line(x-2*mm*s,y+4*mm*s,x+2*mm*s,y-4*mm*s); c.restoreState()
+
+def _trainer_vector(c,x,y,s=1):
+    c.saveState(); c.setFillColor(colors.HexColor("#D9B08C")); c.circle(x,y+7*mm*s,4*mm*s,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#355F4E")); c.roundRect(x-5*mm*s,y-8*mm*s,10*mm*s,12*mm*s,2*mm*s,stroke=0,fill=1)
+    c.setStrokeColor(colors.HexColor("#355F4E")); c.setLineWidth(2.2*s)
+    c.line(x-3*mm*s,y-8*mm*s,x-6*mm*s,y-15*mm*s); c.line(x+3*mm*s,y-8*mm*s,x+6*mm*s,y-15*mm*s)
+    c.setFillColor(colors.HexColor("#B84A45")); c.wedge(x-5*mm*s,y+5*mm*s,x+5*mm*s,y+13*mm*s,0,180,stroke=0,fill=1)
+    c.restoreState()
+
 # ---------- flowable ----------
 class Rubrica(Flowable):
-    """Intestazione di rubrica: adesivo colorato, titolo cartoon e linea ondulata."""
-
+    """Intestazione content-driven: il box segue il testo, non viceversa."""
     def __init__(self, occhiello, titolo, colore=ROSSO):
-        super().__init__()
-        self.occhiello, self.titolo, self.colore = occhiello.upper(), titolo, colore
-
-    def wrap(self, *_):
-        return LARGHEZZA, 21 * mm
-
+        super().__init__(); self.occhiello=occhiello.upper(); self.titolo=titolo; self.colore=colore
+    def wrap(self,aw,ah):
+        self.w=max(40*mm,aw)
+        self.p=Paragraph(_t(self.titolo),ParagraphStyle("rubrica_dynamic",fontName=TITOLO,fontSize=16.2,leading=17.2,textColor=BLU,alignment=TA_CENTER))
+        _,self.th=self.p.wrap(self.w-18*mm,ah)
+        self.h=max(17*mm,self.th+11*mm)
+        return self.w,self.h
     def draw(self):
-        c = self.canv
-        larg = pdfmetrics.stringWidth(self.occhiello, SOTTO, 9) + 8 * mm
-        c.saveState()
-        c.translate(0, 15 * mm)
-        c.rotate(-2)
-        c.setFillColor(self.colore)
-        c.roundRect(0, 0, larg, 6 * mm, 3 * mm, stroke=0, fill=1)
-        c.setFillColor(_su(self.colore))
-        c.setFont(SOTTO, 9)
-        c.drawString(4 * mm, 1.8 * mm, self.occhiello)
-        c.restoreState()
-        c.setFillColor(INCHIOSTRO)
-        c.setFont(TITOLO, 21)
-        c.drawString(0, 5.5 * mm, self.titolo)
-        fine = pdfmetrics.stringWidth(self.titolo, TITOLO, 21) + 4 * mm
-        _stella(c, fine + 3 * mm, 8 * mm, 3 * mm, SOLE)
-        c.setStrokeColor(self.colore)
-        c.setLineWidth(2)
-        p = c.beginPath()
-        p.moveTo(0, 2 * mm)
-        x = 0
-        while x < min(fine + 8 * mm, LARGHEZZA):
-            p.lineTo(x, 2 * mm + 1.1 * mm * math.sin(x / (2.2 * mm)))
-            x += 1.5
-        c.drawPath(p, stroke=1, fill=0)
-
+        c=self.canv
+        c.setFillColor(colors.Color(.05,.15,.30,alpha=.12)); c.roundRect(1*mm,0,self.w-2*mm,self.h-1*mm,3*mm,stroke=0,fill=1)
+        c.setFillColor(colors.Color(1,1,1,alpha=.96)); c.setStrokeColor(colors.HexColor("#72B7E4")); c.setLineWidth(.8)
+        c.roundRect(0,1*mm,self.w-2*mm,self.h-1*mm,3*mm,stroke=1,fill=1)
+        # taglio giallo diagonale da magazine
+        p=c.beginPath(); p.moveTo(0,self.h); p.lineTo(14*mm,self.h); p.lineTo(8*mm,1*mm); p.lineTo(0,1*mm); p.close()
+        c.setFillColor(SOLE); c.drawPath(p,stroke=0,fill=1)
+        # occhiello dimensionato sul testo
+        ow=max(29*mm,min(48*mm,pdfmetrics.stringWidth(self.occhiello,TESTO_B,6)*1.18+8*mm))
+        c.setFillColor(ROSSO); c.roundRect((self.w-ow)/2,self.h-7.3*mm,ow,5.7*mm,2.8*mm,stroke=0,fill=1)
+        c.setFillColor(BIANCO); c.setFont(TESTO_B,6); c.drawCentredString(self.w/2,self.h-5.45*mm,self.occhiello[:34])
+        self.p.drawOn(c,9*mm,4.2*mm)
 
 class Fumetto(Flowable):
-    """Allenatore + fumetto: sostituisce la vecchia mascotte generica."""
-
-    def __init__(self, testo, st, ctx=None, indice=0):
-        super().__init__()
-        self.par = Paragraph(_t(testo), st["fumetto"])
-        self.ctx = ctx or {}
-        self.indice = indice
-
-    def wrap(self, aw, ah):
-        self.larg_nuvola = LARGHEZZA - 36 * mm
-        _, self.alt_testo = self.par.wrap(self.larg_nuvola - 10 * mm, ah)
-        self.altezza = max(self.alt_testo + 10 * mm, 30 * mm)
-        return LARGHEZZA, self.altezza
-
+    """Callout con box alto esattamente quanto richiede il testo."""
+    def __init__(self,testo,st,ctx=None,indice=0):
+        super().__init__(); self.par=Paragraph(_t(testo),st["fumetto"]); self.ctx=ctx or {}; self.indice=indice
+    def wrap(self,aw,ah):
+        self.w=max(70*mm,aw); self.larg_box=self.w-38*mm
+        _,self.alt_testo=self.par.wrap(self.larg_box-12*mm,ah)
+        self.altezza=max(30*mm,self.alt_testo+12*mm)
+        return self.w,self.altezza
     def draw(self):
-        c = self.canv
-        trainer = _mondo_asset(self.ctx, "allenatori", self.indice)
-        if trainer:
-            _immagine_asset(c, trainer, 14 * mm, self.altezza / 2, 25 * mm)
-        else:
-            _immagine_asset(c, _mondo_asset(self.ctx, "pokemon", self.indice), 14 * mm, self.altezza / 2, 25 * mm)
-        x, y = 31 * mm, 2 * mm
-        h = self.altezza - 4 * mm
-        _nuvoletta(c, x, y, self.larg_nuvola, h, 25 * mm, self.altezza / 2)
-        self.par.drawOn(c, x + 5 * mm, y + (h - self.alt_testo) / 2)
+        c=self.canv; h=self.altezza-2*mm; x=38*mm
+        trainer=_mondo_asset(self.ctx,"allenatori",self.indice)
+        if trainer: _immagine_asset(c,trainer,17*mm,self.altezza/2,min(36*mm,self.altezza*.92))
+        _panel(c,x,1*mm,self.larg_box,h,3*mm,.96,"#72B7E4")
+        c.setFillColor(SOLE); c.roundRect(x,1*mm,3*mm,h,1.5*mm,stroke=0,fill=1)
+        # centratura verticale reale del paragrafo
+        py=1*mm+(h-self.alt_testo)/2
+        self.par.drawOn(c,x+6*mm,py)
 
+class PokemonHero(Flowable):
+    """Feature illustrata: artwork grandi in uno spazio realmente riservato."""
+    def __init__(self,ctx,indice=0,altezza=58*mm):
+        super().__init__(); self.ctx=ctx or {}; self.indice=indice; self.altezza=altezza
+    def wrap(self,*_): return LARGHEZZA,self.altezza
+    def draw(self):
+        c=self.canv; _panel(c,0,2*mm,LARGHEZZA,self.altezza-4*mm,4*mm,.90,"#7DB7E3")
+        asset=_mondo_asset(self.ctx,"pokemon",self.indice)
+        if asset: _immagine_asset(c,asset,LARGHEZZA*.70,self.altezza*.50,55*mm)
+        ball=_mondo_asset(self.ctx,"pokeball",self.indice)
+        item=_mondo_asset(self.ctx,"oggetti",self.indice)
+        trainer=_mondo_asset(self.ctx,"allenatori",self.indice)
+        if ball: _immagine_asset(c,ball,LARGHEZZA*.16,self.altezza*.64,28*mm)
+        if item: _immagine_asset(c,item,LARGHEZZA*.30,self.altezza*.34,30*mm)
+        if trainer: _immagine_asset(c,trainer,LARGHEZZA*.88,self.altezza*.52,47*mm)
 
 class Decoro(Flowable):
-    """Separatore composto solo da Pokémon, Ball e strumenti."""
+    """Separatore essenziale: una riga di inventario, senza stelline o ornamenti cartoon."""
 
-    def __init__(self, ctx=None, seme=1, altezza=28 * mm):
+    def __init__(self, ctx=None, seme=1, altezza=42 * mm):
         super().__init__()
         self.ctx, self.seme, self.altezza = ctx or {}, seme, altezza
 
@@ -405,22 +438,12 @@ class Decoro(Flowable):
         return LARGHEZZA, self.altezza
 
     def draw(self):
-        c = self.canv
-        rnd = random.Random(self.seme)
-        gruppi = ("pokemon", "pokeball", "oggetti", "pokemon", "allenatori")
-        for k, gruppo in enumerate(gruppi):
-            nome = _mondo_asset(self.ctx, gruppo, self.seme + k)
-            if not nome:
-                continue
-            x = LARGHEZZA * (0.10 + 0.20 * k)
-            y = self.altezza / 2 + rnd.uniform(-2, 2) * mm
-            larghezza = 19 * mm if gruppo in ("pokemon", "allenatori") else 10.5 * mm
-            angolo = rnd.uniform(-10, 10)
-            _immagine_asset(c, nome, x, y, larghezza, angolo=angolo)
-        for _ in range(8):
-            _scintilla(c, rnd.uniform(0, LARGHEZZA), rnd.uniform(2 * mm, self.altezza - 2 * mm),
-                       rnd.uniform(1.0, 2.0) * mm, rnd.choice(ARCOBALENO))
-
+        c=self.canv
+        _panel(c,0,2*mm,LARGHEZZA,self.altezza-4*mm,4*mm,.90,"#7DB7E3")
+        specs=(("pokeball",.27,29*mm),("oggetti",.50,31*mm),("allenatori",.75,43*mm))
+        for k,(gruppo,px,size) in enumerate(specs):
+            asset=_mondo_asset(self.ctx,gruppo,self.seme+k)
+            if asset: _immagine_asset(c,asset,LARGHEZZA*px,self.altezza/2,size)
 
 def _tag(testo, colore, larghezza=21 * mm):
     t = Table([[Paragraph(_t(testo.upper()), _stile_tag(colore))]], colWidths=[larghezza])
@@ -430,22 +453,23 @@ def _tag(testo, colore, larghezza=21 * mm):
     return t
 
 
-def _tabella(dati, larghezze, colore=CIELO, allinea_destra_da=1):
+def _tabella(dati, larghezze, colore=colors.HexColor("#2366B1"), allinea_destra_da=1):
     t = Table(dati, colWidths=larghezze, repeatRows=1)
     stile = [
-        ("FONTNAME", (0, 0), (-1, 0), SOTTO), ("FONTSIZE", (0, 0), (-1, 0), 9),
-        ("TEXTCOLOR", (0, 0), (-1, 0), _su(colore)), ("BACKGROUND", (0, 0), (-1, 0), colore),
-        ("FONTNAME", (0, 1), (-1, -1), TESTO), ("FONTSIZE", (0, 1), (-1, -1), 8.6),
+        ("FONTNAME", (0, 0), (-1, 0), SOTTO), ("FONTSIZE", (0, 0), (-1, 0), 7.8),
+        ("TEXTCOLOR", (0, 0), (-1, 0), _su(colore)), ("BACKGROUND", (0, 0), (-1, 0), colore), ("ALIGN", (0,0), (-1,0), "CENTER"),
+        ("FONTNAME", (0, 1), (-1, -1), TESTO), ("FONTSIZE", (0, 1), (-1, -1), 7.8),
         ("TEXTCOLOR", (0, 1), (-1, -1), INCHIOSTRO),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("TOPPADDING", (0, 0), (-1, -1), 3.5), ("BOTTOMPADDING", (0, 0), (-1, -1), 3.5),
+        ("LEFTPADDING", (0, 0), (-1, -1), 3), ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+        ("TOPPADDING", (0, 0), (-1, -1), 2.2), ("BOTTOMPADDING", (0, 0), (-1, -1), 2.2),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),
         ("BOX", (0, 0), (-1, -1), 1.2, colore),
     ]
     if allinea_destra_da is not None:
         stile.append(("ALIGN", (allinea_destra_da, 1), (-1, -1), "RIGHT"))
     for i in range(1, len(dati)):
-        stile.append(("BACKGROUND", (0, i), (-1, i), BIANCO if i % 2 else PASTELLO))
+        stile.append(("BACKGROUND", (0, i), (-1, i), colors.Color(.98,.985,1,alpha=.94) if i % 2 else colors.Color(.92,.96,1,alpha=.94)))
     t.setStyle(TableStyle(stile))
     return t
 
@@ -501,214 +525,200 @@ def _grafico(righe, periodo, titolo):
 
 # ---------- pagine ----------
 def _copertina(c, ctx):
-    g = ctx["principale"]
-    c.saveState()
-    _mondo_giorno(c, ctx)
-    # Kit grafico della settimana: Ball in testata + Pokémon protagonista + allenatore.
-    _immagine_asset(c, _mondo_asset(ctx, "pokeball", 0), W - 24 * mm, H - 36 * mm, 15 * mm, angolo=12)
-    _immagine_asset(c, _mondo_asset(ctx, "pokemon", 0), W - MARGINE - 22 * mm, H - 91 * mm, 30 * mm, angolo=6)
-    _immagine_asset(c, _mondo_asset(ctx, "allenatori", 0), MARGINE + 14 * mm, H - 91 * mm, 27 * mm, angolo=-5)
-    colore_tema = _mondo_colore(ctx, "#EF476F")
+    c.saveState(); _sfondo_mappa(c,.62,"#BFEAFF")
+    # Full bleed, contrasto acqua/fuoco come nella reference senza replicarne la composizione.
+    c.setFillColor(colors.Color(.03,.35,.72,alpha=.16)); c.rect(0,0,W,H,stroke=0,fill=1)
+    p=c.beginPath(); p.moveTo(W*.48,0); p.lineTo(W,0); p.lineTo(W,H*.72); p.lineTo(W*.73,H*.56); p.close()
+    c.setFillColor(colors.Color(.92,.20,.10,alpha=.32)); c.drawPath(p,stroke=0,fill=1)
+    p=c.beginPath(); p.moveTo(0,0); p.lineTo(W*.58,0); p.lineTo(W*.36,H*.55); p.lineTo(0,H*.70); p.close()
+    c.setFillColor(colors.Color(.02,.45,.82,alpha=.28)); c.drawPath(p,stroke=0,fill=1)
+    # numero/data e claim
+    c.setFillColor(BIANCO); c.setFont(TITOLO,12); c.drawString(8*mm,H-12*mm,f"N.{ctx['numero']}")
+    c.setFont(TESTO_B,6.5); c.drawString(8*mm,H-18*mm,ctx['data_lunga'].upper())
+    c.drawRightString(W-8*mm,H-11*mm,"LA TUA GUIDA SETTIMANALE")
+    c.drawRightString(W-8*mm,H-16*mm,"AL MONDO POKÉMON TCG")
+    _logo(c,10*mm,H-43*mm,160*mm)
+    hero=(_art_piano(ctx,1).get("hero_asset") or _mondo_asset(ctx,"pokemon",0)); support=_mondo_asset(ctx,"pokemon",1); trainer=_mondo_asset(ctx,"allenatori",0)
+    ball=_mondo_asset(ctx,"pokeball",0); item=_mondo_asset(ctx,"oggetti",0)
+    if support and support!=hero: _immagine_asset(c,support,W-43*mm,H-132*mm,82*mm)
+    if hero: _immagine_asset(c,hero,47*mm,H-151*mm,112*mm)
+    if trainer: _immagine_asset(c,trainer,W-27*mm,57*mm,48*mm)
+    if ball: _immagine_asset(c,ball,21*mm,59*mm,24*mm)
+    if item: _immagine_asset(c,item,W-19*mm,92*mm,23*mm)
+    # cover line: niente box dashboard, solo ribbon e headline.
+    x=10*mm; y=18*mm; w=158*mm
+    c.saveState(); c.rotate(-2)
+    c.setFillColor(ROSSO); c.roundRect(x,y+52*mm,62*mm,9*mm,2*mm,stroke=0,fill=1)
+    c.setFillColor(BIANCO); c.setFont(TITOLO,10); c.drawCentredString(x+31*mm,y+55*mm,"IN PRIMO PIANO")
+    title=_t(ctx["apertura"]["titolo"]).upper(); deck=_t(ctx["apertura"]["sottotitolo"]).upper()
+    tp=Paragraph(title,ParagraphStyle("cover_title_ref",fontName=TITOLO,fontSize=28,leading=25,textColor=SOLE))
+    _,th=tp.wrap(w,48*mm); tp.drawOn(c,x,y+47*mm-th)
+    dp=Paragraph(deck,ParagraphStyle("cover_deck_ref",fontName=TESTO_B,fontSize=9.5,leading=10.5,textColor=BIANCO))
+    _,dh=dp.wrap(w,24*mm); dp.drawOn(c,x,y+42*mm-th-dh)
+    c.restoreState(); c.restoreState()
 
-    # nastro con numero e data
-    nastro = f"SETTIMANALE DEL MERCATO POKÉMON GCC  ·  N. {ctx['numero']}  ·  {ctx['data_lunga'].upper()}"
-    larg = pdfmetrics.stringWidth(nastro, SOTTO, 9) + 10 * mm
+
+def _art_piano(ctx, numero):
+    pages=((ctx or {}).get("art_direction") or {}).get("pages") or []
+    return next((p for p in pages if p.get("page")==numero), {})
+
+def _topographic_map_path():
+    """Mappa illustrata di Hoenn; fallback locale a rilievo."""
+    realistic=ASSET_DIR/"hoenn_realistic.png"
+    if realistic.exists() and realistic.stat().st_size > 10000:
+        return realistic
+    out=ASSET_DIR/"hoenn_topographic.png"
+    ASSET_DIR.mkdir(parents=True,exist_ok=True)
+    Wm,Hm=1600,1000
+
+    # mare con profondità e variazioni naturali
+    sea_noise=PILImage.effect_noise((400,250),28).resize((Wm,Hm),PILImage.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(8))
+    sea=ImageOps.colorize(sea_noise,(63,124,151),(174,216,220)).convert("RGB")
+
+    # sagoma Hoenn organica
+    mask=PILImage.new("L",(Wm,Hm),0); md=ImageDraw.Draw(mask)
+    coast=[(90,475),(115,330),(220,225),(385,210),(500,145),(610,190),(710,125),(835,190),(920,285),(1110,285),(1225,375),(1160,470),(1235,575),(1075,665),(920,640),(815,760),(665,700),(535,765),(405,680),(270,715),(145,610)]
+    md.polygon(coast,fill=255)
+    for box in ((1190,230,1300,330),(1315,420,1385,490),(1050,790,1145,870),(790,805,870,875),(470,810,540,860)):
+        md.ellipse(box,fill=255)
+    mask=mask.filter(ImageFilter.GaussianBlur(5))
+
+    # elevazione multiscala
+    n1=PILImage.effect_noise((400,250),50).resize((Wm,Hm),PILImage.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(13))
+    n2=PILImage.effect_noise((200,125),32).resize((Wm,Hm),PILImage.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(25))
+    elev=ImageChops.blend(n1,n2,.42)
+    # catena montuosa centrale
+    ridge=PILImage.new("L",(Wm,Hm),0); rd=ImageDraw.Draw(ridge)
+    for cx,cy,rx,ry,v in ((680,420,230,165,150),(780,385,175,135,125),(575,475,150,110,105),(905,420,115,95,80)):
+        rd.ellipse((cx-rx,cy-ry,cx+rx,cy+ry),fill=v)
+    ridge=ridge.filter(ImageFilter.GaussianBlur(48))
+    elev=ImageChops.add(elev,ridge,scale=1.35,offset=-25)
+    elev=ImageOps.autocontrast(elev)
+
+    # tavolozza naturale per quota
+    terrain=ImageOps.colorize(elev,(52,86,58),(211,198,153),mid=(111,145,83)).convert("RGB")
+    # hillshade semplice da differenza di elevazione traslata
+    shifted=ImageChops.offset(elev,7,7)
+    shade=ImageChops.subtract(elev,shifted,scale=1.0,offset=128).filter(ImageFilter.GaussianBlur(2))
+    shade_rgb=ImageOps.colorize(shade,(55,61,53),(245,239,214)).convert("RGB")
+    terrain=PILImage.blend(terrain,shade_rgb,.24)
+    sea.paste(terrain,(0,0),mask)
+
+    dr=ImageDraw.Draw(sea,"RGBA")
+    # foreste semitrasparenti e zone vulcaniche
+    for cx,cy,rx,ry in ((330,390,150,100),(395,280,100,75),(955,430,155,100),(1020,550,125,82)):
+        dr.ellipse((cx-rx,cy-ry,cx+rx,cy+ry),fill=(30,86,50,45))
+    for r,alpha in ((145,34),(100,42),(62,52)):
+        dr.ellipse((680-r,420-r*.72,680+r,420+r*.72),outline=(92,76,58,alpha),width=5)
+
+    # fiumi
+    for pts in ([(660,300),(635,385),(570,475),(500,575)],[(855,310),(890,400),(980,485),(1080,535)]):
+        dr.line(pts,fill=(66,139,172,180),width=6,joint="curve")
+
+    # rotte sottili, realistiche e subordinate al terreno
+    routes=[[(190,520),(390,535),(640,470),(900,535),(1150,455)],[(390,535),(420,325),(680,300),(925,270),(1195,285)]]
+    for pts in routes:
+        dr.line(pts,fill=(78,70,58,100),width=6,joint="curve")
+        dr.line(pts,fill=(225,207,166,205),width=3,joint="curve")
+
+    # località discrete
+    cities=[(190,520,"Petalburg"),(390,535,"Mauville"),(420,325,"Rustboro"),(640,470,"Mt. Chimney"),(900,535,"Lilycove"),(1150,455,"Mossdeep")]
+    for x0,y0,name in cities:
+        dr.ellipse((x0-8,y0-8,x0+8,y0+8),fill=(242,235,211,255),outline=(48,71,61,255),width=3)
+        dr.rounded_rectangle((x0+13,y0-15,x0+20+len(name)*7,y0+8),5,fill=(245,241,222,190))
+        dr.text((x0+18,y0-12),name,fill=(43,61,54,235))
+
+    # cartografia
+    dr.text((45,38),"HOENN · CARTA FISICA",fill=(37,57,53,255))
+    dr.polygon([(1490,55),(1503,92),(1477,92)],fill=(38,58,54,230)); dr.text((1486,28),"N",fill=(38,58,54,255))
+    dr.line((55,930,245,930),fill=(42,61,56,220),width=4); dr.text((105,943),"100 km",fill=(42,61,56,230))
+    sea.save(out,"PNG")
+    return out
+
+def _art_map(c,x,y,w,h,seed=1):
+    path=_topographic_map_path()
     c.saveState()
-    c.translate(MARGINE, H - 22 * mm)
-    c.rotate(1.5)
-    c.setFillColor(colore_tema)
-    c.roundRect(0, 0, larg, 7 * mm, 3.5 * mm, stroke=0, fill=1)
-    c.setFillColor(BIANCO)
-    c.setFont(SOTTO, 9)
-    c.drawString(5 * mm, 2.2 * mm, nastro)
+    c.setFillColor(colors.HexColor("#E9EEE7")); c.roundRect(x-1.2*mm,y-1.2*mm,w+2.4*mm,h+2.4*mm,2.8*mm,stroke=0,fill=1)
+    c.drawImage(str(path),x,y,w,h,preserveAspectRatio=False,mask="auto")
+    c.setStrokeColor(colors.HexColor("#71847A")); c.setLineWidth(.7); c.roundRect(x,y,w,h,2*mm,stroke=1,fill=0)
     c.restoreState()
 
-    # testata
-    _testo_cartoon(c, MARGINE, H - 45 * mm, TESTATA, TITOLO, 46, SOLE, ombra=4)
-    c.setFont(SOTTO, 12)
-    c.setFillColor(INCHIOSTRO)
-    c.drawString(MARGINE + 1 * mm, H - 53 * mm, "Il giornalino di chi colleziona e investe in carte Pokémon")
-    c.setFont(SOTTO, 9)
-    c.setFillColor(colore_tema)
-    c.drawString(MARGINE + 1 * mm, H - 59 * mm, f"TEMA DELLA SETTIMANA: {(ctx.get('pokemon_mondo') or {}).get('tema', 'Avventura Pokémon').upper()}")
-
-    # primo piano
-    y_top = H - 60 * mm
-    titolo = Paragraph(_t(ctx["apertura"]["titolo"]),
-                       ParagraphStyle("ct", fontName=TITOLO, fontSize=19, leading=23, textColor=INCHIOSTRO))
-    sotto = Paragraph(_t(ctx["apertura"]["sottotitolo"]),
-                      ParagraphStyle("cs", fontName=TESTO, fontSize=11, leading=14.5, textColor=GRIGIO))
-    lp = LARGHEZZA - 45 * mm
-    _, h1 = titolo.wrap(lp - 12 * mm, 80 * mm)
-    _, h2 = sotto.wrap(lp - 12 * mm, 40 * mm)
-    alt = h1 + h2 + 20 * mm
-    _pannello(c, MARGINE, y_top - alt, lp, alt)
-    c.setFillColor(ROSSO)
-    c.roundRect(MARGINE + 6 * mm, y_top - 10 * mm, 30 * mm, 6 * mm, 3 * mm, stroke=0, fill=1)
-    c.setFillColor(BIANCO)
-    c.setFont(SOTTO, 8.5)
-    c.drawCentredString(MARGINE + 21 * mm, y_top - 8.2 * mm, "IN PRIMO PIANO")
-    titolo.drawOn(c, MARGINE + 6 * mm, y_top - 13 * mm - h1)
-    sotto.drawOn(c, MARGINE + 6 * mm, y_top - 15 * mm - h1 - h2)
-    y = y_top - alt - 8 * mm
-
-    # numeri della settimana: adesivi colorati
-    larg_card = (LARGHEZZA - 3 * 4 * mm) / 4
-    for i, ((numero, etichetta), colore) in enumerate(zip(ctx["kpi"], (BLU, ROSSO, ARANCIO, VIOLA))):
-        x = MARGINE + i * (larg_card + 4 * mm)
-        c.saveState()
-        c.translate(x + larg_card / 2, y - 12 * mm)
-        c.rotate((-2, 1.5, -1, 2)[i])
-        c.setFillColor(colors.Color(0, 0, 0, alpha=0.18))
-        c.roundRect(-larg_card / 2 + 1.5, -12 * mm - 1.5, larg_card, 24 * mm, 4 * mm, stroke=0, fill=1)
-        c.setFillColor(colore)
-        c.setStrokeColor(BIANCO)
-        c.setLineWidth(2.5)
-        c.roundRect(-larg_card / 2, -12 * mm, larg_card, 24 * mm, 4 * mm, stroke=1, fill=1)
-        c.setFillColor(_su(colore))
-        c.setFont(TITOLO, 22)
-        c.drawCentredString(0, -1 * mm, str(numero))
-        c.setFont(SOTTO, 8)
-        c.drawCentredString(0, -8 * mm, etichetta)
-        c.restoreState()
-    y -= 32 * mm
-
-    # sommario
-    alt_s = 13 * mm + len(ctx["sommario"]) * 7 * mm
-    _pannello(c, MARGINE, y - alt_s, LARGHEZZA, alt_s)
-    c.setFillColor(VIOLA)
-    c.setFont(TITOLO, 13)
-    c.drawString(MARGINE + 6 * mm, y - 9 * mm, "IN QUESTO NUMERO")
-    yy = y - 17 * mm
-    for k, (titolo_r, descrizione) in enumerate(ctx["sommario"]):
-        _stella(c, MARGINE + 8 * mm, yy + 1.2 * mm, 2 * mm, ARCOBALENO[k % 6])
-        c.setFillColor(INCHIOSTRO)
-        c.setFont(SOTTO, 11)
-        c.drawString(MARGINE + 12 * mm, yy, titolo_r)
-        c.setFillColor(GRIGIO)
-        c.setFont(TESTO, 9.5)
-        c.drawString(MARGINE + 75 * mm, yy, descrizione)
-        yy -= 7 * mm
-    y -= alt_s + 6 * mm
-
-    # anteprima 200 euro
-    car = g["carrello"]
-    righe = car["proposte"] or [None]
-    alt_c = 13 * mm + len(righe) * 6.5 * mm
-    _pannello(c, MARGINE, y - alt_c, LARGHEZZA, alt_c, colore=SOLE, alpha=1)
-    c.setFillColor(INCHIOSTRO)
-    c.setFont(TITOLO, 14)
-    c.drawString(MARGINE + 6 * mm, y - 9 * mm, "CON 200 € FAREI...")
-    yy = y - 16 * mm
-    for x in righe:
-        if x is None:
-            c.setFont(TESTO_B, 10)
-            c.drawString(MARGINE + 6 * mm, yy, "Niente: questa settimana li terrei da parte.")
-            break
-        c.setFont(SOTTO, 9.5)
-        c.drawString(MARGINE + 6 * mm, yy, x["categoria"].upper())
-        c.setFont(TESTO_B, 10)
-        c.drawString(MARGINE + 42 * mm, yy, x["nome"][:58])
-        c.drawRightString(W - MARGINE - 6 * mm, yy, _eur(x["prezzo"]))
-        yy -= 6.5 * mm
-
-    c.setFillColor(colors.Color(0.1, 0.2, 0.15, alpha=0.55))
-    c.roundRect(MARGINE - 3 * mm, 2.5 * mm, LARGHEZZA + 6 * mm, 7 * mm, 3.5 * mm, stroke=0, fill=1)
-    c.setFillColor(BIANCO)
-    c.setFont(TESTO_B, 8)
-    c.drawString(MARGINE, 5 * mm, f"Dati: Cardmarket e siti di notizie  ·  {g['giorni_storico']} giorni di storico  ·  "
-                                  "rivista informativa, non è consulenza finanziaria")
+def _art_ui(c, x, y, w, h, kind="pokedex"):
+    c.saveState()
+    c.setFillColor(colors.HexColor("#263238"))
+    c.roundRect(x,y,w,h,3*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#BFE8C0"))
+    c.roundRect(x+3*mm,y+3*mm,w-6*mm,h-6*mm,2*mm,stroke=0,fill=1)
+    c.setFillColor(colors.HexColor("#214A3A"))
+    c.setFont(SOTTO,6.5)
+    c.drawString(x+6*mm,y+h-9*mm,kind.upper())
+    c.setStrokeColor(colors.HexColor("#5E9273"))
+    for i in range(3):
+        c.line(x+6*mm,y+h-(14+i*6)*mm,x+w-6*mm,y+h-(14+i*6)*mm)
     c.restoreState()
 
+def _art_overlay(c, ctx, page):
+    plan=_art_piano(ctx,page)
+    if not plan:
+        return
+    _art_map(c,W-58*mm,H-54*mm,44*mm,30*mm,page)
+    _art_ui(c,MARGINE,H-48*mm,40*mm,23*mm,plan.get("ui","pokedex"))
+    asset=plan.get("hero_asset")
+    if asset:
+        _immagine_asset(c,asset,W-20*mm,H/2+8*mm,42*mm,angolo=5 if page%2 else -5)
+    c.setFillColor(colors.Color(1,1,1,alpha=.82))
+    c.roundRect(MARGINE+45*mm,H-19*mm,72*mm,8*mm,2*mm,stroke=0,fill=1)
+    c.setFillColor(INCHIOSTRO)
+    c.setFont(SOTTO,7)
+    c.drawString(MARGINE+48*mm,H-16*mm,f"{plan.get('layout','editorial').upper()} · {plan.get('hero_pokemon','POKEMON').upper()}")
 
 def _pagina_interna(c, doc, ctx):
-    c.saveState()
-    colore_tema = _mondo_colore(ctx, "#118AB2")
-    c.setFillColor(CARTA)
-    c.rect(0, 0, W, H, stroke=0, fill=1)
-    # testata azzurra ondulata, con un bordino giallo che segue l'onda
-    for colore, profondita in ((SOLE, 15.5 * mm), (colore_tema, 13 * mm)):
-        p = c.beginPath()
-        p.moveTo(0, H)
-        p.lineTo(W, H)
-        x = W
-        while x >= 0:
-            p.lineTo(x, H - profondita + 1.8 * mm * math.sin(x / (9 * mm)))
-            x -= 3
-        p.lineTo(0, H - profondita + 1.8 * mm * math.sin(0))
-        p.close()
-        c.setFillColor(colore)
-        c.drawPath(p, stroke=0, fill=1)
-    _testo_cartoon(c, MARGINE, H - 9 * mm, TESTATA, TITOLO, 14, SOLE, ombra=1.5)
-    c.setFillColor(BIANCO)
-    c.setFont(SOTTO, 9)
-    c.drawRightString(W - MARGINE, H - 8 * mm, f"N. {ctx['numero']}  ·  {ctx['data_lunga']}")
-    # prato in fondo pagina
-    _collina(c, 0, W, 7 * mm, 1.6 * mm, colors.HexColor("#A8DE84"), doc.page, 14 * mm)
-    _collina(c, 0, W, 4 * mm, 1.2 * mm, PRATO, doc.page + 2, 10 * mm)
-    rnd = random.Random(doc.page)
-    for _ in range(14):
-        _fiore(c, rnd.uniform(0, W), rnd.uniform(1.5 * mm, 4 * mm), rnd.choice([ROSSO, SOLE, VIOLA, BIANCO]), 0.7)
-    # Un Pokémon o un allenatore presidia il bordo inferiore.
-    footer_gruppo = "allenatori" if doc.page % 2 == 0 else "pokemon"
-    footer_asset = _mondo_asset(ctx, footer_gruppo, doc.page)
-    footer_x = MARGINE + 12 * mm if doc.page % 2 == 0 else W - MARGINE - 12 * mm
-    _immagine_asset(c, footer_asset, footer_x, 12 * mm, 24 * mm, angolo=(-6 if doc.page % 2 == 0 else 6))
-    _immagine_asset(c, _mondo_asset(ctx, "pokeball", doc.page), W / 2, 6.5 * mm, 11 * mm, angolo=(doc.page % 20) - 10)
-    # numero di pagina in un bollino giallo
-    c.setFillColor(colors.Color(0, 0, 0, alpha=0.18))
-    c.circle(W - MARGINE + 0.8, 11 * mm - 0.8, 5.2 * mm, stroke=0, fill=1)
-    c.setFillColor(SOLE)
-    c.setStrokeColor(BIANCO)
-    c.setLineWidth(2)
-    c.circle(W - MARGINE, 11 * mm, 5.2 * mm, stroke=1, fill=1)
-    c.setFillColor(INCHIOSTRO)
-    c.setFont(TITOLO, 10)
-    c.drawCentredString(W - MARGINE, 9.6 * mm, str(doc.page))
-    # decorazioni nei margini
-    for _ in range(9):
-        lato = rnd.choice((rnd.uniform(3 * mm, MARGINE - 5 * mm), rnd.uniform(W - MARGINE + 5 * mm, W - 3 * mm)))
-        yy = rnd.uniform(25 * mm, H - 30 * mm)
-        colore = rnd.choice(ARCOBALENO)
-        (_stella if rnd.random() < 0.5 else _scintilla)(c, lato, yy, rnd.uniform(1.5, 3) * mm, colore)
-    # Un Pokémon, una Ball e uno strumento cambiano a ogni pagina. Restano nel margine.
-    lato_sx = doc.page % 2 == 0
-    pokemon = _mondo_asset(ctx, "pokemon", doc.page - 1)
-    ball = _mondo_asset(ctx, "pokeball", doc.page - 1)
-    item = _mondo_asset(ctx, "oggetti", doc.page - 1)
-    if lato_sx:
-        _immagine_asset(c, pokemon, 8 * mm, H / 2 + 4 * mm, 19 * mm, angolo=-8)
-        _immagine_asset(c, ball, W - 8 * mm, H - 27 * mm, 12 * mm, angolo=10)
-        _immagine_asset(c, item, W - 9 * mm, H / 2 - 5 * mm, 10 * mm, angolo=8)
-    else:
-        _immagine_asset(c, pokemon, W - 8 * mm, H / 2 + 4 * mm, 19 * mm, angolo=8)
-        _immagine_asset(c, ball, 8 * mm, H - 27 * mm, 12 * mm, angolo=-10)
-        _immagine_asset(c, item, 9 * mm, H / 2 - 5 * mm, 10 * mm, angolo=-8)
+    c.saveState(); page=doc.page; plan=_art_piano(ctx,page)
+    # Reference magazine: scenario visibile, velo leggero, testata diagonale ad alto contrasto.
+    _sfondo_mappa(c,.28,"#EAF8FC")
+    c.setFillColor(colors.Color(.86,.96,1,alpha=.28)); c.rect(0,0,W,H,stroke=0,fill=1)
+    # fascia superiore obliqua
+    p=c.beginPath(); p.moveTo(0,H); p.lineTo(W,H); p.lineTo(W,H-20*mm); p.lineTo(0,H-14*mm); p.close()
+    c.setFillColor(colors.HexColor("#0E4C91")); c.drawPath(p,stroke=0,fill=1)
+    p=c.beginPath(); p.moveTo(0,H-14*mm); p.lineTo(W,H-20*mm); p.lineTo(W,H-23*mm); p.lineTo(0,H-17*mm); p.close()
+    c.setFillColor(SOLE); c.drawPath(p,stroke=0,fill=1)
+    titles={2:("MERCATO","ANDAMENTI, TREND E OPPORTUNITÀ"),3:("NOVITÀ","TUTTE LE NEWS DAL MONDO POKÉMON TCG"),4:("ANALISI","APPROFONDIMENTI E STRATEGIE"),5:("FOCUS COLLEZIONE","LE CARTE E I PRODOTTI DA TENERE D'OCCHIO"),6:("GUIDA MERCATO","CONSIGLI PRATICI PER COLLEZIONISTI")}
+    titolo,sottotitolo=titles.get(page,("POKEPUTZU WEEKLY","IL MAGAZINE SETTIMANALE"))
+    c.setFillColor(BIANCO); c.setFont(TITOLO,19 if page!=5 else 16); c.drawString(MARGINE,H-11.2*mm,titolo)
+    c.setFont(TESTO_B,6.3); c.drawString(MARGINE+2*mm,H-16.3*mm,sottotitolo)
+    c.drawRightString(W-MARGINE,H-10.5*mm,f"N.{ctx['numero']} · P.{page}")
+    # piccoli elementi illustrati solo nella fascia sicura superiore/destra.
+    hero=plan.get("hero_asset")
+    if hero and page in (3,4,6): _immagine_asset(c,hero,W-18*mm,H-33*mm,31*mm)
+    # Terzo inferiore = scena illustrata, non spazio residuo.
+    scene_y=13*mm
+    p=c.beginPath(); p.moveTo(0,scene_y); p.lineTo(W,scene_y); p.lineTo(W,154*mm); p.lineTo(0,132*mm); p.close()
+    c.setFillColor(colors.Color(.05,.34,.68,alpha=.12)); c.drawPath(p,stroke=0,fill=1)
+    hero=plan.get("hero_asset") or _mondo_asset(ctx,"pokemon",max(0,page-1))
+    trainer=_mondo_asset(ctx,"allenatori",page-2); ball=_mondo_asset(ctx,"pokeball",page-2); item=_mondo_asset(ctx,"oggetti",page-2)
+    if hero: _immagine_asset(c,hero,W-48*mm,91*mm,96*mm)
+    if trainer and page in (2,4,6): _immagine_asset(c,trainer,29*mm,83*mm,65*mm)
+    if ball and page in (2,3,5): _immagine_asset(c,ball,21*mm,47*mm,29*mm)
+    if item and page in (3,5,6): _immagine_asset(c,item,58*mm,43*mm,32*mm)
+    # footer chiaro e marchio costante.
+    c.setFillColor(colors.Color(1,1,1,alpha=.90)); c.rect(0,0,W,10*mm,stroke=0,fill=1)
+    _logo(c,MARGINE,5.8*mm,39*mm,compact=True)
+    c.setFillColor(BLU); c.setFont(TESTO_B,6.5); c.drawRightString(W-MARGINE,3.4*mm,str(page))
     c.restoreState()
 
 
 def _retro(c, ctx):
     c.saveState()
     _mondo_tramonto(c, ctx)
-    colore_tema = _mondo_colore(ctx, "#8338EC")
-    _testo_cartoon(c, W / 2, H - 36 * mm, "ARRIVEDERCI", TITOLO, 40, SOLE, contorno=colore_tema, ombra=4, centrato=True)
-    _testo_cartoon(c, W / 2, H - 50 * mm, "AL PROSSIMO NUMERO!", TITOLO, 24, BIANCO, ombra=3, centrato=True)
-    c.setFillColor(BIANCO)
-    c.setFont(SOTTO, 12)
-    c.drawCentredString(W / 2, H - 60 * mm, f"Il Collezionista n. {ctx['numero'] + 1} arriva domenica {ctx['prossima']}")
-    _pannello(c, MARGINE, H - 190 * mm, LARGHEZZA, 122 * mm, alpha=0.95)
-    _immagine_asset(c, _mondo_asset(ctx, "pokemon", 3), W - 14 * mm, H - 145 * mm, 27 * mm, angolo=-6)
-    _immagine_asset(c, _mondo_asset(ctx, "allenatori", 1), 42 * mm, 31 * mm, 31 * mm, angolo=5)
-    _immagine_asset(c, _mondo_asset(ctx, "pokeball", 2), W - 25 * mm, 27 * mm, 13 * mm, angolo=8)
-    testo = "La prossima settimana: un nuovo team di Pokémon, strumenti e allenatori."
-    larg = 102 * mm
-    _nuvoletta(c, 68 * mm, 31 * mm, larg, 18 * mm, 57 * mm, 43 * mm)
-    st_retro = ParagraphStyle("retro", fontName=TESTO_B, fontSize=11, leading=13.5, textColor=INCHIOSTRO)
-    p_retro = Paragraph(_t(testo), st_retro)
-    _, h_retro = p_retro.wrap(larg - 10 * mm, 18 * mm)
-    p_retro.drawOn(c, 73 * mm, 31 * mm + (18 * mm - h_retro) / 2)
+    _logo(c,MARGINE,H-34*mm,132*mm)
+    c.setFillColor(BIANCO); c.setFont(TITOLO,23); c.drawString(MARGINE,H-57*mm,"CI VEDIAMO AL PROSSIMO NUMERO!")
+    c.setFont(SOTTO,11); c.setFillColor(SOLE)
+    c.drawString(MARGINE,H-67*mm,f"N.{ctx['numero']} · PROSSIMO NUMERO {ctx['prossima']}")
+    # Nessun pannello fisso: i flowable sottostanti seguono l’altezza reale del testo.
     c.restoreState()
 
+
+# ---------- rubriche ----------
 
 # ---------- rubriche ----------
 def _battuta_iniziale(ctx):
@@ -743,8 +753,8 @@ def _box_200(car, st):
         scheda.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
                                     ("BACKGROUND", (0, 0), (-1, -1), BIANCO),
                                     ("ROUNDEDCORNERS", [6, 6, 6, 6]),
-                                    ("BOX", (0, 0), (-1, -1), 1, SOLE),
-                                    ("TOPPADDING", (0, 0), (-1, -1), 3), ("BOTTOMPADDING", (0, 0), (-1, -1), 3)]))
+                                    ("BOX", (0, 0), (-1, -1), 1, BLU),
+                                    ("TOPPADDING", (0, 0), (-1, -1), 2), ("BOTTOMPADDING", (0, 0), (-1, -1), 2)]))
         righe.append([scheda])
     if car["proposte"]:
         righe.append([Paragraph(f"<b>Totale: {_eur(car['speso'])}</b>  ·  restano {_eur(car['residuo'])}",
@@ -754,11 +764,11 @@ def _box_200(car, st):
     righe.append([Paragraph(_t("Proposta automatica, non consulenza finanziaria. Il ragionamento completo è "
                                "nell'analisi di Claude della domenica."), st["nota"])])
     box = Table(righe, colWidths=[LARGHEZZA])
-    box.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), CREMA),
-                             ("ROUNDEDCORNERS", [12, 12, 12, 12]),
-                             ("BOX", (0, 0), (-1, -1), 2.5, SOLE),
-                             ("LEFTPADDING", (0, 0), (-1, -1), 9), ("RIGHTPADDING", (0, 0), (-1, -1), 9),
-                             ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4)]))
+    box.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FFFFFF")),
+                             ("ROUNDEDCORNERS", [4, 4, 4, 4]),
+                             ("BOX", (0, 0), (-1, -1), 1.2, BLU),
+                             ("LEFTPADDING", (0, 0), (-1, -1), 7), ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+                             ("TOPPADDING", (0, 0), (-1, -1), 2.5), ("BOTTOMPADDING", (0, 0), (-1, -1), 2.5)]))
     return KeepTogether([box])
 
 
@@ -785,114 +795,116 @@ def _tabella_classifica(titolo, righe, colore):
     return KeepTogether([_tabella(dati, larghezze, colore)])
 
 
-def crea(percorso, ctx):
-    st = _stili()
-    g = ctx["principale"]
-    doc = BaseDocTemplate(percorso, pagesize=A4, title=f"{TESTATA} n. {ctx['numero']}",
-                          leftMargin=MARGINE, rightMargin=MARGINE, topMargin=24 * mm, bottomMargin=18 * mm)
-    cornice = Frame(MARGINE, 18 * mm, LARGHEZZA, H - 43 * mm, id="testo", leftPadding=0, rightPadding=0)
-    cornice_retro = Frame(MARGINE + 7 * mm, H - 186 * mm, LARGHEZZA - 14 * mm, 114 * mm, id="retro",
-                          leftPadding=0, rightPadding=0)
+def _layout_profile(ctx, compact=False):
+    """Seleziona densità/template dai contenuti reali."""
+    g=ctx["principale"]; score=len(ctx.get("sintesi",[]))*2+len(g.get("radar",[]))*3+len(g.get("previsioni",[]))*2+len(g.get("occasioni",[]))*2
+    for tipo in ("sigillato","singola"):
+        for periodo in C.PERIODI:
+            blocco=(g.get("classifiche",{}).get(tipo,{}) or {}).get(str(periodo),{})
+            score+=len(blocco.get("rialzi",[]))+len(blocco.get("ribassi",[]))
+    mode="data-heavy" if score>52 else ("balanced" if score>24 else "visual")
+    return {"mode":mode,"compact":compact,"space":3 if compact else (5 if mode=="data-heavy" else 7),"hero":43*mm if compact else (48*mm if mode=="data-heavy" else 58*mm)}
+
+def _top_rows(g, tipo, limite=5):
+    """Top movimenti reali, compatti per una pagina magazine."""
+    out=[]
+    cl=g.get("classifiche",{}).get(tipo,{})
+    for periodo in C.PERIODI:
+        blocco=cl.get(str(periodo),{})
+        for direzione,segno in (("rialzi",1),("ribassi",-1)):
+            for r in blocco.get(direzione,[])[:limite]:
+                var=r.get("variazioni",{}).get(str(periodo),0)
+                out.append((abs(var),r,periodo,var))
+    out.sort(key=lambda x:x[0],reverse=True)
+    return out[:limite]
+
+def _market_table(g, st):
+    su=_top_rows(g,"singola",4); sig=_top_rows(g,"sigillato",4)
+    rows=[["Movimento","Prodotto","Prezzo","Var."]]
+    for _,r,p,v in (su+sig)[:7]:
+        rows.append([Paragraph("IN SALITA" if v>=0 else "IN DISCESA",st["cella_b"]),
+                     Paragraph(_t(r.get("nome","—")),st["cella"]),
+                     _eur(r.get("prezzo",0)),_perc(v)])
+    return _tabella(rows,[27*mm,91*mm,28*mm,30*mm],BLU)
+
+def _crea_legacy(percorso, ctx, compact=False):
+    """Sette template verticali espliciti, modellati sulla reference editoriale."""
+    profile=_layout_profile(ctx,compact); ctx["_layout_profile"]=profile; st=_stili(); g=ctx["principale"]
+    doc=BaseDocTemplate(percorso,pagesize=A4,title=f"{TESTATA} n. {ctx['numero']}",
+        leftMargin=MARGINE,rightMargin=MARGINE,topMargin=25*mm,bottomMargin=15*mm)
+    frame=Frame(MARGINE,68*mm,LARGHEZZA,H-94*mm,id="testo",leftPadding=0,rightPadding=0,topPadding=3*mm,bottomPadding=2*mm)
+    retro=Frame(MARGINE+7*mm,H-151*mm,LARGHEZZA-14*mm,78*mm,id="retro",leftPadding=0,rightPadding=0)
     doc.addPageTemplates([
-        PageTemplate(id="copertina", frames=[Frame(0, 0, W, H, id="vuota")],
-                     onPage=lambda c, d: _copertina(c, ctx)),
-        PageTemplate(id="interna", frames=[cornice], onPage=lambda c, d: _pagina_interna(c, d, ctx)),
-        PageTemplate(id="retro", frames=[cornice_retro], onPage=lambda c, d: _retro(c, ctx)),
-    ])
-    E = [NextPageTemplate("interna"), Spacer(1, 1), PageBreak()]
+        PageTemplate(id="copertina",frames=[Frame(0,0,W,H,id="cover")],onPage=lambda c,d:_copertina(c,ctx)),
+        PageTemplate(id="interna",frames=[frame],onPage=lambda c,d:_pagina_interna(c,d,ctx)),
+        PageTemplate(id="retro",frames=[retro],onPage=lambda c,d:_retro(c,ctx))])
+    E=[NextPageTemplate("interna"),Spacer(1,1),PageBreak()]
 
-    # 1. La settimana in breve + 200 euro
-    E += [Rubrica("Editoriale", "La settimana in breve", VIOLA), Spacer(1, 3)]
-    for k, riga in enumerate(ctx["sintesi"]):
-        E.append(Paragraph(f'<font color="{HEX[k % 5]}" name="{SOTTO}">»</font>  {_t(riga)}', st["p"]))
-        E.append(Spacer(1, 2.5))
-    E += [Spacer(1, 6), Fumetto(_battuta_iniziale(ctx), st, ctx, indice=0), Spacer(1, 6),
-          _box_200(g["carrello"], st), Spacer(1, 6), Decoro(ctx, seme=ctx["numero"])]
+    # P2 MERCATO — intro + movimenti + focus, come la reference.
+    E += [Rubrica("L'andamento generale","Mercato della settimana",BLU),Spacer(1,3)]
+    for r in ctx.get("sintesi",[])[:3]:
+        E += [Paragraph("»  "+_t(r),st["p"]),Spacer(1,2)]
+    E += [Spacer(1,3),_market_table(g,st),Spacer(1,5)]
+    focus=ctx.get("apertura",{})
+    E += [Rubrica("Focus settimanale",focus.get("titolo","Il punto sul mercato"),ROSSO),
+          Paragraph(_t(focus.get("sottotitolo","")),st["p"]),Spacer(1,4),
+          NextPageTemplate("interna"),PageBreak()]
 
-    # 2. Radar uscite
-    E += [Spacer(1, 6), CondPageBreak(60 * mm), Rubrica("Radar", "Le uscite in arrivo", ROSSO),
-          Paragraph(_t("Date di uscita trovate nelle notizie delle ultime settimane (siti ufficiali, italiani e "
-                       "internazionali) per i prossimi 60 giorni. Più fonti = più interesse. Controlla sempre la "
-                       "data sul link."), st["occhiello"]), Spacer(1, 5)]
-    if g["radar"]:
-        dati = [["Data", "Uscita", "Fonte", "Fonti", "Mercato"]]
-        for u in g["radar"]:
-            d = u["data"]
-            dati.append([Paragraph(f"{d[8:10]}/{d[5:7]}", st["cella_b"]),
-                         _link(u["titolo"], u["link"], st["cella"], 110), Paragraph(_t(u["fonte"]), st["cella"]),
-                         str(u["citazioni"]), _stato(u["mercato"])])
-        E.append(_tabella(dati, [15 * mm, 88 * mm, 30 * mm, 12 * mm, 31 * mm], ROSSO, allinea_destra_da=None))
+    # P3 NOVITÀ — uscite, annunci, notizie.
+    E += [Rubrica("Nuove uscite in arrivo","Radar Pokémon TCG",ROSSO),Spacer(1,3)]
+    if g.get("radar"):
+        rows=[["Data","Uscita","Mercato"]]
+        for u in g["radar"][:4]:
+            d=u.get("data",""); rows.append([d[8:10]+"/"+d[5:7] if len(d)>=10 else "—",
+                Paragraph(_t(u.get("titolo","")),st["cella"]),_stato(u.get("mercato","radar"))])
+        E += [_tabella(rows,[23*mm,116*mm,37*mm],ROSSO),Spacer(1,5)]
+    E += [Rubrica("Annunci e segnali","Cosa succede questa settimana",BLU),Spacer(1,2)]
+    for n in g.get("notizie",[])[:3]:
+        E += [Paragraph(f'<font name="{TESTO_B}">{_t(n.get("titolo",""))}</font><br/><font size="7">{_t(n.get("fonte",""))} · {_t(n.get("data",""))}</font>',st["p"]),Spacer(1,3)]
+    E += [PageBreak()]
+
+    # P4 ANALISI — protagonista + dati principali + interpretazione.
+    E += [Rubrica("Carta / prodotto protagonista",focus.get("titolo","Analisi della settimana"),ROSSO),Spacer(1,3),
+          Spacer(1,2)]
+    tops=_top_rows(g,"singola",3)
+    if tops:
+        rows=[["Prodotto","Prezzo","Periodo","Variazione"]]
+        for _,r,p,v in tops: rows.append([Paragraph(_t(r.get("nome","")),st["cella"]),_eur(r.get("prezzo",0)),f"{p}g",_perc(v)])
+        E += [_tabella(rows,[86*mm,30*mm,25*mm,35*mm],BLU),Spacer(1,5)]
+    E += [Rubrica("Perché è importante","Lettura del dato",SOLE),
+          Paragraph(_t(focus.get("sottotitolo","Il movimento va letto insieme a disponibilità, ristampe e profondità dello storico.")),st["p"]),
+          Spacer(1,4),Fumetto(_battuta_iniziale(ctx),st,ctx,indice=0),PageBreak()]
+
+    # P5 FOCUS COLLEZIONE — selezione visiva e occasioni.
+    E += [Rubrica("Le icone di Hoenn","Focus collezione",BLU),Spacer(1,3),
+          Paragraph("Una selezione compatta dei segnali più interessanti emersi dai dati di questa settimana.",st["occhiello"]),
+          Spacer(1,4)]
+    if g.get("occasioni"):
+        rows=[["Prodotto","Offerta","Tendenza","Sconto"]]
+        for o in g["occasioni"][:5]:
+            rows.append([Paragraph(_t(o.get("nome","")),st["cella"]),_eur(o.get("prezzo_minimo",0)),_eur(o.get("prezzo_tendenza",0)),_perc(-o.get("sconto",0))])
+        E += [_tabella(rows,[98*mm,27*mm,27*mm,24*mm],ARANCIO),Spacer(1,5)]
     else:
-        E.append(Paragraph("Nessuna data di uscita trovata nelle notizie di questa settimana.", st["nota"]))
+        E += [Rubrica("Perché collezionare","Qualità prima della quantità",ROSSO),
+              Paragraph("Questa settimana non emergono occasioni abbastanza forti: meglio osservare il mercato che riempire la pagina con falsi affari.",st["p"])]
+    E += [PageBreak()]
 
-    # 3. Termometro delle novità
-    E += [Spacer(1, 10), CondPageBreak(60 * mm), Rubrica("Previsioni", "Il termometro delle novità", ARANCIO),
-          Paragraph(_t(f"Sigillato comparso su Cardmarket negli ultimi {C.PREVISIONI_GIORNI} giorni: prevendite, "
-                       "prodotti in arrivo e appena usciti. Caldo = prezzo in salita o poche offerte sotto la "
-                       "tendenza. Freddo = prezzo in calo o molte offerte scontate. In arrivo = ancora nessuna "
-                       "vendita."), st["occhiello"]), Spacer(1, 5)]
-    if g["previsioni"]:
-        dati = [["Prodotto", "Listato", "Prezzo", "Variaz.", "Stato", "Perché"]]
-        for p in g["previsioni"]:
-            a = p["aggiunto"]
-            dati.append([_link(p["nome"], p["link"], st["cella"], 55), f"{a[8:10]}/{a[5:7]}", _eur(p["prezzo"]),
-                         _perc(p["variazione"]), _stato(p["stato"]), Paragraph(_t(p["motivo"]), st["cella"])])
-        E.append(_tabella(dati, [50 * mm, 13 * mm, 19 * mm, 15 * mm, 25 * mm, 54 * mm], ARANCIO))
-    else:
-        E.append(Paragraph("Nessun prodotto sigillato nuovo nel periodo.", st["nota"]))
+    # P6 GUIDA MERCATO — strategia, rischio, allenatore.
+    E += [Rubrica("Strategia della settimana","Guida mercato",BLU),Spacer(1,4),
+          _box_200(g.get("carrello",[]),st),Spacer(1,6),
+          Fumetto("Monitora prima di comprare: confronta storico, lingua, condizioni e disponibilità. Un prezzo basso da solo non è ancora un'occasione.",st,ctx,indice=1),
+          Spacer(1,6),Rubrica("Livello di rischio","Come leggere i segnali",ROSSO)]
+    for nota in ctx.get("note_metodo",[])[:4]:
+        E += [Paragraph("✓  "+_t(nota),st["p"]),Spacer(1,2.5)]
+    E += [NextPageTemplate("retro"),PageBreak()]
 
-    # 4. Il borsino
-    E += [Spacer(1, 10), CondPageBreak(110 * mm), Rubrica("Mercato", "Il borsino della settimana", VERDE),
-          Paragraph(_t("Chi sale e chi scende. Prezzo = tendenza Cardmarket. * = stima dal primo giorno, "
-                       "sostituita dallo storico reale man mano che si accumula."), st["occhiello"])]
-    for tipo, nome_tipo in (("sigillato", "Sigillato"), ("singola", "Carte singole")):
-        cl = g["classifiche"][tipo]
-        periodo = _periodo_grafico(cl)
-        E.append(Paragraph(nome_tipo, st["sotto"]))
-        if periodo is None:
-            E.append(Paragraph("Dati non ancora sufficienti.", st["nota"]))
-            continue
-        c = cl[str(periodo)]
-        grafico = _grafico(c["rialzi"] + c["ribassi"], periodo, f"Maggiori movimenti a {periodo} giorni")
-        if grafico:
-            E += [grafico, Spacer(1, 6)]
-        for p in C.PERIODI:
-            c = cl[str(p)]
-            if c["rialzi"]:
-                E += [_tabella_classifica(f"Rialzi a {p} giorni", c["rialzi"], VERDE), Spacer(1, 6)]
-            if c["ribassi"]:
-                E += [_tabella_classifica(f"Ribassi a {p} giorni", c["ribassi"], ROSSO), Spacer(1, 6)]
-            elif c.get("piu_deboli"):
-                E += [_tabella_classifica(f"Più deboli a {p} giorni (nessun calo)", c["piu_deboli"], ARANCIO),
-                      Spacer(1, 6)]
-
-    # 5. Occasioni
-    if g["occasioni"]:
-        E += [Spacer(1, 6), CondPageBreak(80 * mm), Rubrica("Affari", "Le occasioni della settimana", SOLE),
-              Paragraph(_t("Sigillato con un'offerta molto sotto il prezzo di tendenza."), st["occhiello"]),
-              Spacer(1, 4),
-              Fumetto("Occhio: l'offerta più bassa può essere in un'altra lingua o rovinata. Apri il link e "
-                      "filtra l'italiano prima di comprare!", st, ctx, indice=1), Spacer(1, 5)]
-        dati = [["Prodotto", "Offerta", "Tendenza", "Sconto"]]
-        for o in g["occasioni"]:
-            dati.append([_link(o["nome"], o["link"], st["cella"], 80), _eur(o["prezzo_minimo"]),
-                         _eur(o["prezzo_tendenza"]), _perc(-o["sconto"])])
-        E.append(_tabella(dati, [104 * mm, 24 * mm, 24 * mm, 24 * mm], ARANCIO))
-
-    # 6. Notizie
-    if g["notizie"]:
-        E += [Spacer(1, 10), CondPageBreak(45 * mm), Rubrica("Attualità", "Dal mondo Pokémon", CIELO), Spacer(1, 3)]
-        for k, n in enumerate(g["notizie"]):
-            E.append(Paragraph(f'<font color="{HEX[k % 5]}" name="{SOTTO}" size="8">'
-                               f'{_t((n.get("fonte") or "").upper())}  ·  {_t(n["data"])}</font><br/>'
-                               f'<link href="{escape(n["link"])}" color="#2B2D42">'
-                               f'<font name="{TESTO_B}">{_t(n["titolo"])}</font></link>', st["p"]))
-            E.append(Spacer(1, 6))
-    E += [Spacer(1, 6), Decoro(ctx, seme=ctx["numero"] + 5)]
-
-    # 7. Quarta di copertina: come leggere la rivista
-    E += [NextPageTemplate("retro"), PageBreak(), Rubrica("Metodo", "Come leggere la rivista", VIOLA), Spacer(1, 3)]
-    for nota in ctx["note_metodo"]:
-        E.append(Paragraph(f'<font color="#FF8C42" name="{SOTTO}">»</font>  {_t(nota)}', st["p"]))
-        E.append(Spacer(1, 4))
+    # P7 SALUTO — quarta illustrata, poche note e nessuna tabella.
+    E += [Rubrica("Alla prossima settimana","Continueremo a seguire il mercato",BLU),Spacer(1,3)]
+    E += [Paragraph("POKEPUTZU WEEKLY torna con nuovi movimenti, uscite, opportunità e approfondimenti dal mondo Pokémon TCG.",ParagraphStyle("bye",parent=st["p"],fontSize=10,leading=13,textColor=BIANCO))]
     doc.build(E)
+
+
+def crea(percorso, ctx, compact=False):
+    """Measured editorial layouts; continuation pages follow the content."""
+    from src.editorial import crea as render_editorial
+    return render_editorial(percorso, ctx, compact=compact)

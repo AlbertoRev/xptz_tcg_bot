@@ -1,7 +1,6 @@
 """Prepara il set grafico Pokémon della settimana.
 
-Il bot scarica soltanto gli asset scelti per quel numero della rivista, così ogni
-settimana la grafica cambia senza dover salvare le immagini nel repository.
+Il bot scarica soltanto gli asset scelti per quel numero della rivista.
 """
 
 from __future__ import annotations
@@ -14,13 +13,23 @@ import random
 import urllib.request
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parent
 ASSET_DIR = ROOT / "assets"
 
 POKEAPI_RAW = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites"
-SHOWDOWN_TRAINER_RAW = "https://play.pokemonshowdown.com/sprites/trainers"
+TRAINERCARDS_ITEMS_RAW = "https://raw.githubusercontent.com/jonbarrow/trainercards.studio/master/public/images/items"
+TRAINER_ART_POOL = [
+    ("may", "May Torchic Pokémon Center Trainer artwork.png"),
+    ("brendan", "Ruby Sapphire Brendan.png"),
+    ("steven", "Steven Stone M8 JN.png"),
+]
+
+WIKIDEX_API="https://www.wikidex.net/api.php"
+BALL_ART={"poke-ball":"Poké Ball (Ilustración).png","ultra-ball":"Ultra Ball (Ilustración).png","timer-ball":"Turno Ball (Ilustración).png","nest-ball":"Nido Ball (Ilustración).png","quick-ball":"Veloz Ball (Ilustración).png","dusk-ball":"Ocaso Ball (Ilustración).png","heal-ball":"Sana Ball (Ilustración).png","luxury-ball":"Lujo Ball (Ilustración).png","great-ball":"Super Ball (Ilustración).png","net-ball":"Malla Ball (Ilustración).png"}
+ITEM_ART={"bicycle":"Bici acrobática artwork.png","rare-candy":"Caramelo raro (Ilustración).png","exp-share":"Artwork de Repartir Experiencia.png","fresh-water":"Artwork agua fresca.png","old-rod":"Ilustración del tubo pokécubos.png","good-rod":"Kit de Pokécubos ROZA.png"}
+TRAINER_WIKIDEX=[("may","Aura ROZA (Ilustración).png"),("brendan","Bruno ROZA (Ilustración).png"),("steven","Máximo (Architraje) Masters EX.png")]
 
 # Poké Ball e varianti: tutte arrivano dagli sprite item di PokéAPI.
 BALL_POOL = [
@@ -41,7 +50,7 @@ ITEM_POOL = [
 ]
 
 # La pagina di PokéAPI indica che la National Dex corrente contiene 1025 Pokémon.
-POKEMON_IDS = tuple(range(1, 1026))
+POKEMON_IDS = tuple(range(252, 387))  # Hoenn: Treecko (252) → Deoxys (386)
 
 # Pokémon Showdown espone una collezione di trainer sprites con nomi leggibili.
 # La usiamo solo per la componente "allenatore", perché il repository sprite di PokéAPI
@@ -52,12 +61,7 @@ TRAINER_POOL = [
     "barry", "bianca",
 ]
 
-THEMES = [
-    "Avventura di Kanto", "Ragazzi di Johto", "Tesori di Hoenn", "Sinnoh Expedition",
-    "Unima in viaggio", "Kalos Style", "Alola al tramonto", "Galar League", "Tesori di Paldea",
-    "Notte Misteriosa", "Palestra Elettrica", "Cascata Acquatica", "Sentiero Selvaggio",
-    "Cima Ghiacciata", "Zona Vulcanica", "Foresta Incantata",
-]
+THEMES = ["Tesori di Hoenn", "Rotte di Hoenn", "Mare di Hoenn", "Leggende di Hoenn"]
 
 
 def _seed(numero: int, data: str) -> int:
@@ -94,12 +98,97 @@ def _download(url: str, percorso: Path) -> bool:
         return False
 
 
+def _download_wikimedia(titolo: str, percorso: Path, thumb_width=1600) -> bool:
+    """Scarica una resa PNG ad alta risoluzione da Wikimedia Commons."""
+    try:
+        import urllib.parse
+        api="https://commons.wikimedia.org/w/api.php?"+urllib.parse.urlencode({
+            "action":"query","format":"json","prop":"imageinfo","iiprop":"url",
+            "iiurlwidth":str(thumb_width),"titles":"File:"+titolo})
+        req=urllib.request.Request(api,headers={"User-Agent":"POKEPUTZU-WEEKLY/1.0"})
+        with urllib.request.urlopen(req,timeout=30) as r: data=json.loads(r.read().decode("utf-8"))
+        page=next(iter(data["query"]["pages"].values())); info=page["imageinfo"][0]
+        url=info.get("thumburl") or info["url"]
+        if not _download(url,percorso): return False
+        return True
+    except Exception as exc:
+        print(f"Mappa Wikimedia non disponibile ({titolo}): {exc}"); return False
+
+def _download_wikidex(titolo: str, percorso: Path) -> bool:
+    try:
+        import urllib.parse
+        api=WIKIDEX_API+"?"+urllib.parse.urlencode({"action":"query","format":"json","prop":"imageinfo","iiprop":"url","titles":"Archivo:"+titolo})
+        req=urllib.request.Request(api,headers={"User-Agent":"Mozilla/5.0 POKEPUTZU-WEEKLY/1.0"})
+        with urllib.request.urlopen(req,timeout=30) as r: data=json.loads(r.read().decode("utf-8"))
+        page=next(iter(data["query"]["pages"].values())); url=page["imageinfo"][0]["url"]
+        return _download(url,percorso)
+    except Exception as exc:
+        print(f"Artwork WikiDex non disponibile ({titolo}): {exc}"); return False
+
+def _download_mediawiki(titolo: str, percorso: Path) -> bool:
+    """Risoluzione via API MediaWiki: evita redirect HTML e recupera il PNG originale."""
+    try:
+        import urllib.parse
+        api="https://archives.bulbagarden.net/w/api.php?"+urllib.parse.urlencode({
+            "action":"query","format":"json","prop":"imageinfo","iiprop":"url","titles":"File:"+titolo
+        })
+        req=urllib.request.Request(api,headers={"User-Agent":"Mozilla/5.0 POKEPUTZU-WEEKLY/1.0"})
+        with urllib.request.urlopen(req,timeout=30) as r:
+            data=json.loads(r.read().decode("utf-8"))
+        page=next(iter(data["query"]["pages"].values()))
+        url=page["imageinfo"][0]["url"]
+        return _download(url,percorso)
+    except Exception as exc:
+        print(f"Artwork trainer non disponibile ({titolo}): {exc}")
+        return False
+
+
+def _polish_asset(percorso: Path, canvas=512):
+    """Porta gli asset piccoli a una resa morbida da illustrazione, senza pixel visibili."""
+    try:
+        with Image.open(percorso).convert("RGBA") as im:
+            bbox=im.getbbox()
+            if bbox: im=im.crop(bbox)
+            im=im.resize((canvas-80,canvas-80),Image.Resampling.LANCZOS).filter(ImageFilter.SMOOTH_MORE)
+            im=im.filter(ImageFilter.UnsharpMask(radius=1.2,percent=115,threshold=3))
+            out=Image.new("RGBA",(canvas,canvas),(0,0,0,0)); out.alpha_composite(im,((canvas-im.width)//2,(canvas-im.height)//2))
+            out.save(percorso)
+    except Exception as exc:
+        print(f"Impossibile rifinire {percorso.name}: {exc}")
+
+def _trainer_fallback(percorso: Path, variante=0):
+    """Illustrazione originale cel-shaded ad alta risoluzione, usata se il server artwork rifiuta il download."""
+    w,h=640,900; im=Image.new("RGBA",(w,h),(0,0,0,0)); d=ImageDraw.Draw(im,"RGBA")
+    palettes=[((42,92,78,255),(224,91,73,255)),((50,91,126,255),(235,180,75,255)),((88,70,112,255),(79,151,128,255))]
+    coat,accent=palettes[variante%len(palettes)]
+    # gambe, torso, braccia: forme morbide e contorno scuro
+    outline=(38,45,48,255); skin=(230,184,151,255)
+    d.rounded_rectangle((245,520,310,825),28,fill=coat,outline=outline,width=8); d.rounded_rectangle((330,520,395,825),28,fill=coat,outline=outline,width=8)
+    d.rounded_rectangle((190,285,450,590),70,fill=coat,outline=outline,width=10)
+    d.polygon([(205,350),(115,570),(165,600),(255,420)],fill=skin,outline=outline); d.polygon([(435,350),(525,570),(475,600),(385,420)],fill=skin,outline=outline)
+    d.ellipse((220,90,420,290),fill=skin,outline=outline,width=10)
+    # capelli / cappello / giacca
+    d.pieslice((205,55,435,275),180,360,fill=outline)
+    d.rounded_rectangle((210,330,430,405),30,fill=accent)
+    d.ellipse((260,170,280,190),fill=outline); d.ellipse((360,170,380,190),fill=outline)
+    d.arc((285,185,355,235),0,180,fill=(120,72,62,255),width=5)
+    # scarpe e Poké Ball alla cintura
+    d.rounded_rectangle((225,790,315,855),25,fill=(245,245,238,255),outline=outline,width=8); d.rounded_rectangle((325,790,415,855),25,fill=(245,245,238,255),outline=outline,width=8)
+    cx,cy=320,500; d.ellipse((cx-28,cy-28,cx+28,cy+28),fill=(235,75,70,255),outline=outline,width=6); d.rectangle((cx-28,cy-4,cx+28,cy+4),fill=outline); d.ellipse((cx-8,cy-8,cx+8,cy+8),fill=(245,245,238,255),outline=outline,width=4)
+    im=im.filter(ImageFilter.GaussianBlur(.35)); im.save(percorso)
+
 def _candidati_pokemon(rng: random.Random, quanti: int):
-    ids = list(POKEMON_IDS)
-    rng.shuffle(ids)
+    # Lead with Hoenn's large, recognizable silhouettes; reserve the remainder
+    # for distinct interior heroes and the collection gallery.
+    cover_pair = [382, 383]
+    rng.shuffle(cover_pair)
+    featured = [cover_pair[0], 373, 380, 384, 381, 376, 359, cover_pair[1]]
+    rest = [poke_id for poke_id in POKEMON_IDS if poke_id not in featured]
+    rng.shuffle(rest)
+    ids = featured + rest
     # Di tanto in tanto pesca anche un shiny per rendere davvero variabile il kit.
     for poke_id in ids:
-        shiny = rng.random() < 0.16
+        shiny = poke_id not in featured and rng.random() < 0.16
         variante = "shiny" if shiny else "normale"
         nome = f"pokemon_{poke_id}_{variante}.png"
         base = f"{POKEAPI_RAW}/pokemon/other/official-artwork"
@@ -114,20 +203,15 @@ def _candidati_pokemon(rng: random.Random, quanti: int):
 
 
 def _candidati_item(rng: random.Random, piscina, prefisso: str):
-    slugs = list(piscina)
-    rng.shuffle(slugs)
+    mapping=BALL_ART if prefisso=="ball" else ITEM_ART
+    slugs=list(mapping); rng.shuffle(slugs)
     for slug in slugs:
-        nome = f"{prefisso}_{slug}.png"
-        url = f"{POKEAPI_RAW}/items/{slug}.png"
-        yield nome, url, slug
-
+        yield f"{prefisso}_{slug}.png", "wikidex:"+mapping[slug], slug
 
 def _candidati_trainer(rng: random.Random):
-    nomi = list(TRAINER_POOL)
-    rng.shuffle(nomi)
-    for nome in nomi:
-        yield f"trainer_{nome}.png", f"{SHOWDOWN_TRAINER_RAW}/{nome}.png", nome
-
+    candidati=list(TRAINER_WIKIDEX); rng.shuffle(candidati)
+    for nome,titolo in candidati:
+        yield f"trainer_{nome}.png", "wikidex:"+titolo, nome
 
 def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
     """Costruisce e scarica il kit grafico della settimana.
@@ -149,37 +233,44 @@ def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
         "allenatori": [],
     }
 
-    # 6 Pokémon grandi: copertina, bordi, separatori e retro.
-    for nome, url in _candidati_pokemon(rng, 10):
+    # Mappa illustrata ufficiale di Hoenn (ORAS), non pixel. Fallback: carta fisica locale.
+    map_path=ASSET_DIR/"hoenn_realistic.png"
+    if _download_wikidex("Mapa de Hoenn ROZA.png",map_path):
+        manifest["map"]=map_path.name
+    else:
+        manifest["map"]="hoenn_topographic.png"
+
+    # Seven page heroes, one cover companion and four distinct card-gallery art assets.
+    for nome, url in _candidati_pokemon(rng, 18):
         percorso = ASSET_DIR / nome
         if _download(url, percorso):
             manifest["pokemon"].append(nome)
-        if len(manifest["pokemon"]) >= 6:
+        if len(manifest["pokemon"]) >= 12:
             break
 
-    # 4 Poké Ball diverse a settimana.
-    for nome, url, slug in _candidati_item(rng, BALL_POOL, "ball"):
-        percorso = ASSET_DIR / nome
-        if _download(url, percorso):
-            manifest["pokeball"].append(nome)
-        if len(manifest["pokeball"]) >= 4:
-            break
+    # 4 Poké Ball illustrate ad alta risoluzione.
+    for nome,url,slug in _candidati_item(rng,BALL_POOL,"ball"):
+        percorso=ASSET_DIR/nome
+        ok=_download_wikidex(url[8:],percorso) if url.startswith("wikidex:") else _download(url,percorso)
+        if ok:
+            _polish_asset(percorso); manifest["pokeball"].append(nome)
+        if len(manifest["pokeball"])>=4: break
 
-    # 6 strumenti diversi a settimana.
-    for nome, url, slug in _candidati_item(rng, ITEM_POOL, "item"):
-        percorso = ASSET_DIR / nome
-        if _download(url, percorso):
-            manifest["oggetti"].append(nome)
-        if len(manifest["oggetti"]) >= 6:
-            break
+    # Strumenti con artwork illustrato.
+    for nome,url,slug in _candidati_item(rng,ITEM_POOL,"item"):
+        percorso=ASSET_DIR/nome
+        ok=_download_wikidex(url[8:],percorso) if url.startswith("wikidex:") else _download(url,percorso)
+        if ok:
+            _polish_asset(percorso); manifest["oggetti"].append(nome)
+        if len(manifest["oggetti"])>=6: break
 
-    # 3 trainer sprites: se un nome non è disponibile, si passa al successivo.
-    for nome, url, trainer_nome in _candidati_trainer(rng):
-        percorso = ASSET_DIR / nome
-        if _download(url, percorso):
-            manifest["allenatori"].append(nome)
-        if len(manifest["allenatori"]) >= 3:
-            break
+    # Allenatori Hoenn: artwork ad alta risoluzione, fallback cel-shaded solo se la fonte è indisponibile.
+    for nome,url,trainer_nome in _candidati_trainer(rng):
+        percorso=ASSET_DIR/nome
+        ok=_download_wikidex(url[8:],percorso) if url.startswith("wikidex:") else _download_mediawiki(url,percorso)
+        if not ok: _trainer_fallback(percorso,len(manifest["allenatori"]))
+        if percorso.exists(): manifest["allenatori"].append(nome)
+        if len(manifest["allenatori"])>=3: break
 
     # Il manifest è utile per debuggare un run di GitHub Actions e resta in assets/,
     # già esclusa dal repository tramite .gitignore.

@@ -1,0 +1,42 @@
+{
+  "updated_utc": "2026-09-28T14:58:05+00:00",
+  "sources": {
+    "carte_en": "https://api.tcgdex.net/v2/en/cards",
+    "carte_it": "https://api.tcgdex.net/v2/it/cards",
+    "set_en": "https://api.tcgdex.net/v2/en/sets",
+    "set_it": "https://api.tcgdex.net/v2/it/sets",
+    "cardmarket_singole": "https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json",
+    "cardmarket_altri": "https://downloads.s3.cardmarket.com/productCatalog/productList/products_nonsingles_6.json"
+  },
+  "counts": {
+    "tcgdex_cards": 23736,
+    "tcgdex_name_en": 23736,
+    "tcgdex_name_it": 15741,
+    "tcgdex_image_en": 21987,
+    "tcgdex_image_it": 14580,
+    "tcgdex_set_name_en": 23736,
+    "tcgdex_set_name_it": 21722,
+    "cardmarket_singles": 74473,
+    "cardmarket_nonsingles": 5065
+  },
+  "notes": [
+    "TCGdex e Cardmarket non sono collegati automaticamente per nome.",
+    "Le immagini delle carte sono URL di base; la disponibilità del file non è verificata per ogni carta.",
+    "Cardmarket nonsingles include anche accessori; non equivale a soli prodotti sigillati.",
+    "I nomi del catalogo non provano lingua, stato di uscita o corrispondenza della confezione."
+  ],
+  "crosswalk": {
+    "set_status": {
+      "high_confidence_inferred": 333,
+      "review": 436,
+      "unmatched": 15
+    },
+    "card_status": {
+      "high_confidence_inferred": 24153,
+      "ambiguous": 13881,
+      "unmatched": 3992,
+      "review": 32447
+    },
+    "method": "unique name inside conservatively matched expansion; inferred mappings are not manual verifications"
+  }
+}

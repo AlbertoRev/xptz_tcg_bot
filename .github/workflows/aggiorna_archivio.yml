@@ -1,0 +1,45 @@
+name: Aggiorna archivio Pokémon
+
+on:
+  schedule:
+    - cron: "15 3 * * 1"
+      timezone: "Europe/Rome"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dati
+  cancel-in-progress: false
+
+jobs:
+  aggiorna:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Aggiorna i cataloghi e ricostruisci gli abbinamenti
+        run: |
+          python -u -m src.catalogo_pokemon
+          python -u -m src.archivio_match
+          python -u -m src.archivio_check
+      - name: Carica archivio consultabile
+        uses: actions/upload-artifact@v4
+        with:
+          name: Catalogo-Pokemon-TCG
+          path: data/catalogo_pokemon/
+          if-no-files-found: error
+      - name: Salva aggiornamenti
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/catalogo_pokemon/
+          if ! git diff --cached --quiet; then
+            git commit -m "Aggiorna catalogo Pokémon TCG"
+            git pull --rebase
+            git push
+          fi

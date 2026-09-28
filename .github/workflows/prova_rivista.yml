@@ -1,0 +1,73 @@
+name: Prova rivista PDF
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - pokeputzu_redesign
+
+permissions:
+  contents: write
+
+jobs:
+  genera:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      CMAPI_KEY: ${{ secrets.CMAPI_KEY }}
+      GEMINI_API_KEY: ${{ secrets['GEMINI_API_KEY'] }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Font per il PDF
+        run: sudo apt-get update -qq && sudo apt-get install -y fonts-dejavu-core fonts-noto-core fonts-liberation2 > /dev/null
+      - name: Installa le librerie
+        run: pip install -r requirements.txt PyMuPDF
+      - name: Controllo del codice
+        run: python -m py_compile main.py download_assets.py src/*.py
+      - name: Ricalcola abbinamenti dall'archivio locale
+        run: |
+          python -m src.archivio_match
+          python -m src.archivio_check
+      - name: Carica archivio consultabile
+        uses: actions/upload-artifact@v4
+        with:
+          name: Catalogo-Pokemon-TCG
+          path: data/catalogo_pokemon/
+          if-no-files-found: error
+      - name: Salva archivio nel branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/catalogo_pokemon/
+          if ! git diff --cached --quiet; then
+            git commit -m "Refresh Pokémon TCG catalogue"
+            git push origin HEAD:pokeputzu_redesign
+          fi
+      - name: Genera PDF e verifica QA
+        run: python -u main.py prova_rivista
+      - name: Carica PDF e diagnostica di prova
+        uses: actions/upload-artifact@v4
+        with:
+          name: POKEPUTZU-WEEKLY-PDF
+          path: |
+            output/*.pdf
+            output/*_image_audit.json
+            output/visual_review/*.png
+          if-no-files-found: error
+      - name: Invia l'anteprima su Telegram
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from src.telegram import documento
+
+          pdfs = sorted(Path("output").glob("POKEPUTZU_WEEKLY_n*.pdf"))
+          if len(pdfs) != 1:
+              raise RuntimeError(f"Atteso un solo PDF di prova, trovati: {pdfs}")
+          documento(pdfs[0], f"POKèPUTZU WEEKLY · anteprima branch pokeputzu_redesign · {pdfs[0].stem}")
+          PY

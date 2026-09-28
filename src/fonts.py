@@ -1,60 +1,25 @@
-"""Font della rivista: scaricati da Google Fonts (licenze libere OFL/Apache) al primo uso.
-
-Se il download non riesce, la rivista usa i font di sistema: il PDF viene creato comunque.
-"""
-import os
-from pathlib import Path
-
-import requests
+"""Tipografia editoriale contemporanea per POKEPUTZU WEEKLY."""
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+import os, glob
 
-BASE = "https://raw.githubusercontent.com/google/fonts/main/"
-SCELTI = {
-    "Testata": "apache/luckiestguy/LuckiestGuy-Regular.ttf",   # testata in stile cartone animato
-    "Titolo": "ofl/lilitaone/LilitaOne-Regular.ttf",            # titoli tondeggianti
-    "Corpo": "ofl/comicneue/ComicNeue-Regular.ttf",             # testo
-    "CorpoB": "ofl/comicneue/ComicNeue-Bold.ttf",               # testo in grassetto
-}
-RISERVA = {"Testata": "DejaVuSans-Bold.ttf", "Titolo": "DejaVuSans-Bold.ttf",
-           "Corpo": "DejaVuSans.ttf", "CorpoB": "DejaVuSans-Bold.ttf"}
-RISERVA_BASE = {"Testata": "Helvetica-Bold", "Titolo": "Helvetica-Bold", "Corpo": "Helvetica", "CorpoB": "Helvetica-Bold"}
-CARTELLA = Path("font_cache")
-CARTELLE_SISTEMA = ("/usr/share/fonts/truetype/dejavu/", "/usr/share/fonts/dejavu/")
-
-
-def _sistema(file):
-    for base in CARTELLE_SISTEMA:
-        if os.path.exists(base + file):
-            return base + file
+def _find(patterns):
+    for pattern in patterns:
+        hits=glob.glob(pattern,recursive=True)
+        if hits: return hits[0]
     return None
 
+def _reg(alias, patterns, fallback):
+    path=_find(patterns)
+    if path and os.path.exists(path):
+        pdfmetrics.registerFont(TTFont(alias,path))
+        return alias
+    return fallback
 
 def carica():
-    nomi = {}
-    for nome, percorso in SCELTI.items():
-        locale = CARTELLA / Path(percorso).name
-        try:
-            if not locale.exists():
-                CARTELLA.mkdir(exist_ok=True)
-                r = requests.get(BASE + percorso, timeout=60)
-                r.raise_for_status()
-                locale.write_bytes(r.content)
-            pdfmetrics.registerFont(TTFont(nome, str(locale)))
-            nomi[nome] = nome
-            continue
-        except Exception:
-            pass
-        file = _sistema(RISERVA[nome])
-        if file:
-            pdfmetrics.registerFont(TTFont(nome + "R", file))
-            nomi[nome] = nome + "R"
-        else:
-            nomi[nome] = RISERVA_BASE[nome]
-    simboli = _sistema("DejaVuSans.ttf")
-    if simboli:
-        pdfmetrics.registerFont(TTFont("Simboli", simboli))
-        nomi["Simboli"] = "Simboli"
-    else:
-        nomi["Simboli"] = "Helvetica"
-    return nomi
+    regular=_reg("PokeBody",["/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf","/usr/share/fonts/**/*NotoSans-Regular.ttf"],"Helvetica")
+    medium=_reg("PokeMedium",["/usr/share/fonts/truetype/noto/NotoSans-Medium.ttf","/usr/share/fonts/**/*NotoSans-Medium.ttf"],"Helvetica")
+    bold=_reg("PokeBold",["/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf","/usr/share/fonts/**/*NotoSans-Bold.ttf"],"Helvetica-Bold")
+    title=_reg("PokeTitle",["/usr/share/fonts/truetype/liberation2/LiberationSans-BoldItalic.ttf","/usr/share/fonts/**/*LiberationSans-BoldItalic.ttf","/usr/share/fonts/truetype/noto/NotoSans-Black.ttf"],bold)
+    logo=_reg("PokeLogo",["/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf","/usr/share/fonts/**/*DejaVuSans-Bold.ttf"],bold)
+    return {"Testata":title,"Titolo":title,"Logo":logo,"Corpo":regular,"CorpoB":medium,"Simboli":regular}
