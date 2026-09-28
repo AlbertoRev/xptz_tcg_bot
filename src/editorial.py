@@ -216,20 +216,36 @@ def _section(c, label, x, top, w, color=BLUE):
     _ribbon(c,label,x,top,w,color,9)
 
 
-def _movement(c, row, x, top, w, color, rank):
+def _movement(c, row, x, top, w, color, rank, ctx=None):
     """One ranked movement with a proportional bar, not a tabular row."""
     _, data, period, value = row
     name=data.get("nome", "Prodotto")
     _rect(c,x,top,w,22*mm,WHITE,.94,2*mm)
-    c.setFillColor(color); c.setFont(R.TITOLO,18)
-    c.drawString(x+3*mm,H-top-8*mm,f"{rank:02d}")
-    _text(c,name,x+17*mm,top+2.7*mm,w-42*mm,10*mm,9.2,R.TESTO_B)
+    image_name = data.get("immagine_carta")
+    image_path = R.ASSET_DIR / image_name if image_name else None
+    if image_path and image_path.is_file():
+        c.drawImage(str(image_path),x+2*mm,H-top-20.5*mm,12.5*mm,17.5*mm,
+                    preserveAspectRatio=True,anchor="c")
+    else:
+        illustration=R._mondo_asset(ctx,"pokemon",rank-1)
+        if illustration:
+            R._immagine_asset(c,illustration,x+8*mm,H-top-10*mm,16*mm)
+        else:
+            R._logo(c,x+2*mm,H-top-18*mm,14*mm,compact=True)
+    _text(c,name,x+17*mm,top+2.7*mm,w-42*mm,8*mm,9.2,R.TESTO_B)
+    ref=data.get("immagine_carta_riferimento")
+    if ref and image_path and image_path.is_file():
+        _text(c,f"≈ {ref['set']} · {ref['numero']} · TCGdex",x+17*mm,top+11*mm,w-21*mm,5*mm,
+              6.4,R.TESTO_B,BLUE,5.8)
+    else:
+        _text(c,"Illustrazione tematica",x+17*mm,top+11*mm,w-21*mm,5*mm,
+              6.4,R.TESTO_B,BLUE,5.8)
     c.setFont(R.TESTO_B,9); c.setFillColor(color)
     c.drawRightString(x+w-3*mm,H-top-8*mm,f"{value:+.1f}%")
     c.setFillColor(colors.HexColor("#DBE4E9"))
-    c.roundRect(x+17*mm,H-top-18*mm,w-22*mm,2.4*mm,1*mm,stroke=0,fill=1)
+    c.roundRect(x+17*mm,H-top-20*mm,w-22*mm,1.3*mm,.6*mm,stroke=0,fill=1)
     c.setFillColor(color)
-    c.roundRect(x+17*mm,H-top-18*mm,max(8*mm,(w-22*mm)*min(abs(value),300)/300),2.4*mm,1*mm,stroke=0,fill=1)
+    c.roundRect(x+17*mm,H-top-20*mm,max(8*mm,(w-22*mm)*min(abs(value),300)/300),1.3*mm,.6*mm,stroke=0,fill=1)
 
 
 def _cover(c,ctx):
@@ -294,11 +310,12 @@ def _market(c,ctx,page):
     downs=_signed_movements(g,-1)
     c.setFont(R.TITOLO,14);c.setFillColor(colors.HexColor("#087E5E"));c.drawString(11*mm,H-153*mm,"IN SALITA")
     c.setFillColor(RED);c.drawString(109*mm,H-153*mm,"IN DISCESA")
-    for i,row in enumerate(ups): _movement(c,row,9*mm,(158+i*26)*mm,94*mm,colors.HexColor("#087E5E"),i+1)
-    for i,row in enumerate(downs): _movement(c,row,107*mm,(158+i*26)*mm,94*mm,RED,i+1)
+    for i,row in enumerate(ups): _movement(c,row,9*mm,(158+i*26)*mm,94*mm,colors.HexColor("#087E5E"),i+1,ctx)
+    for i,row in enumerate(downs): _movement(c,row,107*mm,(158+i*26)*mm,94*mm,RED,i+1,ctx)
     _rect(c,9*mm,241*mm,138*mm,34*mm,WHITE,.95)
     _section(c,"FOCUS SETTIMANALE",11*mm,242*mm,80*mm)
-    _text(c,ctx.get("apertura",{}).get("sottotitolo",""),13*mm,252*mm,129*mm,18*mm,9)
+    _text(c,"≈ Scansione più simile: set e numero sono indicati sotto la carta; stampa Cardmarket da verificare.",
+          13*mm,252*mm,129*mm,18*mm,8.5)
     _hero(c,ctx,1,174*mm,247*mm,61*mm)
     c.showPage()
 
@@ -419,16 +436,17 @@ def _collector(c,ctx,page):
         if item.get("immagine_prodotto") and path.is_file():
             c.drawImage(str(path),x+4*mm,H-y-46*mm,37*mm,42*mm,
                         preserveAspectRatio=True,anchor="c")
-            _text(c,item.get("fonte_immagine", ""),x+4*mm,y+44*mm,37*mm,3.5*mm,
-                  5.8,R.TESTO_B,BLUE,5.8)
+            caption=("≈ Foto simile: " + item.get("immagine_riferimento", "")
+                     if item.get("immagine_approssimata") else item.get("fonte_immagine", ""))
+            _text(c,caption,x+3*mm,y+43*mm,39*mm,5*mm,6,R.TESTO_B,BLUE,5.5)
         else:
-            # A data card is honest about missing photography; decorative
-            # Pokémon artwork here would imply the wrong sealed product.
-            c.setFillColor(colors.HexColor("#D6E9F2"))
-            c.roundRect(x+6*mm,H-y-43*mm,33*mm,37*mm,2*mm,fill=1,stroke=0)
-            c.setFillColor(BLUE);c.setFont(R.TITOLO,24)
-            c.drawCentredString(x+22.5*mm,H-y-23*mm,f"{i+1:02d}")
-            _text(c,"PRODOTTO SIGILLATO",x+9*mm,y+27*mm,27*mm,9*mm,6.8,R.TESTO_B,BLUE,6.8)
+            illustration=R._mondo_asset(ctx,"pokemon",i)
+            if illustration:
+                R._immagine_asset(c,illustration,x+22*mm,H-y-23*mm,38*mm)
+            else:
+                R._logo(c,x+5*mm,H-y-42*mm,35*mm,compact=True)
+            _text(c,"ILLUSTRAZIONE TEMATICA",x+3*mm,y+43*mm,39*mm,5*mm,
+                  6,R.TESTO_B,BLUE,5.5)
         _text(c,item.get("nome") or "Prodotto",x+3*mm,y+50*mm,39*mm,18*mm,8.4,R.TESTO_B,WHITE,7.3)
         c.setFillColor(YELLOW);c.setFont(R.TESTO_B,9)
         c.drawString(x+3*mm,H-y-75*mm,_eur(item.get("prezzo_minimo")))
@@ -439,7 +457,7 @@ def _collector(c,ctx,page):
             c.linkURL(url,(x,H-y-86*mm,x+45*mm,H-y),relative=0)
     _rect(c,9*mm,199*mm,139*mm,72*mm)
     _section(c,"PERCHÉ COLLEZIONARE",11*mm,201*mm,93*mm,RED)
-    _text(c,"Ogni scheda rimanda al prodotto preciso su Cardmarket. Le foto mostrano la confezione identificata; varianti e lingua dell'inserzione vanno controllate prima di acquistare.",13*mm,215*mm,128*mm,40*mm,10)
+    _text(c,"Ogni scheda rimanda al prodotto Cardmarket. La dicitura «foto simile» indica una confezione di riferimento diversa: controlla prodotto, formato e lingua prima di acquistare.",13*mm,215*mm,128*mm,40*mm,10)
     _hero(c,ctx,4,173*mm,234*mm,76*mm)
     c.showPage()
 

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import config as C
 from download_assets import scarica_immagini_pokemon
-from src import product_images
+from src import card_images, editorial, product_images
 from src import analysis, art_director, cardmarket, editorial_news, news, pdf_qa, report, rivista, storage, telegram, verify
 
 LINGUE_IT = {"italian": "italiano", "english": "inglese", "japanese": "giapponese"}
@@ -229,6 +229,8 @@ def settimanale(invia_telegram=True):
     g = next(iter(ctx["giochi"].values()))
     ctx["principale"] = g
     product_images.prepara(g.get("occasioni") or [])
+    movements = editorial._signed_movements(g, 1) + editorial._signed_movements(g, -1)
+    card_images.prepara([row[1] for row in movements])
     ctx["apertura"] = _apertura(g)
     ctx["cover_visual"] = _visual_copertina(ctx["apertura"]["titolo"],pokemon_mondo)
     ctx["kpi"] = [(f"{g['monitorati']:,}".replace(",", "."), "prodotti monitorati"),
