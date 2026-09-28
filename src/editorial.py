@@ -406,26 +406,38 @@ def _collector(c,ctx,page):
     _header(c,ctx,page,"FOCUS COLLEZIONE","Le carte e i prodotti da tenere d'occhio")
     _rect(c,8*mm,64*mm,W-16*mm,128*mm)
     _section(c,"LA SELEZIONE DELLA SETTIMANA",10*mm,67*mm,119*mm)
-    _text(c,"Prodotti e segnali osservati questa settimana, con prezzi e sconti da verificare per lingua e condizione.",13*mm,79*mm,W-28*mm,17*mm,9)
-    assets=ctx.get("pokemon_mondo",{}).get("pokemon") or []
-    for i in range(4):
-        x=(12+i*49)*mm; y=100*mm
-        _rect(c,x,y,45*mm,79*mm,colors.HexColor("#083F7B"),1,2*mm)
-        _rect(c,x+2*mm,y+2*mm,41*mm,56*mm,colors.HexColor("#CEE8F1"),1,1*mm)
-        if len(assets)>i+8:
-            R._immagine_asset(c,assets[i+8],x+22.5*mm,H-y-30*mm,42*mm)
+    _text(c,"Sigillati del catalogo Cardmarket. Prezzo minimo e sconto rispetto alla tendenza: verifica lingua, stato e inserzione.",13*mm,79*mm,W-28*mm,17*mm,9)
+    if not occasions:
+        _rect(c,13*mm,104*mm,W-26*mm,70*mm,colors.HexColor("#EAF3F8"))
+        _text(c,"Questa settimana non emergono offerte sul sigillato che superino i filtri di prezzo.",
+              19*mm,124*mm,W-38*mm,26*mm,13,R.TESTO_B)
+    for i,item in enumerate(occasions[:4]):
+        x=(12+i*49)*mm; y=99*mm
+        _rect(c,x,y,45*mm,86*mm,colors.HexColor("#083F7B"),1,2*mm)
+        _rect(c,x+2*mm,y+2*mm,41*mm,46*mm,WHITE,1,1*mm)
+        path=R.ASSET_DIR / (item.get("immagine_prodotto") or "")
+        if item.get("immagine_prodotto") and path.is_file():
+            c.drawImage(str(path),x+4*mm,H-y-46*mm,37*mm,42*mm,
+                        preserveAspectRatio=True,anchor="c")
         else:
-            item=R._mondo_asset(ctx,"oggetti" if i%2 else "pokeball",i)
-            if item: R._immagine_asset(c,item,x+22.5*mm,H-y-30*mm,40*mm)
-        item=occasions[i] if i<len(occasions) else {}
-        label=item.get("nome") or f"Segnale {i+1}"
-        _text(c,label,x+3*mm,y+59*mm,39*mm,14*mm,8.2,R.TESTO_B,WHITE,8)
-        if item:
-            c.setFillColor(YELLOW);c.setFont(R.TESTO_B,8)
-            c.drawString(x+3*mm,H-y-76*mm,_eur(item.get("prezzo_minimo",0)))
+            # A data card is honest about missing photography; decorative
+            # Pokémon artwork here would imply the wrong sealed product.
+            c.setFillColor(colors.HexColor("#D6E9F2"))
+            c.roundRect(x+6*mm,H-y-43*mm,33*mm,37*mm,2*mm,fill=1,stroke=0)
+            c.setFillColor(BLUE);c.setFont(R.TITOLO,24)
+            c.drawCentredString(x+22.5*mm,H-y-23*mm,f"{i+1:02d}")
+            _text(c,"PRODOTTO SIGILLATO",x+9*mm,y+27*mm,27*mm,9*mm,6.8,R.TESTO_B,BLUE,6.8)
+        _text(c,item.get("nome") or "Prodotto",x+3*mm,y+50*mm,39*mm,18*mm,8.4,R.TESTO_B,WHITE,7.3)
+        c.setFillColor(YELLOW);c.setFont(R.TESTO_B,9)
+        c.drawString(x+3*mm,H-y-75*mm,_eur(item.get("prezzo_minimo")))
+        c.setFillColor(WHITE);c.setFont(R.TESTO_B,7)
+        c.drawRightString(x+42*mm,H-y-75*mm,f"-{item.get('sconto',0):.0f}%")
+        if item.get("id"):
+            url=f"https://www.cardmarket.com/Pokemon/Products?idProduct={int(item['id'])}"
+            c.linkURL(url,(x,H-y-86*mm,x+45*mm,H-y),relative=0)
     _rect(c,9*mm,199*mm,139*mm,72*mm)
     _section(c,"PERCHÉ COLLEZIONARE",11*mm,201*mm,93*mm,RED)
-    _text(c,"Una selezione ragionata: confronta prezzo, disponibilità, lingua e stato prima di acquistare.",13*mm,215*mm,128*mm,40*mm,10)
+    _text(c,"Ogni scheda rimanda al prodotto preciso su Cardmarket. La fotografia appare solo se associata al suo ID; controlla le offerte prima di acquistare.",13*mm,215*mm,128*mm,40*mm,10)
     _hero(c,ctx,4,173*mm,234*mm,76*mm)
     c.showPage()
 

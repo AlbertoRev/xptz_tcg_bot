@@ -35,9 +35,14 @@ def verifica(prodotti, lingua):
             if r.status_code == 429:
                 break
             r.raise_for_status()
-            prezzi = r.json().get("prices", {})
+            dettaglio = r.json()
+            prezzi = dettaglio.get("prices", {})
             p["verifica_lingua"] = {"lingua": lingua, "da": prezzi.get("from"),
                                     "media5": prezzi.get("avg5"), "disponibili": prezzi.get("available")}
+            # The response is keyed by Cardmarket's product ID. Never infer an
+            # image from a Pokémon or expansion name: sealed variants differ.
+            if str(dettaglio.get("id")) == str(p["id"]):
+                p["immagine_prodotto_url"] = dettaglio.get("image_url")
         except (requests.RequestException, ValueError):
             continue
     storage.scrivi_json("verifiche.json", stato)
