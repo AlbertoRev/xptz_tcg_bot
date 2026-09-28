@@ -174,6 +174,16 @@ def _header(c, ctx, page, title, subtitle, scene_role=None):
     _footer(c,ctx,page)
 
 
+def _feature_header(c, ctx, page, title, subtitle, scene_role):
+    """Let the illustrated setting carry a feature page's display typography."""
+    _scene(c,ctx,role=scene_role)
+    c.saveState(); c.setFillAlpha(.76)
+    _poly(c,[(0,0),(W,0),(W,35*mm),(0,52*mm)],colors.HexColor("#06396E"))
+    c.restoreState()
+    _display(c,title,10*mm,5*mm,W-20*mm,44,WHITE,1)
+    _ribbon(c,subtitle,13*mm,40*mm,min(W-28*mm,132*mm),BLUE,9)
+
+
 def _section(c, label, x, top, w, color=BLUE):
     _ribbon(c,label,x,top,w,color,9)
 
@@ -299,28 +309,29 @@ def _news(c,ctx,page):
 
 def _analysis(c,ctx,page):
     g=ctx["principale"];focus=ctx.get("apertura") or {}
-    _header(c,ctx,page,"ANALISI","Approfondimenti e strategie",scene_role="analysis")
+    _feature_header(c,ctx,page,"ANALISI","Approfondimenti e strategie","analysis")
     # Paint the creature before the copy panels. Its silhouette can cross
     # the composition, but never obscure the headline or the measured data.
-    _hero(c,ctx,3,160*mm,156*mm,145*mm)
-    _rect(c,8*mm,65*mm,124*mm,68*mm,alpha=.92)
-    _section(c,"CARTA / PRODOTTO PROTAGONISTA",10*mm,68*mm,116*mm,RED)
+    _hero(c,ctx,3,167*mm,160*mm,190*mm)
+    _rect(c,8*mm,68*mm,118*mm,64*mm,alpha=.92)
+    _section(c,"SOTTO LA LENTE",10*mm,70*mm,106*mm,RED)
     title=focus.get("titolo","Analisi della settimana")
     _display(c,_short_title(title),12*mm,85*mm,113*mm,23,BLUE,3)
     _text(c,title if len(title)>54 else focus.get("sottotitolo",""),
           13*mm,112*mm,108*mm,17*mm,9)
-    _rect(c,8*mm,143*mm,113*mm,75*mm,alpha=.93)
-    _section(c,"DATI PRINCIPALI",10*mm,145*mm,82*mm)
+    _rect(c,8*mm,146*mm,105*mm,73*mm,alpha=.93)
+    _section(c,"SEGNALI DI MERCATO",10*mm,148*mm,94*mm)
     rows=R._top_rows(g,"singola",4)
     for i,row in enumerate(rows[:3]):
-        y=(159+i*18)*mm
-        _text(c,row[1].get("nome",""),13*mm,y,74*mm,11*mm,9,R.TESTO_B)
+        y=(163+i*17)*mm
+        _text(c,row[1].get("nome",""),13*mm,y,65*mm,11*mm,9,R.TESTO_B)
         c.setFillColor(BLUE if row[3]>=0 else RED);c.setFont(R.TITOLO,11)
-        c.drawRightString(113*mm,H-y-7*mm,f"{row[3]:+.1f}%")
-        c.setStrokeColor(colors.HexColor("#ACCBDC"));c.line(13*mm,H-y-14*mm,113*mm,H-y-14*mm)
-    _rect(c,9*mm,226*mm,145*mm,48*mm,alpha=.94)
-    _section(c,"PERCHÉ È IMPORTANTE",11*mm,228*mm,98*mm,RED)
-    _text(c,R._battuta_iniziale(ctx),13*mm,241*mm,136*mm,27*mm,10)
+        c.drawRightString(108*mm,H-y-7*mm,f"{row[3]:+.1f}%")
+        c.setStrokeColor(colors.HexColor("#ACCBDC"));c.line(13*mm,H-y-14*mm,108*mm,H-y-14*mm)
+    _rect(c,9*mm,234*mm,137*mm,42*mm,alpha=.94)
+    _section(c,"PERCHÉ È IMPORTANTE",11*mm,236*mm,98*mm,RED)
+    _text(c,R._battuta_iniziale(ctx),13*mm,248*mm,127*mm,23*mm,10)
+    _footer(c,ctx,page)
     c.showPage()
 
 
@@ -355,31 +366,32 @@ def _collector(c,ctx,page):
 
 def _guide(c,ctx,page):
     g=ctx["principale"];car=g.get("carrello") or {}; proposals=car.get("proposte") or []
-    _header(c,ctx,page,"GUIDA MERCATO","Consigli pratici per collezionisti",scene_role="guide")
-    _rect(c,8*mm,66*mm,116*mm,98*mm,alpha=.91)
-    _section(c,"STRATEGIA DELLA SETTIMANA",10*mm,69*mm,110*mm)
+    _feature_header(c,ctx,page,"GUIDA MERCATO","Consigli pratici per collezionisti","guide")
+    _rect(c,8*mm,70*mm,115*mm,89*mm,alpha=.91)
+    _section(c,"STRATEGIA DELLA SETTIMANA",10*mm,72*mm,110*mm)
     advice=["Controlla lo storico dei prezzi", "Verifica lingua e condizioni", "Confronta le offerte reali", "Considera il rischio di ristampa"]
     for i,a in enumerate(advice):
-        yy=88+i*17
+        yy=91+i*15
         c.setFillColor(colors.HexColor("#0D8D69"));c.setFont(R.TITOLO,16);c.drawString(14*mm,H-yy*mm,"✓")
         _text(c,a,27*mm,(yy-5)*mm,89*mm,13*mm,10,R.TESTO_B)
-    _rect(c,129*mm,66*mm,72*mm,98*mm,alpha=.91)
-    _section(c,"RISCHIO",131*mm,69*mm,65*mm,RED)
+    _rect(c,129*mm,70*mm,72*mm,89*mm,alpha=.91)
+    _section(c,"RISCHIO",131*mm,72*mm,65*mm,RED)
     for i,(label,pct,col) in enumerate((("BASSO",.30,colors.HexColor("#1DAD6D")),("MEDIO",.53,YELLOW),("ALTO",.20,RED))):
-        y=(91+i*22)*mm
+        y=(92+i*20)*mm
         c.setFillColor(NAVY);c.setFont(R.TESTO_B,9);c.drawString(135*mm,H-y,label)
         c.setFillColor(colors.HexColor("#D9E4EB"));c.roundRect(135*mm,H-y-8*mm,58*mm,5*mm,2*mm,fill=1,stroke=0)
         c.setFillColor(col);c.roundRect(135*mm,H-y-8*mm,58*mm*pct,5*mm,2*mm,fill=1,stroke=0)
     trainer=R._mondo_asset(ctx,"allenatori",1)
-    if trainer: R._immagine_asset(c,trainer,33*mm,H-225*mm,117*mm)
-    _hero(c,ctx,5,67*mm,235*mm,81*mm)
-    _rect(c,97*mm,182*mm,103*mm,90*mm,alpha=.93)
-    _section(c,"CONSIGLIO DELL'ESPERTO",99*mm,185*mm,99*mm,BLUE)
+    if trainer: R._immagine_asset(c,trainer,46*mm,H-230*mm,157*mm)
+    _hero(c,ctx,5,70*mm,244*mm,115*mm)
+    _rect(c,104*mm,184*mm,96*mm,89*mm,alpha=.93)
+    _section(c,"CONSIGLIO DELL'ESPERTO",106*mm,187*mm,91*mm,BLUE)
     if proposals:
         text=f"Prima ipotesi: {proposals[0].get('nome','')}. Prezzo indicato: {_eur(proposals[0].get('prezzo',0))}. Controlla i dettagli dell'inserzione."
     else:
         text="Questa settimana conviene osservare i segnali. Un prezzo basso da solo non dimostra che l'acquisto sia una buona occasione."
-    _text(c,text,102*mm,202*mm,93*mm,58*mm,11)
+    _text(c,text,109*mm,203*mm,84*mm,58*mm,11)
+    _footer(c,ctx,page)
     c.showPage()
 
 
@@ -412,21 +424,22 @@ def _continuation(c,ctx,page,title,records,kind):
 
 def _back(c,ctx):
     _scene(c,ctx,role="back")
-    c.saveState();c.setFillAlpha(.66)
-    _poly(c,[(0,0),(W,0),(W,53*mm),(0,61*mm)],colors.HexColor("#043B75"))
+    c.saveState();c.setFillAlpha(.74)
+    _poly(c,[(0,0),(W,0),(W,37*mm),(0,49*mm)],colors.HexColor("#043B75"))
     c.restoreState()
-    _display(c,"IL SALUTO",10*mm,6*mm,W-20*mm,46,WHITE,1)
-    R._logo(c,11*mm,H-82*mm,122*mm)
-    _rect(c,11*mm,104*mm,112*mm,57*mm,WHITE,.94)
-    _section(c,"ALLA PROSSIMA SETTIMANA",12*mm,106*mm,108*mm,BLUE)
-    _text(c,"Continueremo a seguire uscite, movimenti e opportunità del mondo Pokémon TCG. Grazie per aver letto POKèPUTZU WEEKLY!",16*mm,121*mm,100*mm,34*mm,11)
-    _hero(c,ctx,6,164*mm,217*mm,127*mm)
+    _display(c,"IL SALUTO",10*mm,3*mm,W-20*mm,51,WHITE,1)
+    _ribbon(c,"GRAZIE PER AVERCI LETTO",12*mm,42*mm,123*mm,BLUE,10)
+    _rect(c,10*mm,78*mm,113*mm,53*mm,WHITE,.94)
+    _section(c,"ALLA PROSSIMA SETTIMANA",12*mm,80*mm,108*mm,BLUE)
+    _text(c,"Continueremo a seguire uscite, movimenti e opportunità del mondo Pokémon TCG. Grazie per aver letto POKèPUTZU WEEKLY!",15*mm,98*mm,103*mm,28*mm,12)
+    _hero(c,ctx,6,172*mm,205*mm,162*mm)
     trainer=R._mondo_asset(ctx,"allenatori",2)
-    if trainer: R._immagine_asset(c,trainer,113*mm,H-223*mm,115*mm)
+    if trainer: R._immagine_asset(c,trainer,110*mm,H-223*mm,132*mm)
     c.saveState();c.setFillColor(colors.HexColor("#062A55"));c.setFillAlpha(.66)
     c.rect(0,0,W,21*mm,stroke=0,fill=1);c.restoreState()
     c.setFillColor(WHITE);c.setFont(R.TITOLO,13)
     c.drawString(13*mm,15*mm,f"N.{ctx['numero']}  ·  CI VEDIAMO AL PROSSIMO NUMERO")
+    R._logo(c,W-57*mm,7*mm,48*mm,compact=True)
     c.showPage()
 
 
