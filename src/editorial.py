@@ -256,6 +256,9 @@ def _cover(c,ctx):
     elif kind not in ("community","sky"):
         ball=R._mondo_asset(ctx,"pokeball",0)
         if ball: R._immagine_asset(c,ball,W-35*mm,H-178*mm,80*mm)
+    c.saveState();c.setFillAlpha(.58)
+    _poly(c,[(0,0),(80*mm,0),(72*mm,23*mm),(0,23*mm)],colors.HexColor("#082E5E"))
+    c.restoreState()
     c.setFillColor(WHITE);c.setFont(R.TITOLO,14)
     c.drawString(8*mm,H-11*mm,f"N.{ctx['numero']}")
     c.setFont(R.TESTO_B,8);c.drawString(8*mm,H-17*mm,ctx.get("data_lunga","").upper())

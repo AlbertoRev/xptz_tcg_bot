@@ -149,7 +149,13 @@ def _apertura(g):
                 "sottotitolo": f"{p['motivo'].capitalize()}. Prezzo attuale {report._eur(p['prezzo'])}."}
     if g["radar"]:
         u = g["radar"][0]
-        return {"titolo": u["titolo"], "sottotitolo": f"Fonte: {u['fonte']}."}
+        titolo=u["titolo"].strip();fonte=u["fonte"].strip()
+        for separatore in (" - "," | "," — "):
+            suffix=separatore+fonte
+            if titolo.casefold().endswith(suffix.casefold()):
+                titolo=titolo[:-len(suffix)].strip()
+                break
+        return {"titolo": titolo, "sottotitolo": f"Fonte: {fonte}."}
     return {"titolo": "Settimana tranquilla sul mercato Pokémon",
             "sottotitolo": "Pochi movimenti rilevanti: il bot sta ancora accumulando storico."}
 
