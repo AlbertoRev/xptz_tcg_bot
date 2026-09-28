@@ -1,8 +1,10 @@
 {
-  "updated_utc": "2026-09-28T14:17:42+00:00",
+  "updated_utc": "2026-09-28T14:58:05+00:00",
   "sources": {
     "carte_en": "https://api.tcgdex.net/v2/en/cards",
     "carte_it": "https://api.tcgdex.net/v2/it/cards",
+    "set_en": "https://api.tcgdex.net/v2/en/sets",
+    "set_it": "https://api.tcgdex.net/v2/it/sets",
     "cardmarket_singole": "https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json",
     "cardmarket_altri": "https://downloads.s3.cardmarket.com/productCatalog/productList/products_nonsingles_6.json"
   },
@@ -12,6 +14,8 @@
     "tcgdex_name_it": 15741,
     "tcgdex_image_en": 21987,
     "tcgdex_image_it": 14580,
+    "tcgdex_set_name_en": 23736,
+    "tcgdex_set_name_it": 21722,
     "cardmarket_singles": 74473,
     "cardmarket_nonsingles": 5065
   },
