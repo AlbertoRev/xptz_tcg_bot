@@ -13,7 +13,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
-from src import rivista as R
+from src import editorial_news, rivista as R
 from src.report import _eur, _t
 
 W, H = R.W, R.H
@@ -325,8 +325,25 @@ def _signed_movements(g,sign):
 def _news_card(c,n,x,top,w,h,accent=RED):
     _rect(c,x,top,w,h)
     _poly(c,[(x,top),(x+4*mm,top),(x+4*mm,top+h),(x,top+h)],accent)
-    _text(c,n.get("titolo",""),x+7*mm,top+5*mm,w-14*mm,h-20*mm,12,R.TITOLO,min_size=9)
-    _text(c,f"{n.get('fonte','')}  ·  {n.get('data','')}",x+7*mm,top+h-13*mm,w-14*mm,9*mm,8,R.TESTO_B,color=BLUE)
+    sources=n.get("voci")
+    if not sources:
+        _text(c,n.get("titolo",""),x+7*mm,top+5*mm,w-14*mm,h-20*mm,12,R.TITOLO,min_size=9)
+        _text(c,f"{n.get('fonte','')}  ·  {n.get('data','')}",x+7*mm,top+h-13*mm,w-14*mm,9*mm,8,R.TESTO_B,color=BLUE)
+        return
+    title_h=_text(c,n.get("titolo",""),x+7*mm,top+4*mm,w-14*mm,13*mm,13,R.TITOLO,min_size=10)
+    cursor=top+5*mm+title_h
+    if n.get("sommario") and h >= 39*mm:
+        summary_h=_text(c,n["sommario"],x+7*mm,cursor,w-14*mm,9*mm,8.8)
+        cursor+=summary_h+2*mm
+    remaining=top+h-3*mm-cursor
+    row_h=max(3.7*mm,min(7*mm,remaining/max(len(sources),1)))
+    for i,source in enumerate(sources):
+        y=cursor+i*row_h
+        if y+3*mm>top+h: break
+        label=f"{source.get('fonte','')} · {source.get('data','')}  |  {editorial_news.clean_title(source)}"
+        _text(c,label,x+7*mm,y,w-14*mm,row_h,7.8,R.TESTO_B,color=BLUE,min_size=7)
+        if source.get("link"):
+            c.linkURL(source["link"],(x+7*mm,H-y-row_h,x+w-7*mm,H-y),relative=0)
 
 
 def _news(c,ctx,page):
@@ -334,18 +351,25 @@ def _news(c,ctx,page):
     _header(c,ctx,page,"NOVITÀ","Tutte le news dal mondo Pokémon TCG")
     lead=radar[0] if radar else (news[0] if news else {"titolo":"Le novità della settimana"})
     _rect(c,8*mm,65*mm,W-16*mm,79*mm)
-    _section(c,"NUOVE USCITE IN ARRIVO",10*mm,68*mm,96*mm,RED)
+    lead_plain=editorial_news._plain(lead.get("titolo",""))
+    label=("EVENTI E COMMUNITY" if any(word in lead_plain for word in ("popcon","fiera","torneo","festival"))
+           else "NUOVE USCITE IN ARRIVO")
+    _section(c,label,10*mm,68*mm,96*mm,RED)
     lead_title=lead.get("titolo","")
-    _display(c,_short_title(lead_title),13*mm,86*mm,106*mm,22,BLUE,3)
-    _text(c,lead_title if len(lead_title)>54 else
-          (lead.get("fonte") or "Date e dettagli da verificare"),
+    _display(c,ctx.get("radar_headline") or editorial_news.fallback_headline(lead_title),13*mm,86*mm,106*mm,22,BLUE,3)
+    _text(c,editorial_news.clean_title(lead) + " · " + (lead.get("fonte") or "Fonte da verificare"),
           13*mm,114*mm,99*mm,23*mm,9)
     _hero(c,ctx,2,159*mm,103*mm,88*mm)
-    _section(c,"ANNUNCI UFFICIALI E SEGNALI",9*mm,150*mm,130*mm,BLUE)
-    for i,n in enumerate(news[:3]):
-        _news_card(c,n,9*mm,(163+i*34)*mm,139*mm,30*mm,RED if i==0 else BLUE)
-    item=R._mondo_asset(ctx,"oggetti",0)
-    if item: R._immagine_asset(c,item,178*mm,H-220*mm,70*mm)
+    _section(c,"STORIE DELLA SETTIMANA",9*mm,150*mm,130*mm,BLUE)
+    visible=news[:3]
+    if visible:
+        available=113*mm-(len(visible)-1)*2*mm
+        weights=[max(1,len(n.get("voci") or [])) for n in visible]
+        heights=[(available-len(visible)*25*mm)*weight/sum(weights)+25*mm for weight in weights]
+        top=163*mm
+        for i,(n,height) in enumerate(zip(visible,heights)):
+            _news_card(c,n,9*mm,top,W-18*mm,height,RED if i==0 else BLUE)
+            top+=height+2*mm
     c.showPage()
 
 
@@ -441,16 +465,16 @@ def _continuation(c,ctx,page,title,records,kind):
     _header(c,ctx,page,title,"Approfondimenti della settimana")
     _section(c,"ALTRE SEGNALAZIONI",10*mm,68*mm,106*mm,RED)
     for i,record in enumerate(records):
-        top=(81+i*30)*mm
-        if kind=="news": _news_card(c,record,10*mm,top,W-20*mm,27*mm)
+        top=(81+i*(47 if kind=="news" else 30))*mm
+        if kind=="news": _news_card(c,record,10*mm,top,W-20*mm,44*mm)
         else:
             _rect(c,10*mm,top,W-20*mm,27*mm)
             _text(c,record.get("nome",""),14*mm,top+4*mm,126*mm,16*mm,11,R.TESTO_B)
             _text(c,f"Offerta {_eur(record.get('prezzo_minimo',0))}  ·  Tendenza {_eur(record.get('prezzo_tendenza',0))}",14*mm,top+21*mm,153*mm,9*mm,8.5)
             c.setFillColor(RED);c.setFont(R.TITOLO,13)
             c.drawRightString(W-15*mm,H-top-12*mm,f"-{record.get('sconto',0):.1f}%")
-    if len(records)<6:
-        top=(86+len(records)*30)*mm
+    if len(records)<(4 if kind=="news" else 6):
+        top=(86+len(records)*(47 if kind=="news" else 30))*mm
         height=275*mm-top
         if height>20*mm:
             _rect(c,10*mm,top,W-20*mm,height,WHITE,.92)
@@ -495,10 +519,10 @@ def crea(percorso,ctx,compact=False):
         draw(c,ctx,i)
     page=7
     g=ctx["principale"]
-    for kind,title,records,start in (("news","NOVITÀ",g.get("notizie") or [],3),
-                                    ("offers","FOCUS COLLEZIONE",g.get("occasioni") or [],4)):
-        for j in range(start,len(records),6):
-            _continuation(c,ctx,page,title,records[j:j+6],kind)
+    for kind,title,records,start,step in (("news","NOVITÀ",g.get("notizie") or [],3,4),
+                                          ("offers","FOCUS COLLEZIONE",g.get("occasioni") or [],4,6)):
+        for j in range(start,len(records),step):
+            _continuation(c,ctx,page,title,records[j:j+step],kind)
             page+=1
     _back(c,ctx)
     c.save()
