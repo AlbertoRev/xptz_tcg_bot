@@ -1,7 +1,7 @@
 """Avvio del bot.
 
   python main.py setup         -> riconosce i giochi su Cardmarket e manda un messaggio di prova
-  python main.py giornaliero   -> salva i prezzi del giorno e manda gli alert
+  python main.py giornaliero   -> salva lo storico Pokémon senza inviare alert
   python main.py settimanale   -> salva i prezzi (se mancano) e manda il report completo
   python main.py prova_grafica -> prova il nuovo art director Gemini senza inviare PDF
 """
@@ -50,83 +50,9 @@ def raccogli():
     return risultati
 
 
-ORDINE = {"movimento": 0, "occasione": 1, "slancio": 1, "da_osservare": 2}
-
-
-def _seleziona(candidati, limite, stato, oggi):
-    """Sceglie fino a 'limite' alert: prima per tipo di segnale, poi le novità."""
-    visti = set()
-    unici = []
-    for a in candidati:
-        if a["id"] in visti:
-            continue
-        visti.add(a["id"])
-        genere = "occasione" if a["genere"] == "da_osservare" else a["genere"]
-        a["_chiave"] = f"{genere}:{a['id']}"
-        s = stato.get(a["_chiave"])
-        continuo = s and (oggi - dt.date.fromisoformat(s["ultimo"])).days <= 2
-        a["segnalato_dal"] = s["primo"] if continuo and s["primo"] != oggi.isoformat() else None
-        unici.append(a)
-    unici.sort(key=lambda a: (ORDINE[a["genere"]], a["segnalato_dal"] is not None))
-    scelti = []
-    for a in unici:
-        if not C.RIPETI_ALERT_ATTIVI and a["segnalato_dal"]:
-            continue
-        if a["genere"] in ("occasione", "da_osservare"):
-            verify.verifica([a], a["lingua"])
-        stato[a["_chiave"]] = {"primo": a["segnalato_dal"] or oggi.isoformat(), "ultimo": oggi.isoformat()}
-        scelti.append(a)
-        if len(scelti) >= limite:
-            break
-    # nel messaggio i nuovi compaiono per primi, poi quelli ancora attivi (ognuno per tipo di segnale)
-    scelti.sort(key=lambda a: (a["segnalato_dal"] is not None, ORDINE[a["genere"]]))
-    return scelti
-
-
 def giornaliero():
-    dati = raccogli()
-    stato = storage.leggi_json("stato_alert.json", {})
-    for k, v in list(stato.items()):          # formato vecchio: solo la data
-        if isinstance(v, str):
-            stato[k] = {"primo": v, "ultimo": v}
-    oggi = dt.date.today()
-    singole_occ = verify.attivo() or C.OCCASIONI_SINGOLE_SENZA_VERIFICA
-
-    for chiave, (giorno, prezzi, cat) in dati.items():
-        g = C.GIOCHI[chiave]
-        if g["livello"] != "principale":
-            continue
-        slug = g["slug_cardmarket"]
-        base = {"gioco": g["nome"], "lingua_it": LINGUE_IT.get(g["lingua"], g["lingua"]), "lingua": g["lingua"]}
-        df = analysis.tabella(chiave, giorno, prezzi, cat)
-        link = cardmarket.link_ricerca
-
-        movimenti = [{**a, **base, "genere": "movimento"} for a in analysis.alert_movimenti(chiave, giorno, df, slug, link)]
-
-        # --- sigillato
-        occ = [{**o, **base, "genere": "occasione"}
-               for o in analysis.occasioni(df, slug, link, singole_occ, limite=500) if o["tipo"] == "sigillato"]
-        oss = []
-        if C.RIEMPI_CON_DA_OSSERVARE:
-            oss = [{**o, **base, "genere": "da_osservare"}
-                   for o in analysis.occasioni(df, slug, link, singole_occ, limite=500,
-                                               rapporto_da=C.SOGLIA_OCCASIONE, rapporto_a=C.SOGLIA_DA_OSSERVARE)
-                   if o["tipo"] == "sigillato"]
-        mov_sig = [a for a in movimenti if a["tipo"] == "sigillato"]
-        sig = _seleziona(mov_sig + occ + oss, C.MAX_ALERT_SIGILLATO, stato, oggi)
-        telegram.messaggio(report.telegram_alert(sig, g["nome"], "sigillato", (len(mov_sig), len(occ), len(oss))))
-
-        # --- carte singole
-        # carte singole: solo ribassi
-        mov_sing = [a for a in movimenti if a["tipo"] == "singola" and a["variazione_7g"] < 0]
-        sla = [{**a, **base, "genere": "slancio"} for a in analysis.slancio_singole(df, slug, link)
-               if a["variazione"] < 0]
-        sing = _seleziona(mov_sing + sla, C.MAX_ALERT_SINGOLE, stato, oggi)
-        telegram.messaggio(report.telegram_alert(sing, g["nome"], "singola", (len(mov_sing), len(sla))))
-        print(f"{g['nome']}: {len(sig)} alert sigillato, {len(sing)} alert singole")
-
-    stato = {k: v for k, v in stato.items() if (oggi - dt.date.fromisoformat(v["ultimo"])).days < 30}
-    storage.scrivi_json("stato_alert.json", stato)
+    """Aggiorna solo lo storico necessario al magazine; nessun alert quotidiano."""
+    raccogli()
 
 
 MESI_IT = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre",

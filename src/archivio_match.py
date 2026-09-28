@@ -31,11 +31,17 @@ def read_rows(path):
             yield json.loads(line)
 
 
+def optional_index(path, key):
+    return {row[key]: row for row in read_rows(path)} if path.is_file() else {}
+
+
 def build(dest=DEST):
     cards = list(read_rows(dest / "carte.jsonl.gz"))
     products = list(read_rows(dest / "cardmarket_singole.jsonl.gz"))
     manual_cards = json.loads((dest / "carte_verificate.json").read_text(encoding="utf-8"))
     manual_sets = json.loads((dest / "espansioni_verificate.json").read_text(encoding="utf-8"))
+    source_cards = optional_index(dest / "carte_fonte_tcgdex.jsonl.gz", "cardmarket_id")
+    source_sets = optional_index(dest / "espansioni_fonte_tcgdex.jsonl.gz", "cardmarket_expansion_id")
     by_id = {c["tcgdex_id"]: c for c in cards}
     label_by_set = {c["set_id"]: c.get("set_name_en") for c in cards if c.get("set_name_en")}
     groups = defaultdict(list)
@@ -66,12 +72,14 @@ def build(dest=DEST):
                 scores[sid] += weight
         top = scores.most_common(2)
         manual_sid = manual_sets.get(str(gid))
-        if not top and not manual_sid:
+        source_sids = source_sets.get(gid, {}).get("tcgdex_set_ids", [])
+        source_sid = source_sids[0] if len(source_sids) == 1 and source_sids[0] in set_names else None
+        if not top and not manual_sid and not source_sid:
             crosswalk.append({"cardmarket_expansion_id": gid, "status": "unmatched", "products": len(rows)})
             continue
-        sid, score = top[0] if top else (manual_sid, 0)
-        if manual_sid:
-            sid = manual_sid
+        sid, score = top[0] if top else (manual_sid or source_sid, 0)
+        if manual_sid or source_sid:
+            sid = manual_sid or source_sid
             if sid not in set_names:
                 raise ValueError(f"Set verificato assente da TCGdex: {gid} → {sid}")
         shared = len(names & set_names[sid])
@@ -79,6 +87,8 @@ def build(dest=DEST):
         margin = score / (top[1][1] if len(top) > 1 else .001)
         if manual_sid:
             status = "verified"
+        elif source_sid:
+            status = "source_id_linked"
         elif shared >= SET_MIN_SHARED and coverage >= SET_MIN_COVERAGE and margin >= SET_MIN_MARGIN:
             status = "high_confidence_inferred"
         else:
@@ -103,6 +113,19 @@ def build(dest=DEST):
             if cid not in by_id:
                 raise ValueError(f"Carta verificata assente da TCGdex: {pid} → {cid}")
             base.update(tcgdex_id=cid, status="verified")
+        elif pid in source_cards:
+            ids = source_cards[pid]["tcgdex_ids"]
+            valid = [cid for cid in ids if cid in by_id]
+            exact = [cid for cid in valid if key in
+                     {normalized(by_id[cid].get("name_en")), normalized(by_id[cid].get("name_it"))}]
+            sid = chosen_sets.get(gid, (None, None))[0]
+            aligned = [cid for cid in exact if by_id[cid]["set_id"] == sid]
+            if len(aligned) == 1:
+                base.update(tcgdex_id=aligned[0], status="source_id_name_set")
+            elif len(exact) == 1 and sid is None:
+                base.update(tcgdex_id=exact[0], status="source_id_name_only")
+            else:
+                base.update(status="source_conflict", candidates=valid[:4])
         elif gid in chosen_sets:
             sid, set_status = chosen_sets[gid]
             candidates = {c["tcgdex_id"]: c for c in names_by_set[sid].get(key, ())}
@@ -123,6 +146,9 @@ def build(dest=DEST):
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["crosswalk"] = {"set_status": dict(Counter(r["status"] for r in crosswalk)),
                              "card_status": dict(counts), "method": "unique name inside conservatively matched expansion; inferred mappings are not manual verifications"}
+    provenance = dest / "fonte_tcgdex.json"
+    if provenance.is_file():
+        manifest["crosswalk"]["source_revision"] = json.loads(provenance.read_text(encoding="utf-8"))["revision"]
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return manifest["crosswalk"]
 

@@ -27,16 +27,21 @@
   ],
   "crosswalk": {
     "set_status": {
-      "high_confidence_inferred": 333,
-      "review": 436,
-      "unmatched": 15
+      "source_id_linked": 146,
+      "review": 408,
+      "high_confidence_inferred": 218,
+      "unmatched": 12
     },
     "card_status": {
-      "high_confidence_inferred": 24153,
-      "ambiguous": 13881,
-      "unmatched": 3992,
-      "review": 32447
+      "source_id_name_set": 17906,
+      "source_conflict": 14196,
+      "ambiguous": 4721,
+      "high_confidence_inferred": 7553,
+      "unmatched": 3088,
+      "review": 26342,
+      "source_id_name_only": 667
     },
-    "method": "unique name inside conservatively matched expansion; inferred mappings are not manual verifications"
+    "method": "unique name inside conservatively matched expansion; inferred mappings are not manual verifications",
+    "source_revision": "309aab7060b165925fee48573e730275dfbd737c"
   }
 }

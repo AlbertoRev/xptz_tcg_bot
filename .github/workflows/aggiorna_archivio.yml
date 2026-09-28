@@ -2,7 +2,7 @@ name: Aggiorna archivio Pokémon
 
 on:
   schedule:
-    - cron: "15 3 * * 1"
+    - cron: "15 3 * * 6"
       timezone: "Europe/Rome"
   workflow_dispatch:
 
@@ -25,6 +25,9 @@ jobs:
       - name: Aggiorna i cataloghi e ricostruisci gli abbinamenti
         run: |
           python -u -m src.catalogo_pokemon
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/tcgdex/cards-database.git /tmp/tcgdex_source
+          git -C /tmp/tcgdex_source sparse-checkout set data data-asia
+          python -u -m src.archivio_fonte_tcgdex /tmp/tcgdex_source
           python -u -m src.archivio_match
           python -u -m src.archivio_check
       - name: Carica archivio consultabile

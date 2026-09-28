@@ -30,8 +30,9 @@ jobs:
         run: pip install -r requirements.txt PyMuPDF
       - name: Controllo del codice
         run: python -m py_compile main.py download_assets.py src/*.py
-      - name: Ricalcola abbinamenti dall'archivio locale
+      - name: Completa carte correnti e ricalcola abbinamenti
         run: |
+          python -u -m src.catalogo_pokemon
           python -m src.archivio_match
           python -m src.archivio_check
       - name: Carica archivio consultabile
@@ -60,7 +61,7 @@ jobs:
             output/*_image_audit.json
             output/visual_review/*.png
           if-no-files-found: error
-      - name: Invia l'anteprima su Telegram
+      - name: Invia l'anteprima PDF su Telegram
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -69,5 +70,5 @@ jobs:
           pdfs = sorted(Path("output").glob("POKEPUTZU_WEEKLY_n*.pdf"))
           if len(pdfs) != 1:
               raise RuntimeError(f"Atteso un solo PDF di prova, trovati: {pdfs}")
-          documento(pdfs[0], f"POKèPUTZU WEEKLY · anteprima branch pokeputzu_redesign · {pdfs[0].stem}")
+          documento(pdfs[0], f"POKèPUTZU WEEKLY · anteprima · {pdfs[0].stem}")
           PY

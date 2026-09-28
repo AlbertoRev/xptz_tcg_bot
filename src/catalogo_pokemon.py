@@ -20,8 +20,10 @@ DEST = ROOT / "data" / "catalogo_pokemon"
 SOURCES = {
     "carte_en": "https://api.tcgdex.net/v2/en/cards",
     "carte_it": "https://api.tcgdex.net/v2/it/cards",
+    "carte_ja": "https://api.tcgdex.net/v2/ja/cards",
     "set_en": "https://api.tcgdex.net/v2/en/sets",
     "set_it": "https://api.tcgdex.net/v2/it/sets",
+    "set_ja": "https://api.tcgdex.net/v2/ja/sets",
     "cardmarket_singole": "https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json",
     "cardmarket_altri": "https://downloads.s3.cardmarket.com/productCatalog/productList/products_nonsingles_6.json",
 }
@@ -38,10 +40,10 @@ def fetch_json(url: str):
             time.sleep(8 * (attempt + 1))
 
 
-def card_rows(en, it, sets_en=(), sets_it=()):
+def card_rows(en, it, sets_en=(), sets_it=(), ja=(), sets_ja=()):
     """Merge by exact TCGdex ID, retaining cards unique to either language."""
     index = {}
-    for lang, cards in (("en", en), ("it", it)):
+    for lang, cards in (("en", en), ("it", it), ("ja", ja)):
         if not isinstance(cards, list):
             raise ValueError(f"TCGdex {lang}: expected card list")
         for card in cards:
@@ -54,7 +56,7 @@ def card_rows(en, it, sets_en=(), sets_it=()):
             image = card.get("image")
             if isinstance(image, str) and image.startswith("https://assets.tcgdex.net/"):
                 row[f"image_{lang}"] = image  # base URL; append /high.webp on demand
-    for lang, sets in (("en", sets_en), ("it", sets_it)):
+    for lang, sets in (("en", sets_en), ("it", sets_it), ("ja", sets_ja)):
         if not isinstance(sets, (list, tuple)):
             raise ValueError(f"TCGdex {lang}: expected set list")
         names = {s["id"]: s["name"] for s in sets if s.get("id") and s.get("name")}
@@ -99,7 +101,8 @@ def write_gzip(path, rows):
 
 def build(dest=DEST):
     raw = {key: fetch_json(url) for key, url in SOURCES.items()}
-    cards = card_rows(raw["carte_en"], raw["carte_it"], raw["set_en"], raw["set_it"])
+    cards = card_rows(raw["carte_en"], raw["carte_it"], raw["set_en"], raw["set_it"],
+                      raw["carte_ja"], raw["set_ja"])
     singles = market_rows(raw["cardmarket_singole"], "singles")
     others = market_rows(raw["cardmarket_altri"], "nonsingles")
     curated_file = dest / "foto_prodotti.json"
@@ -122,10 +125,13 @@ def build(dest=DEST):
         "sources": SOURCES,
         "counts": {"tcgdex_cards": len(cards), "tcgdex_name_en": sum("name_en" in c for c in cards),
                    "tcgdex_name_it": sum("name_it" in c for c in cards),
+                   "tcgdex_name_ja": sum("name_ja" in c for c in cards),
                    "tcgdex_image_en": sum("image_en" in c for c in cards),
                    "tcgdex_image_it": sum("image_it" in c for c in cards),
+                   "tcgdex_image_ja": sum("image_ja" in c for c in cards),
                    "tcgdex_set_name_en": sum("set_name_en" in c for c in cards),
                    "tcgdex_set_name_it": sum("set_name_it" in c for c in cards),
+                   "tcgdex_set_name_ja": sum("set_name_ja" in c for c in cards),
                    "cardmarket_singles": len(singles), "cardmarket_nonsingles": len(others)},
         "notes": ["TCGdex e Cardmarket non sono collegati automaticamente per nome.",
                   "Le immagini delle carte sono URL di base; la disponibilità del file non è verificata per ogni carta.",

@@ -62,6 +62,9 @@ class CardIndex:
         link = self.market_links.get(cardmarket_id) or {}
         ids = [link["tcgdex_id"]] if link.get("tcgdex_id") else link.get("candidates", [])
         selected = [self.by_id[cid] for cid in ids if cid in self.by_id]
+        if link.get("status") == "source_conflict":
+            selected = [row for row in selected if key in
+                        {normalize(row.get("name_en")), normalize(row.get("name_it"))}]
         found = self.by_name.get(key, [])
         if not found:
             # Only candidates with the same first word are eligible. A broad
