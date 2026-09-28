@@ -178,11 +178,17 @@ def _trainer_fallback(percorso: Path, variante=0):
     im=im.filter(ImageFilter.GaussianBlur(.35)); im.save(percorso)
 
 def _candidati_pokemon(rng: random.Random, quanti: int):
-    ids = list(POKEMON_IDS)
-    rng.shuffle(ids)
+    # Lead with Hoenn's large, recognizable silhouettes; reserve the remainder
+    # for distinct interior heroes and the collection gallery.
+    cover_pair = [382, 383]
+    rng.shuffle(cover_pair)
+    featured = [cover_pair[0], 373, 380, 384, 381, 376, 359, cover_pair[1]]
+    rest = [poke_id for poke_id in POKEMON_IDS if poke_id not in featured]
+    rng.shuffle(rest)
+    ids = featured + rest
     # Di tanto in tanto pesca anche un shiny per rendere davvero variabile il kit.
     for poke_id in ids:
-        shiny = rng.random() < 0.16
+        shiny = poke_id not in featured and rng.random() < 0.16
         variante = "shiny" if shiny else "normale"
         nome = f"pokemon_{poke_id}_{variante}.png"
         base = f"{POKEAPI_RAW}/pokemon/other/official-artwork"
@@ -234,12 +240,12 @@ def scarica_immagini_pokemon(numero: int = 1, data: str | None = None):
     else:
         manifest["map"]="hoenn_topographic.png"
 
-    # 7 Pokémon grandi: uno diverso per ciascuna pagina della rivista.
-    for nome, url in _candidati_pokemon(rng, 10):
+    # Seven page heroes, one cover companion and four distinct card-gallery art assets.
+    for nome, url in _candidati_pokemon(rng, 18):
         percorso = ASSET_DIR / nome
         if _download(url, percorso):
             manifest["pokemon"].append(nome)
-        if len(manifest["pokemon"]) >= 7:
+        if len(manifest["pokemon"]) >= 12:
             break
 
     # 4 Poké Ball illustrate ad alta risoluzione.

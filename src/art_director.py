@@ -25,9 +25,9 @@ def genera_piano(issue_number,region="hoenn",available_pokemon=None,content_titl
   elenco=", ".join(available_pokemon or [])
   contenuti="; ".join(content_titles or [])
   prompt=f"""Sei l'art director di POKEPUTZU WEEKLY, magazine settimanale Pokémon TCG. Numero {issue_number}, regione protagonista {region}.
-Progetta esattamente 7 pagine A4 VERTICALI come un magazine illustrato Nintendo/Pokémon contemporaneo: cover cinematografica, titoli display enormi e inclinati, ribbon blu/rosso/giallo, mappe e paesaggi come sfondo full-bleed, pannelli bianchi solo per rendere leggibili testi e dati, artwork che entra nella composizione e infografiche editoriali.
+Progetta i cinque ruoli editoriali principali più cover e quarta su A4 VERTICALI. Il renderer aggiunge pagine di approfondimento quando i contenuti lo richiedono. Cerca la grammatica di un magazine illustrato: cover cinematografica, titoli display enormi, ribbon blu/rosso/giallo, mappe e paesaggi come sfondo full-bleed, pannelli bianchi solo per rendere leggibili testi e dati, artwork che entra nella composizione e infografiche editoriali.
 NON usare pixel art, sprite, scanline, griglie, finte schermate Pokédex/battaglia o estetica da report aziendale. Scegli per ogni pagina un template visual, balanced o data-heavy in base alla quantità di contenuto. Tutte le pagine devono restare verticali.
-Il Pokémon deve essere protagonista visivo, grande e associato alla pagina. Varia le composizioni e non ripetere hero Pokémon.
+Il Pokémon deve essere protagonista visivo, grande e associato alla pagina. Varia le composizioni e non ripetere hero Pokémon. Se disponibili, usa Kyogre o Groudon in cover e Rayquaza nella pagina Analisi; un secondo leggendario distinto è riservato alla cover. Gli scenari originali di costa vulcanica, rovine aeree, città costiera e tramonto sono già disponibili per cover, Analisi, Guida mercato e saluto: prevedi aree sicure per la sovrapposizione degli artwork e dei pannelli.
 ASSET POKÉMON DISPONIBILI: {elenco}
 CONTENUTI EDITORIALI: {contenuti}
 Scegli gli hero solo dagli asset disponibili. Usa mappe/UI dichiarate dal sistema. Solo JSON conforme allo schema."""

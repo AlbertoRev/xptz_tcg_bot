@@ -208,10 +208,17 @@ def settimanale(invia_telegram=True):
     ctx["sintesi"] = report.sintesi_righe(ctx)
     ctx["note_metodo"] = report.NOTE_METODO
     titoli_art = [x[0] for x in ctx["sommario"]] + [ctx["apertura"]["titolo"]]
-    piano = art_director.genera_piano(numero, "hoenn", pokemon_mondo.get("pokemon", []), titoli_art)
     assets_poke = list(pokemon_mondo.get("pokemon", []))
+    # The first seven are reserved for page heroes. The cover companion and
+    # gallery use distinct assets, so an issue never repeats a Pokémon.
+    piano = art_director.genera_piano(numero, "hoenn", assets_poke[:7], titoli_art)
+    used_heroes = set()
     for i, pagina in enumerate(piano.get("pages", [])):
-        pagina["hero_asset"] = assets_poke[i] if i < len(assets_poke) else None
+        chosen = pagina.get("hero_pokemon")
+        if chosen not in assets_poke[:7] or chosen in used_heroes:
+            chosen = next((name for name in assets_poke[:7] if name not in used_heroes), None)
+        pagina["hero_asset"] = chosen
+        if chosen: used_heroes.add(chosen)
     ctx["art_direction"] = piano
 
     Path("output").mkdir(exist_ok=True)

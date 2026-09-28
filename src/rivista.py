@@ -793,7 +793,7 @@ def _market_table(g, st):
                      _eur(r.get("prezzo",0)),_perc(v)])
     return _tabella(rows,[27*mm,91*mm,28*mm,30*mm],BLU)
 
-def crea(percorso, ctx, compact=False):
+def _crea_legacy(percorso, ctx, compact=False):
     """Sette template verticali espliciti, modellati sulla reference editoriale."""
     profile=_layout_profile(ctx,compact); ctx["_layout_profile"]=profile; st=_stili(); g=ctx["principale"]
     doc=BaseDocTemplate(percorso,pagesize=A4,title=f"{TESTATA} n. {ctx['numero']}",
@@ -869,3 +869,8 @@ def crea(percorso, ctx, compact=False):
     E += [Paragraph("POKEPUTZU WEEKLY torna con nuovi movimenti, uscite, opportunità e approfondimenti dal mondo Pokémon TCG.",ParagraphStyle("bye",parent=st["p"],fontSize=10,leading=13,textColor=BIANCO))]
     doc.build(E)
 
+
+def crea(percorso, ctx, compact=False):
+    """Measured editorial layouts; continuation pages follow the content."""
+    from src.editorial import crea as render_editorial
+    return render_editorial(percorso, ctx, compact=compact)
