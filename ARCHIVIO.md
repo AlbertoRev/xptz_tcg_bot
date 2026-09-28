@@ -31,7 +31,7 @@ python -m src.archivio_match
 python -m src.archivio_check
 ```
 
-L'aggiornamento settimanale del lunedì importa le nuove uscite e ricalcola
+L'aggiornamento settimanale del sabato importa le nuove uscite e ricalcola
 gli abbinamenti; la rivista usa l'ultima base conservata. Il workflow di prova
 genera il PDF e un file `*_image_audit.json` con le corrispondenze effettive.
 Nessuna importazione di massa da Pokécardex è prevista senza un canale
