@@ -30,6 +30,23 @@ jobs:
         run: pip install -r requirements.txt PyMuPDF
       - name: Controllo del codice
         run: python -m py_compile main.py download_assets.py src/*.py
+      - name: Aggiorna archivio carte e prodotti Pokémon
+        run: python -m src.catalogo_pokemon
+      - name: Carica archivio consultabile
+        uses: actions/upload-artifact@v4
+        with:
+          name: Catalogo-Pokemon-TCG
+          path: data/catalogo_pokemon/
+          if-no-files-found: error
+      - name: Salva archivio nel branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/catalogo_pokemon/
+          if ! git diff --cached --quiet; then
+            git commit -m "Refresh Pokémon TCG catalogue"
+            git push origin HEAD:pokeputzu_redesign
+          fi
       - name: Genera PDF e verifica QA
         run: python main.py prova_rivista
       - name: Carica PDF di prova
