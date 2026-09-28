@@ -187,7 +187,7 @@ def _hero(c, ctx, index, x, top, size, layer_alpha=1):
 
 def _footer(c, ctx, page):
     _poly(c,[(0,283*mm),(W,281*mm),(W,H),(0,H)],colors.HexColor("#06437A"))
-    R._logo(c,11*mm,5*mm,38*mm,compact=True)
+    R._logo(c,11*mm,5*mm,30*mm,compact=True)
     c.setFillColor(WHITE); c.setFont(R.TESTO_B,8)
     c.drawRightString(W-9*mm,5*mm,f"N.{ctx['numero']}  /  {page}")
 
@@ -262,7 +262,7 @@ def _cover(c,ctx):
     c.setFillColor(WHITE);c.setFont(R.TITOLO,14)
     c.drawString(8*mm,H-11*mm,f"N.{ctx['numero']}")
     c.setFont(R.TESTO_B,8);c.drawString(8*mm,H-17*mm,ctx.get("data_lunga","").upper())
-    R._logo(c,8*mm,H-51*mm,W-16*mm)
+    R._logo(c,8*mm,H-99*mm,170*mm)
     c.saveState();c.setFillAlpha(.83)
     _poly(c,[(0,220*mm),(W,206*mm),(W,H),(0,H)],colors.HexColor("#062A55"))
     c.restoreState()
@@ -481,7 +481,7 @@ def _back(c,ctx):
     c.rect(0,0,W,21*mm,stroke=0,fill=1);c.restoreState()
     c.setFillColor(WHITE);c.setFont(R.TITOLO,13)
     c.drawString(13*mm,15*mm,f"N.{ctx['numero']}  ·  CI VEDIAMO AL PROSSIMO NUMERO")
-    R._logo(c,W-57*mm,7*mm,48*mm,compact=True)
+    R._logo(c,W-52*mm,0,43*mm,compact=True)
     c.showPage()
 
 

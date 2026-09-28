@@ -30,7 +30,7 @@ jobs:
         run: pip install -r requirements.txt PyMuPDF
       - name: Controllo del codice
         run: python -m py_compile main.py download_assets.py src/*.py
-      - name: Genera PDF senza Telegram
+      - name: Genera PDF e verifica QA
         run: python main.py prova_rivista
       - name: Carica PDF di prova
         uses: actions/upload-artifact@v4
@@ -38,3 +38,14 @@ jobs:
           name: POKEPUTZU-WEEKLY-PDF
           path: output/*.pdf
           if-no-files-found: error
+      - name: Invia l'anteprima su Telegram
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from src.telegram import documento
+
+          pdfs = sorted(Path("output").glob("POKEPUTZU_WEEKLY_n*.pdf"))
+          if len(pdfs) != 1:
+              raise RuntimeError(f"Atteso un solo PDF di prova, trovati: {pdfs}")
+          documento(pdfs[0], f"POKèPUTZU WEEKLY · anteprima branch pokeputzu_redesign · {pdfs[0].stem}")
+          PY

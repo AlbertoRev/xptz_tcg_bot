@@ -8,6 +8,7 @@ import math
 import random
 from pathlib import Path
 from PIL import Image as PILImage, ImageDraw, ImageFilter, ImageOps, ImageChops
+from reportlab.lib.utils import ImageReader
 from xml.sax.saxutils import escape
 
 from reportlab.graphics.shapes import Drawing, Line, Rect, String
@@ -57,10 +58,16 @@ MARGINE = 17 * mm
 LARGHEZZA = W - 2 * MARGINE
 TESTATA = "POKEPUTZU WEEKLY"
 ASSET_DIR = Path(__file__).resolve().parent.parent / "assets"
+BRAND_LOGO = Path(__file__).resolve().parent.parent / "brand" / "pokeputzu-weekly-logo.png"
 
 
 def _logo(c, x, y, width, compact=False):
-    """Original vector masthead with a lively contour and painted weekly flag."""
+    """Use the supplied masthead, retaining the vector version as a fallback."""
+    if BRAND_LOGO.is_file():
+        with PILImage.open(BRAND_LOGO) as im:
+            height = width * im.height / im.width
+            c.drawImage(ImageReader(im), x, y, width, height, mask="auto")
+        return
     font=F["Logo"]
     letters="PokèPutzu"
     size=max(11,width/(6.4 if compact else 5.8))
