@@ -98,7 +98,12 @@ def _display(c, text, x, top, width, size=34, color=WHITE, max_lines=2):
 
 def _short_title(text, limit=5):
     words=str(text or "").split()
-    return " ".join(words[:limit]) if len(text or "")>54 else str(text or "")
+    if len(text or "") <= 54:
+        return str(text or "")
+    chosen=words[:limit]
+    while len(chosen)>2 and chosen[-1].casefold().strip("’'.,:!") in {"di","del","della","a","al","con","per","ti","e"}:
+        chosen.pop()
+    return " ".join(chosen)
 
 
 def _cover_headline(c, title, x, top, width, max_height=48*mm):
@@ -464,7 +469,6 @@ def _collector(c,ctx,page):
 
 
 def _guide(c,ctx,page):
-    g=ctx["principale"];car=g.get("carrello") or {}; proposals=car.get("proposte") or []
     _feature_header(c,ctx,page,"GUIDA MERCATO","Consigli pratici per collezionisti","guide")
     _rect(c,8*mm,70*mm,115*mm,89*mm,alpha=.91)
     _section(c,"STRATEGIA DELLA SETTIMANA",10*mm,72*mm,110*mm)
@@ -474,21 +478,16 @@ def _guide(c,ctx,page):
         c.setFillColor(colors.HexColor("#0D8D69"));c.setFont(R.TITOLO,16);c.drawString(14*mm,H-yy*mm,"✓")
         _text(c,a,27*mm,(yy-5)*mm,89*mm,13*mm,10,R.TESTO_B)
     _rect(c,129*mm,70*mm,72*mm,89*mm,alpha=.91)
-    _section(c,"RISCHIO",131*mm,72*mm,65*mm,RED)
-    for i,(label,pct,col) in enumerate((("BASSO",.30,colors.HexColor("#1DAD6D")),("MEDIO",.53,YELLOW),("ALTO",.20,RED))):
-        y=(92+i*20)*mm
-        c.setFillColor(NAVY);c.setFont(R.TESTO_B,9);c.drawString(135*mm,H-y,label)
-        c.setFillColor(colors.HexColor("#D9E4EB"));c.roundRect(135*mm,H-y-8*mm,58*mm,5*mm,2*mm,fill=1,stroke=0)
-        c.setFillColor(col);c.roundRect(135*mm,H-y-8*mm,58*mm*pct,5*mm,2*mm,fill=1,stroke=0)
+    _section(c,"VERIFICA",131*mm,72*mm,65*mm,RED)
+    for i,label in enumerate(("Stampa italiana", "Foto della confezione", "Prezzo filtrato per lingua")):
+        _text(c,label,135*mm,(91+i*21)*mm,60*mm,16*mm,9.5,R.TESTO_B)
     trainer=R._mondo_asset(ctx,"allenatori",1)
     if trainer: R._immagine_asset(c,trainer,46*mm,H-230*mm,157*mm)
     _hero(c,ctx,5,70*mm,244*mm,115*mm)
     _rect(c,104*mm,184*mm,96*mm,89*mm,alpha=.93)
-    _section(c,"CONSIGLIO DELL'ESPERTO",106*mm,187*mm,91*mm,BLUE)
-    if proposals:
-        text=f"Prima ipotesi: {proposals[0].get('nome','')}. Prezzo indicato: {_eur(proposals[0].get('prezzo',0))}. Controlla i dettagli dell'inserzione."
-    else:
-        text="Questa settimana conviene osservare i segnali. Un prezzo basso da solo non dimostra che l'acquisto sia una buona occasione."
+    _section(c,"PRIMA DI SCEGLIERE",106*mm,187*mm,91*mm,BLUE)
+    text=("Il catalogo identifica il prodotto, ma il prezzo pubblico può includere più lingue. "
+          "Per il prezzo italiano serve una verifica delle inserzioni nella lingua richiesta.")
     _text(c,text,109*mm,203*mm,84*mm,58*mm,11)
     _footer(c,ctx,page)
     c.showPage()

@@ -7,7 +7,7 @@ on:
       - pokeputzu_redesign
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   genera:
@@ -30,25 +30,10 @@ jobs:
         run: pip install -r requirements.txt PyMuPDF
       - name: Controllo del codice
         run: python -m py_compile main.py download_assets.py src/*.py
-      - name: Completa carte correnti e ricalcola abbinamenti
+      - name: Verifica abbinamenti dall'archivio locale
         run: |
-          python -u -m src.catalogo_pokemon
           python -m src.archivio_match
           python -m src.archivio_check
-      - name: Carica archivio consultabile
-        uses: actions/upload-artifact@v4
-        with:
-          name: Catalogo-Pokemon-TCG
-          path: data/catalogo_pokemon/
-          if-no-files-found: error
-      - name: Salva archivio nel branch
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/catalogo_pokemon/
-          if ! git diff --cached --quiet; then
-            git commit -m "Refresh Pokémon TCG catalogue"
-            git push origin HEAD:pokeputzu_redesign
           fi
       - name: Genera PDF e verifica QA
         run: python -u main.py prova_rivista

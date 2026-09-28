@@ -67,6 +67,8 @@ def notizie(gioco, max_per_gioco=8):
     for q, lingua in RICERCHE.get(gioco, []):
         for e in _voci(_url(q, lingua, 7)):
             titolo = _pulisci(e.get("title"))
+            if "pokémon pocket" in titolo.casefold() or "pokemon pocket" in titolo.casefold() or "gcc pocket" in titolo.casefold():
+                continue
             chiave = titolo.lower()[:80]
             if not titolo or chiave in visti:
                 continue
