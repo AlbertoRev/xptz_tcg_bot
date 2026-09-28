@@ -59,10 +59,10 @@ def build(dest=DEST):
         names = {card_name(row["name"]) for row in rows}
         names.discard("")
         scores = Counter()
-        for name in names:
+        for name in sorted(names):
             candidate_sets = inverse.get(name, ())
             weight = 1 / math.sqrt(len(candidate_sets) or 1)
-            for sid in candidate_sets:
+            for sid in sorted(candidate_sets):
                 scores[sid] += weight
         top = scores.most_common(2)
         manual_sid = manual_sets.get(str(gid))
