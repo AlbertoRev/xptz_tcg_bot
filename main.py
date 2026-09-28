@@ -9,6 +9,7 @@ import datetime as dt
 import html
 import json
 import sys
+import unicodedata
 from pathlib import Path
 
 import config as C
@@ -153,6 +154,32 @@ def _apertura(g):
             "sottotitolo": "Pochi movimenti rilevanti: il bot sta ancora accumulando storico."}
 
 
+def _visual_copertina(titolo, assets):
+    """Choose a visual setting from the actual lead story, with a local fallback."""
+    plain="".join(ch for ch in unicodedata.normalize("NFKD",titolo.lower())
+                  if not unicodedata.combining(ch))
+    pokemon=assets.get("pokemon") or []
+    def find(number):
+        return next((name for name in pokemon[:7] if name.startswith(f"pokemon_{number}_")),None)
+    named=(("kyogre",382),("groudon",383),("rayquaza",384),("latias",380),
+           ("latios",381),("salamence",373),("metagross",376),("absol",359))
+    match=next((number for word,number in named if word in plain and find(number)),None)
+    event=any(term in plain for term in ("popcon","evento","torneo","festival","fiera",
+                                         "community","convention","area nintendo"))
+    if match:
+        hero=find(match)
+        scene="analysis" if match in (384,380,381,373) else "cover"
+        kind="legend" if match in (382,383) else "sky"
+    elif event:
+        hero=find(380) or find(381) or find(373) or (pokemon[0] if pokemon else None)
+        scene="guide";kind="community"
+    else:
+        hero=find(382) or find(383) or (pokemon[0] if pokemon else None)
+        scene="cover";kind="market"
+    partner=(pokemon[7] if len(pokemon)>7 and kind in ("legend","market") else None)
+    return {"scene":scene,"kind":kind,"hero_asset":hero,"companion_asset":partner}
+
+
 def settimanale(invia_telegram=True):
     oggi = dt.date.today()
     numero = storage.leggi_json("numero_rivista.json", {"numero": 0})["numero"] + 1
@@ -195,6 +222,7 @@ def settimanale(invia_telegram=True):
     g = next(iter(ctx["giochi"].values()))
     ctx["principale"] = g
     ctx["apertura"] = _apertura(g)
+    ctx["cover_visual"] = _visual_copertina(ctx["apertura"]["titolo"],pokemon_mondo)
     ctx["kpi"] = [(f"{g['monitorati']:,}".replace(",", "."), "prodotti monitorati"),
                   (sum(1 for p in g["previsioni"] if p["stato"] == "caldo"), "novità calde"),
                   (len(g["occasioni"]), "occasioni sul sigillato"),
@@ -213,12 +241,12 @@ def settimanale(invia_telegram=True):
     # gallery use distinct assets, so an issue never repeats a Pokémon.
     piano = art_director.genera_piano(numero, "hoenn", assets_poke[:7], titoli_art)
     used_heroes = set()
-    # Visual anchors mandated by the magazine reference. Gemini directs the
-    # remaining roles, but the cover and analysis keep their iconic silhouettes.
+    # The cover hero follows the lead story. The other pages remain distinct,
+    # and Gemini directs their visual roles wherever an asset is available.
     reserved = {}
-    if assets_poke: reserved[1] = assets_poke[0]
+    if ctx["cover_visual"]["hero_asset"]: reserved[1] = ctx["cover_visual"]["hero_asset"]
     rayquaza = next((name for name in assets_poke[:7] if name.startswith("pokemon_384_")), None)
-    if rayquaza: reserved[4] = rayquaza
+    if rayquaza and rayquaza != reserved.get(1): reserved[4] = rayquaza
     reserved_names = set(reserved.values())
     for i, pagina in enumerate(piano.get("pages", [])):
         chosen = reserved.get(i + 1, pagina.get("hero_pokemon"))

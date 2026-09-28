@@ -101,6 +101,34 @@ def _short_title(text, limit=5):
     return " ".join(words[:limit]) if len(text or "")>54 else str(text or "")
 
 
+def _cover_headline(c, title, x, top, width, max_height=48*mm):
+    """Keep the entire weekly lead dominant without overrunning the deck."""
+    words=str(title or "").upper().split()
+    remainder=""
+    for size in range(44,17,-1):
+        lines=[];current=""
+        for word in words:
+            candidate=(current+" "+word).strip()
+            if R.pdfmetrics.stringWidth(candidate,R.TITOLO,size)<=width:
+                current=candidate
+            else:
+                if current: lines.append(current)
+                current=word
+        if current: lines.append(current)
+        height=len(lines)*size*1.04
+        if height<=max_height and all(R.pdfmetrics.stringWidth(line,R.TITOLO,size)<=width for line in lines):
+            break
+    else:
+        # Very long source titles keep their complete wording in the deck.
+        visible=max(1,int(max_height/(size*1.04)))
+        remainder=" ".join(lines[visible:])
+        lines=lines[:visible];height=len(lines)*size*1.04
+    c.setFillColor(YELLOW);c.setFont(R.TITOLO,size)
+    for i,line in enumerate(lines):
+        c.drawString(x,H-top-(i+1)*size*1.04,line)
+    return height,remainder
+
+
 def _ribbon(c, label, x, top, w, color=RED, font_size=10):
     h = 9*mm
     _poly(c, [(x,top),(x+w,top),(x+w-5*mm,top+h),(x-2*mm,top+h)], color)
@@ -205,31 +233,42 @@ def _movement(c, row, x, top, w, color, rank):
 
 
 def _cover(c,ctx):
-    _scene(c,ctx,True,"cover")
+    visual=ctx.get("cover_visual") or {}
+    kind=visual.get("kind","market")
+    _scene(c,ctx,True,visual.get("scene","cover"))
     # Water and volcanic diagonal shapes frame the two foreground subjects.
     c.saveState();c.setFillAlpha(.18)
     _poly(c,[(0,108*mm),(57*mm,95*mm),(78*mm,224*mm),(0,230*mm)],BLUE)
     _poly(c,[(W,105*mm),(150*mm,119*mm),(133*mm,219*mm),(W,229*mm)],RED)
     c.restoreState()
-    _hero(c,ctx,0,44*mm,161*mm,177*mm)
-    assets=ctx.get("pokemon_mondo",{}).get("pokemon") or []
-    if len(assets)>7: R._immagine_asset(c,assets[7],W-32*mm,H-177*mm,157*mm)
+    if kind=="community":
+        trainer=R._mondo_asset(ctx,"allenatori",0)
+        if trainer: R._immagine_asset(c,trainer,50*mm,H-160*mm,145*mm)
+        _hero(c,ctx,0,154*mm,157*mm,153*mm)
+    elif kind=="sky":
+        _hero(c,ctx,0,145*mm,156*mm,185*mm)
     else:
+        _hero(c,ctx,0,44*mm,161*mm,177*mm)
+    assets=ctx.get("pokemon_mondo",{}).get("pokemon") or []
+    companion=visual.get("companion_asset",assets[7] if len(assets)>7 and kind=="market" else None)
+    if companion and kind in ("legend","market"):
+        R._immagine_asset(c,companion,W-32*mm,H-177*mm,157*mm)
+    elif kind not in ("community","sky"):
         ball=R._mondo_asset(ctx,"pokeball",0)
         if ball: R._immagine_asset(c,ball,W-35*mm,H-178*mm,80*mm)
     c.setFillColor(WHITE);c.setFont(R.TITOLO,14)
     c.drawString(8*mm,H-11*mm,f"N.{ctx['numero']}")
     c.setFont(R.TESTO_B,8);c.drawString(8*mm,H-17*mm,ctx.get("data_lunga","").upper())
-    R._logo(c,8*mm,H-49*mm,W-16*mm)
+    R._logo(c,8*mm,H-51*mm,W-16*mm)
     c.saveState();c.setFillAlpha(.83)
     _poly(c,[(0,220*mm),(W,206*mm),(W,H),(0,H)],colors.HexColor("#062A55"))
     c.restoreState()
-    _ribbon(c,"IN PRIMO PIANO",10*mm,213*mm,72*mm,RED,12)
+    _ribbon(c,"IN PRIMO PIANO",10*mm,216*mm,72*mm,RED,12)
     title=ctx.get("apertura",{}).get("titolo","Il mondo Pokémon TCG")
-    headline=_short_title(title)
-    used=_display(c,headline,10*mm,225*mm,W-20*mm,43,YELLOW,2)
-    deck=title if headline!=title else ctx.get("apertura",{}).get("sottotitolo","")
-    _text(c,deck,12*mm,230*mm+used,W-24*mm,20*mm,10,R.TESTO_B,WHITE)
+    used,remainder=_cover_headline(c,title,10*mm,228*mm,W-20*mm)
+    deck=(remainder+" · " if remainder else "")+ctx.get("apertura",{}).get("sottotitolo","")
+    deck_top=228*mm+used+3*mm
+    _text(c,deck,12*mm,deck_top,W-24*mm,H-deck_top-5*mm,10,R.TESTO_B,WHITE)
     c.showPage()
 
 

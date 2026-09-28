@@ -60,21 +60,48 @@ ASSET_DIR = Path(__file__).resolve().parent.parent / "assets"
 
 
 def _logo(c, x, y, width, compact=False):
-    """Marchio originale POKèPUTZU WEEKLY, robusto e leggibile anche in piccolo."""
-    main="POKèPUTZU"; size=max(10,width/6.1); tw=pdfmetrics.stringWidth(main,TITOLO,size)
-    if tw>width: size*=width/tw; tw=pdfmetrics.stringWidth(main,TITOLO,size)
-    c.saveState(); c.translate(x,y); c.rotate(-2 if not compact else 0); c.setFont(TITOLO,size)
-    # contorno simulato: affidabile in PDF e visivamente più massiccio
-    off=max(.8,size*.045); c.setFillColor(colors.HexColor("#123E78"))
-    for dx,dy in ((-off,0),(off,0),(0,-off),(0,off),(-off,-off),(off,-off),(-off,off),(off,off)):
-        c.drawString(dx,dy,main)
-    c.setFillColor(SOLE); c.drawString(0,0,main)
-    if not compact:
-        rw=min(width*.46,48*mm); rh=max(7*mm,size*.32); rx=max(0,tw-rw*.86); ry=-rh*.90
-        c.setFillColor(ROSSO); c.roundRect(rx,ry,rw,rh,rh/2,stroke=0,fill=1)
-        c.setFillColor(BIANCO); c.setFont(TESTO_B,max(7,size*.27)); c.drawCentredString(rx+rw/2,ry+rh*.30,"WEEKLY")
-    else:
-        c.setFillColor(ROSSO); c.setFont(TESTO_B,max(5,size*.22)); c.drawRightString(min(width,tw),-3.1*mm,"WEEKLY")
+    """Original vector masthead with a lively contour and painted weekly flag."""
+    font=F["Logo"]
+    letters="PokèPutzu"
+    size=max(11,width/(6.4 if compact else 5.8))
+    heights=(1.14,.86,1.03,.88,1.16,.88,.87,.86,.89)
+    lift=(0,-.025,.035,.015,0,-.02,-.015,-.018,-.01)
+    tilt=(-5,2,-3,3,-2,1,-2,2,-1)
+    glyphs=[]; cursor=0
+    for letter,factor,up,angle in zip(letters,heights,lift,tilt):
+        glyph_size=size*factor
+        glyphs.append((letter,cursor,size*up,glyph_size,angle))
+        cursor+=pdfmetrics.stringWidth(letter,font,glyph_size)*.94
+    sx=min(1.0,(width-size*.13)/cursor)
+    c.saveState();c.translate(x,y);c.rotate(-3 if not compact else 0);c.scale(sx,1)
+    c.setLineJoin(1)
+    def layer(mode,colour,line_width=0,dx=0,dy=0):
+        if mode==1:
+            c.setStrokeColor(colour);c.setLineWidth(line_width)
+        else: c.setFillColor(colour)
+        for letter,gx,gy,gsize,angle in glyphs:
+            c.saveState();c.translate(gx+dx,gy+dy);c.rotate(angle)
+            t=c.beginText(0,0);t.setFont(font,gsize);t.setTextRenderMode(mode);t.textOut(letter)
+            c.drawText(t);c.restoreState()
+    edge=max(1.2,size*.16)
+    layer(1,BIANCO,edge)
+    layer(1,colors.HexColor("#092B65"),edge*.69)
+    layer(1,colors.HexColor("#1766AD"),edge*.38)
+    layer(0,colors.HexColor("#F5A91D"),dx=0,dy=-size*.014)
+    layer(0,colors.HexColor("#FFD82E"))
+    c.restoreState()
+
+    c.saveState();c.translate(x+width*(.50 if not compact else .56),y-size*(.58 if not compact else .54))
+    c.rotate(-4 if not compact else 0)
+    bw=width*(.47 if not compact else .42);bh=max(6,size*.38)
+    p=c.beginPath()
+    for i,(px,py) in enumerate(((0,bh*.18),(bw*.09,bh*.32),(bw*.04,bh*.46),
+                                (bw*.98,bh*.50),(bw,bh*.30),(bw*.96,0),
+                                (bw*.05,-bh*.13),(bw*.10,bh*.04))):
+        (p.moveTo if i==0 else p.lineTo)(px,py)
+    p.close();c.setFillColor(colors.HexColor("#D71E36"));c.drawPath(p,fill=1,stroke=0)
+    c.setFillColor(BIANCO);c.setFont(TITOLO,max(5,size*(.29 if not compact else .24)))
+    c.drawCentredString(bw*.52,bh*.07,"WEEKLY")
     c.restoreState()
 
 def _mondo_asset(ctx, gruppo, indice=0):

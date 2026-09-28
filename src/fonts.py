@@ -21,4 +21,5 @@ def carica():
     medium=_reg("PokeMedium",["/usr/share/fonts/truetype/noto/NotoSans-Medium.ttf","/usr/share/fonts/**/*NotoSans-Medium.ttf"],"Helvetica")
     bold=_reg("PokeBold",["/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf","/usr/share/fonts/**/*NotoSans-Bold.ttf"],"Helvetica-Bold")
     title=_reg("PokeTitle",["/usr/share/fonts/truetype/liberation2/LiberationSans-BoldItalic.ttf","/usr/share/fonts/**/*LiberationSans-BoldItalic.ttf","/usr/share/fonts/truetype/noto/NotoSans-Black.ttf"],bold)
-    return {"Testata":title,"Titolo":title,"Corpo":regular,"CorpoB":medium,"Simboli":regular}
+    logo=_reg("PokeLogo",["/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf","/usr/share/fonts/**/*DejaVuSans-Bold.ttf"],bold)
+    return {"Testata":title,"Titolo":title,"Logo":logo,"Corpo":regular,"CorpoB":medium,"Simboli":regular}
