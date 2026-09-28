@@ -36,13 +36,18 @@ def verifica(prodotti, lingua):
                 break
             r.raise_for_status()
             dettaglio = r.json()
+            filtro = dettaglio.get("filter") or {}
+            if str(dettaglio.get("id")) != str(p["id"]) or \
+                    str(filtro.get("language", "")).casefold() != lingua.casefold():
+                print(f"[verify] ID o lingua inattesi per {p['id']}: dato ignorato")
+                continue
             prezzi = dettaglio.get("prices", {})
             p["verifica_lingua"] = {"lingua": lingua, "da": prezzi.get("from"),
-                                    "media5": prezzi.get("avg5"), "disponibili": prezzi.get("available")}
+                                    "media5": prezzi.get("avg5"), "disponibili": prezzi.get("available"),
+                                    "fonte": "cardmarketapi.com", "rilevato": dettaglio.get("fetched_at")}
             # The response is keyed by Cardmarket's product ID. Never infer an
             # image from a Pokémon or expansion name: sealed variants differ.
-            if str(dettaglio.get("id")) == str(p["id"]):
-                p["immagine_prodotto_url"] = dettaglio.get("image_url")
+            p["immagine_prodotto_url"] = dettaglio.get("image_url")
         except (requests.RequestException, ValueError):
             continue
     storage.scrivi_json("verifiche.json", stato)

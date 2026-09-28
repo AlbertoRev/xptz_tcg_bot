@@ -220,11 +220,11 @@ def settimanale(invia_telegram=True):
     percorso_pdf = f"output/POKEPUTZU_WEEKLY_n{numero}_{oggi.isoformat()}.pdf"
     ctx["pokemon_mondo"] = pokemon_mondo
     rivista.crea(percorso_pdf, ctx, compact=False)
-    qa=pdf_qa.check(percorso_pdf, image_audit=image_audit)
+    qa=pdf_qa.check(percorso_pdf, expected_pages=7, image_audit=image_audit)
     if not qa["ok"]:
         print(f"[pdf_qa] layout standard non valido: {qa['errors']} — retry compatto")
         rivista.crea(percorso_pdf, ctx, compact=True)
-        qa=pdf_qa.check(percorso_pdf, image_audit=image_audit)
+        qa=pdf_qa.check(percorso_pdf, expected_pages=7, image_audit=image_audit)
     if not qa["ok"]:
         raise RuntimeError(f"PDF non supera il QA: {qa['errors']}")
     print(f"[pdf_qa] OK: {qa['pages']} pagine; profilo={ctx.get('_layout_profile',{}).get('mode')}; compact={ctx.get('_layout_profile',{}).get('compact')}")

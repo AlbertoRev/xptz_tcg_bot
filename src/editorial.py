@@ -494,33 +494,6 @@ def _guide(c,ctx,page):
     c.showPage()
 
 
-def _continuation(c,ctx,page,title,records,kind):
-    _header(c,ctx,page,title,"Approfondimenti della settimana")
-    _section(c,"ALTRE SEGNALAZIONI",10*mm,68*mm,106*mm,RED)
-    for i,record in enumerate(records):
-        top=(81+i*(47 if kind=="news" else 30))*mm
-        if kind=="news": _news_card(c,record,10*mm,top,W-20*mm,44*mm)
-        else:
-            _rect(c,10*mm,top,W-20*mm,27*mm)
-            _text(c,record.get("nome",""),14*mm,top+4*mm,126*mm,16*mm,11,R.TESTO_B)
-            _text(c,f"Offerta {_eur(record.get('prezzo_minimo',0))}  ·  Tendenza {_eur(record.get('prezzo_tendenza',0))}",14*mm,top+21*mm,153*mm,9*mm,8.5)
-            c.setFillColor(RED);c.setFont(R.TITOLO,13)
-            c.drawRightString(W-15*mm,H-top-12*mm,f"-{record.get('sconto',0):.1f}%")
-    if len(records)<(4 if kind=="news" else 6):
-        top=(86+len(records)*(47 if kind=="news" else 30))*mm
-        height=275*mm-top
-        if height>20*mm:
-            _rect(c,10*mm,top,W-20*mm,height,WHITE,.92)
-            _section(c,"DA TENERE D'OCCHIO",12*mm,top+2*mm,91*mm,BLUE)
-            message=("Segui le fonti e verifica date e disponibilità prima di considerare un'uscita confermata."
-                     if kind=="news" else
-                     "Prezzi e sconti vanno verificati su Cardmarket: lingua, condizione e spedizione cambiano il risultato.")
-            _text(c,message,15*mm,top+14*mm,129*mm,height-18*mm,9.5)
-            item=R._mondo_asset(ctx,"oggetti",page)
-            if item: R._immagine_asset(c,item,W-34*mm,H-top-height/2,35*mm)
-    c.showPage()
-
-
 def _back(c,ctx):
     _scene(c,ctx,role="back")
     c.saveState();c.setFillAlpha(.74)
@@ -543,20 +516,13 @@ def _back(c,ctx):
 
 
 def crea(percorso,ctx,compact=False):
-    """Render the core story plus measured continuation pages as needed."""
+    """Render seven fixed editorial roles, selecting the most relevant stories."""
     Path(percorso).parent.mkdir(parents=True,exist_ok=True)
     c=canvas.Canvas(str(percorso),pagesize=(W,H),pageCompression=1)
     c.setTitle(f"POKèPUTZU WEEKLY n. {ctx['numero']}")
     _cover(c,ctx)
     for i,draw in enumerate((_market,_news,_analysis,_collector,_guide),2):
         draw(c,ctx,i)
-    page=7
-    g=ctx["principale"]
-    for kind,title,records,start,step in (("news","NOVITÀ",g.get("notizie") or [],3,4),
-                                          ("offers","FOCUS COLLEZIONE",g.get("occasioni") or [],4,6)):
-        for j in range(start,len(records),step):
-            _continuation(c,ctx,page,title,records[j:j+step],kind)
-            page+=1
     _back(c,ctx)
     c.save()
-    ctx["_layout_profile"]={"mode":"editorial", "compact":False,"pages":page}
+    ctx["_layout_profile"]={"mode":"editorial", "compact":False,"pages":7}
