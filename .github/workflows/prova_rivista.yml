@@ -7,7 +7,7 @@ on:
       - pokeputzu_redesign
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   genera:
@@ -30,25 +30,10 @@ jobs:
         run: pip install -r requirements.txt PyMuPDF
       - name: Controllo del codice
         run: python -m py_compile main.py download_assets.py src/*.py
-      - name: Ricalcola abbinamenti dall'archivio locale
+      - name: Verifica abbinamenti dall'archivio locale
         run: |
           python -m src.archivio_match
           python -m src.archivio_check
-      - name: Carica archivio consultabile
-        uses: actions/upload-artifact@v4
-        with:
-          name: Catalogo-Pokemon-TCG
-          path: data/catalogo_pokemon/
-          if-no-files-found: error
-      - name: Salva archivio nel branch
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/catalogo_pokemon/
-          if ! git diff --cached --quiet; then
-            git commit -m "Refresh Pokémon TCG catalogue"
-            git push origin HEAD:pokeputzu_redesign
-          fi
       - name: Genera PDF e verifica QA
         run: python -u main.py prova_rivista
       - name: Carica PDF e diagnostica di prova
@@ -60,7 +45,7 @@ jobs:
             output/*_image_audit.json
             output/visual_review/*.png
           if-no-files-found: error
-      - name: Invia l'anteprima su Telegram
+      - name: Invia l'anteprima PDF su Telegram
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -69,5 +54,5 @@ jobs:
           pdfs = sorted(Path("output").glob("POKEPUTZU_WEEKLY_n*.pdf"))
           if len(pdfs) != 1:
               raise RuntimeError(f"Atteso un solo PDF di prova, trovati: {pdfs}")
-          documento(pdfs[0], f"POKèPUTZU WEEKLY · anteprima branch pokeputzu_redesign · {pdfs[0].stem}")
+          documento(pdfs[0], f"POKèPUTZU WEEKLY · anteprima · {pdfs[0].stem}")
           PY

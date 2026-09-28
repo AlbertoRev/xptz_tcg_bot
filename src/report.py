@@ -1,5 +1,4 @@
-"""Testi del bot: alert Telegram, frasi della rivista e file dati per l'analisi di Claude."""
-import html
+"""Testi della rivista e riepilogo strutturato."""
 import os
 from xml.sax.saxutils import escape
 
@@ -88,49 +87,6 @@ def sintesi_righe(ctx):
             righe.append(f"{len(g['occasioni'])} offerte sul sigillato molto sotto il prezzo di tendenza.")
         righe.append(f"Storico disponibile: {_copertura(g['giorni_storico'])}.")
     return righe or ["Nessun movimento rilevante: servono ancora dati storici."]
-
-
-def telegram_alert(alert, gioco, tipo, conteggi):
-    titolo = "Sigillato" if tipo == "sigillato" else "Carte singole in ribasso"
-    icona_t = "📦" if tipo == "sigillato" else "🃏"
-    r = [f"<b>{icona_t} Alert {html.escape(gioco)} · {titolo}</b>"]
-    if not alert:
-        r += ["", "Nessun segnale oggi."]
-    else:
-        n_nuovi = sum(1 for a in alert if not a.get("segnalato_dal"))
-        r += [f"{len(alert)} alert: {n_nuovi} nuovi, {len(alert) - n_nuovi} ancora attivi", ""]
-    for a in alert:
-        link = f"<a href=\"{html.escape(a['link'])}\">{html.escape(a['nome'][:55])}</a>"
-        if a["genere"] == "movimento":
-            icona = "🔺" if a["variazione_7g"] > 0 else "🔻"
-            riga = f"{icona} {link}: {_perc(a['variazione_7g'])} in 7 giorni, ora {_eur(a['prezzo'])}"
-        elif a["genere"] == "slancio":
-            icona = "📈" if a["variazione"] > 0 else "📉"
-            riga = (f"{icona} {link}: vendite 7 giorni {_perc(a['variazione'])} rispetto al mese, "
-                    f"prezzo {_eur(a['prezzo'])}")
-        else:
-            icona = "💡" if a["genere"] == "occasione" else "👀"
-            riga = (f"{icona} {link}: minimo {_eur(a['prezzo_minimo'])} contro tendenza "
-                    f"{_eur(a['prezzo_tendenza'])} (-{a['sconto']:.0f}%)")
-            v = a.get("verifica_lingua")
-            if v and v.get("da"):
-                riga += f" · in {a['lingua_it']} da {_eur(v['da'])}"
-        if a.get("segnalato_dal"):
-            d = a["segnalato_dal"]
-            riga += f" · <i>attivo dal {d[8:10]}/{d[5:7]}</i>"
-        else:
-            riga += " · <b>nuovo</b>"
-        r.append(riga)
-    r.append("")
-    if tipo == "sigillato":
-        r.append(f"<i>Trovati oggi: {conteggi[0]} movimenti, {conteggi[1]} occasioni, {conteggi[2]} da osservare</i>")
-        r.append("<i>🔺🔻 movimento forte confermato · 💡 minimo sotto il 70% della tendenza · "
-                 "👀 minimo tra 70% e 85%</i>")
-    else:
-        r.append(f"<i>Trovati oggi: {conteggi[0]} ribassi forti, {conteggi[1]} carte con vendite in calo</i>")
-        r.append("<i>🔻 ribasso forte confermato · 📉 vendite dell'ultima settimana sotto la media del mese "
-                 "(stima)</i>")
-    return "\n".join(r)
 
 
 # ---------- dati per Claude ----------

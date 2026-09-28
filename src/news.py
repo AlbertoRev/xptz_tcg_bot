@@ -1,7 +1,6 @@
-"""Notizie e uscite in arrivo da più fonti RSS gratuite (nessuna AI).
+"""Notizie e uscite italiane da fonti RSS gratuite (nessuna AI).
 
-Fonti: Google News in italiano e in inglese (compresi articoli del sito ufficiale Pokémon,
-di Pokémon Millennium e di PokéBeach) e il feed diretto di PokéBeach.
+Fonti: Google News in italiano, inclusi il sito ufficiale Pokémon e fonti italiane.
 Le date di uscita vengono estratte in automatico da titoli e sommari: vanno sempre
 controllate sul link della fonte.
 """
@@ -14,7 +13,7 @@ from urllib.parse import quote, urlparse
 import feedparser
 
 RICERCHE = {
-    "pokemon": [("Pokémon GCC carte nuova espansione", "it"), ("Pokemon TCG new set", "en")],
+    "pokemon": [("Pokémon GCC carte nuova espansione italiana", "it")],
 }
 
 RICERCHE_USCITE = [
@@ -23,11 +22,8 @@ RICERCHE_USCITE = [
     ("Pokémon GCC prevendita", "it"),
     ("site:pokemon.com GCC Pokémon espansione", "it"),
     ("site:pokemonmillennium.net GCC", "it"),
-    ("Pokemon TCG release date", "en"),
-    ("Pokemon TCG upcoming set", "en"),
-    ("site:pokebeach.com release", "en"),
 ]
-FEED_DIRETTI = ["https://www.pokebeach.com/feed"]
+FEED_DIRETTI = []
 
 MESI = {
     "gennaio": 1, "febbraio": 2, "marzo": 3, "aprile": 4, "maggio": 5, "giugno": 6, "luglio": 7,
@@ -71,6 +67,8 @@ def notizie(gioco, max_per_gioco=8):
     for q, lingua in RICERCHE.get(gioco, []):
         for e in _voci(_url(q, lingua, 7)):
             titolo = _pulisci(e.get("title"))
+            if "pokémon pocket" in titolo.casefold() or "pokemon pocket" in titolo.casefold() or "gcc pocket" in titolo.casefold():
+                continue
             chiave = titolo.lower()[:80]
             if not titolo or chiave in visti:
                 continue

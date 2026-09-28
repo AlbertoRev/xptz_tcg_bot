@@ -137,38 +137,6 @@ def anomalie(df):
     return tot
 
 
-def alert_movimenti(gioco, giorno, df, slug, link):
-    """Movimenti forti a 7 giorni, confermati anche il giorno precedente."""
-    ieri, _ = storage.carica_istantanea(gioco, giorno - dt.timedelta(days=1))
-    r7, _ = storage.carica_istantanea(gioco, giorno - dt.timedelta(days=7), 1)
-    r8, _ = storage.carica_istantanea(gioco, giorno - dt.timedelta(days=8), 1)
-    if ieri is None or r7 is None or r8 is None:
-        return []
-    ora = df["trend"] / r7["trend"].reindex(df.index) - 1
-    prima = ieri["trend"].reindex(df.index) / r8["trend"].reindex(df.index) - 1
-    minimo = df["tipo"].map(C.MIN_PREZZO_ALERT)
-    m = (ora.abs() >= C.SOGLIA_ALERT_MOVIMENTO) & (prima.abs() >= C.SOGLIA_CONFERMA) & \
-        (np.sign(ora) == np.sign(prima)) & (ora.abs() <= C.VARIAZIONE_MAX_CREDIBILE) & (df["trend"] >= minimo)
-    sel = df[m].assign(v=ora[m]).sort_values("v", key=abs, ascending=False)
-    return [{
-        "id": int(i), "nome": r["nome"], "tipo": r["tipo"], "prezzo": round(float(r["trend"]), 2),
-        "variazione_7g": round(float(r["v"]) * 100, 1), "link": link(slug, r["nome"]),
-    } for i, r in sel.iterrows()]
-
-
-def slancio_singole(df, slug, link):
-    """Singole con vendite dell'ultima settimana molto diverse dalla media del mese (stima)."""
-    v = df["avg7"] / df["avg30"] - 1
-    m = (df["tipo"] == "singola") & df["avg7"].notna() & (df["avg30"] > 0) & \
-        (df["trend"] >= C.MIN_PREZZO_ALERT["singola"]) & (v.abs() >= C.SOGLIA_SLANCIO) & \
-        (v.abs() <= C.VARIAZIONE_MAX_CREDIBILE)
-    sel = df[m].assign(v=v[m]).sort_values("v", key=abs, ascending=False)
-    return [{
-        "id": int(i), "nome": r["nome"], "tipo": r["tipo"], "prezzo": round(float(r["trend"]), 2),
-        "variazione": round(float(r["v"]) * 100, 1), "link": link(slug, r["nome"]),
-    } for i, r in sel.iterrows()]
-
-
 ORDINE_STATO = {"caldo": 0, "tiepido": 1, "in arrivo": 2, "da valutare": 3, "freddo": 4}
 
 

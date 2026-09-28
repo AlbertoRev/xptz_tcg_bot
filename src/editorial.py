@@ -98,7 +98,12 @@ def _display(c, text, x, top, width, size=34, color=WHITE, max_lines=2):
 
 def _short_title(text, limit=5):
     words=str(text or "").split()
-    return " ".join(words[:limit]) if len(text or "")>54 else str(text or "")
+    if len(text or "") <= 54:
+        return str(text or "")
+    chosen=words[:limit]
+    while len(chosen)>2 and chosen[-1].casefold().strip("’'.,:!") in {"di","del","della","a","al","con","per","ti","e"}:
+        chosen.pop()
+    return " ".join(chosen)
 
 
 def _cover_headline(c, title, x, top, width, max_height=48*mm):
@@ -464,7 +469,6 @@ def _collector(c,ctx,page):
 
 
 def _guide(c,ctx,page):
-    g=ctx["principale"];car=g.get("carrello") or {}; proposals=car.get("proposte") or []
     _feature_header(c,ctx,page,"GUIDA MERCATO","Consigli pratici per collezionisti","guide")
     _rect(c,8*mm,70*mm,115*mm,89*mm,alpha=.91)
     _section(c,"STRATEGIA DELLA SETTIMANA",10*mm,72*mm,110*mm)
@@ -474,50 +478,18 @@ def _guide(c,ctx,page):
         c.setFillColor(colors.HexColor("#0D8D69"));c.setFont(R.TITOLO,16);c.drawString(14*mm,H-yy*mm,"✓")
         _text(c,a,27*mm,(yy-5)*mm,89*mm,13*mm,10,R.TESTO_B)
     _rect(c,129*mm,70*mm,72*mm,89*mm,alpha=.91)
-    _section(c,"RISCHIO",131*mm,72*mm,65*mm,RED)
-    for i,(label,pct,col) in enumerate((("BASSO",.30,colors.HexColor("#1DAD6D")),("MEDIO",.53,YELLOW),("ALTO",.20,RED))):
-        y=(92+i*20)*mm
-        c.setFillColor(NAVY);c.setFont(R.TESTO_B,9);c.drawString(135*mm,H-y,label)
-        c.setFillColor(colors.HexColor("#D9E4EB"));c.roundRect(135*mm,H-y-8*mm,58*mm,5*mm,2*mm,fill=1,stroke=0)
-        c.setFillColor(col);c.roundRect(135*mm,H-y-8*mm,58*mm*pct,5*mm,2*mm,fill=1,stroke=0)
+    _section(c,"VERIFICA",131*mm,72*mm,65*mm,RED)
+    for i,label in enumerate(("Stampa italiana", "Foto della confezione", "Prezzo filtrato per lingua")):
+        _text(c,label,135*mm,(91+i*21)*mm,60*mm,16*mm,9.5,R.TESTO_B)
     trainer=R._mondo_asset(ctx,"allenatori",1)
     if trainer: R._immagine_asset(c,trainer,46*mm,H-230*mm,157*mm)
     _hero(c,ctx,5,70*mm,244*mm,115*mm)
     _rect(c,104*mm,184*mm,96*mm,89*mm,alpha=.93)
-    _section(c,"CONSIGLIO DELL'ESPERTO",106*mm,187*mm,91*mm,BLUE)
-    if proposals:
-        text=f"Prima ipotesi: {proposals[0].get('nome','')}. Prezzo indicato: {_eur(proposals[0].get('prezzo',0))}. Controlla i dettagli dell'inserzione."
-    else:
-        text="Questa settimana conviene osservare i segnali. Un prezzo basso da solo non dimostra che l'acquisto sia una buona occasione."
+    _section(c,"PRIMA DI SCEGLIERE",106*mm,187*mm,91*mm,BLUE)
+    text=("Il catalogo identifica il prodotto, ma il prezzo pubblico può includere più lingue. "
+          "Per il prezzo italiano serve una verifica delle inserzioni nella lingua richiesta.")
     _text(c,text,109*mm,203*mm,84*mm,58*mm,11)
     _footer(c,ctx,page)
-    c.showPage()
-
-
-def _continuation(c,ctx,page,title,records,kind):
-    _header(c,ctx,page,title,"Approfondimenti della settimana")
-    _section(c,"ALTRE SEGNALAZIONI",10*mm,68*mm,106*mm,RED)
-    for i,record in enumerate(records):
-        top=(81+i*(47 if kind=="news" else 30))*mm
-        if kind=="news": _news_card(c,record,10*mm,top,W-20*mm,44*mm)
-        else:
-            _rect(c,10*mm,top,W-20*mm,27*mm)
-            _text(c,record.get("nome",""),14*mm,top+4*mm,126*mm,16*mm,11,R.TESTO_B)
-            _text(c,f"Offerta {_eur(record.get('prezzo_minimo',0))}  ·  Tendenza {_eur(record.get('prezzo_tendenza',0))}",14*mm,top+21*mm,153*mm,9*mm,8.5)
-            c.setFillColor(RED);c.setFont(R.TITOLO,13)
-            c.drawRightString(W-15*mm,H-top-12*mm,f"-{record.get('sconto',0):.1f}%")
-    if len(records)<(4 if kind=="news" else 6):
-        top=(86+len(records)*(47 if kind=="news" else 30))*mm
-        height=275*mm-top
-        if height>20*mm:
-            _rect(c,10*mm,top,W-20*mm,height,WHITE,.92)
-            _section(c,"DA TENERE D'OCCHIO",12*mm,top+2*mm,91*mm,BLUE)
-            message=("Segui le fonti e verifica date e disponibilità prima di considerare un'uscita confermata."
-                     if kind=="news" else
-                     "Prezzi e sconti vanno verificati su Cardmarket: lingua, condizione e spedizione cambiano il risultato.")
-            _text(c,message,15*mm,top+14*mm,129*mm,height-18*mm,9.5)
-            item=R._mondo_asset(ctx,"oggetti",page)
-            if item: R._immagine_asset(c,item,W-34*mm,H-top-height/2,35*mm)
     c.showPage()
 
 
@@ -543,20 +515,13 @@ def _back(c,ctx):
 
 
 def crea(percorso,ctx,compact=False):
-    """Render the core story plus measured continuation pages as needed."""
+    """Render seven fixed editorial roles, selecting the most relevant stories."""
     Path(percorso).parent.mkdir(parents=True,exist_ok=True)
     c=canvas.Canvas(str(percorso),pagesize=(W,H),pageCompression=1)
     c.setTitle(f"POKèPUTZU WEEKLY n. {ctx['numero']}")
     _cover(c,ctx)
     for i,draw in enumerate((_market,_news,_analysis,_collector,_guide),2):
         draw(c,ctx,i)
-    page=7
-    g=ctx["principale"]
-    for kind,title,records,start,step in (("news","NOVITÀ",g.get("notizie") or [],3,4),
-                                          ("offers","FOCUS COLLEZIONE",g.get("occasioni") or [],4,6)):
-        for j in range(start,len(records),step):
-            _continuation(c,ctx,page,title,records[j:j+step],kind)
-            page+=1
     _back(c,ctx)
     c.save()
-    ctx["_layout_profile"]={"mode":"editorial", "compact":False,"pages":page}
+    ctx["_layout_profile"]={"mode":"editorial", "compact":False,"pages":7}
