@@ -201,9 +201,9 @@ def _cover(c,ctx):
     _poly(c,[(0,108*mm),(57*mm,95*mm),(78*mm,224*mm),(0,230*mm)],BLUE)
     _poly(c,[(W,105*mm),(150*mm,119*mm),(133*mm,219*mm),(W,229*mm)],RED)
     c.restoreState()
-    _hero(c,ctx,0,49*mm,157*mm,150*mm)
+    _hero(c,ctx,0,44*mm,161*mm,177*mm)
     assets=ctx.get("pokemon_mondo",{}).get("pokemon") or []
-    if len(assets)>7: R._immagine_asset(c,assets[7],W-36*mm,H-169*mm,137*mm)
+    if len(assets)>7: R._immagine_asset(c,assets[7],W-32*mm,H-177*mm,157*mm)
     else:
         ball=R._mondo_asset(ctx,"pokeball",0)
         if ball: R._immagine_asset(c,ball,W-35*mm,H-178*mm,80*mm)
@@ -300,15 +300,15 @@ def _news(c,ctx,page):
 def _analysis(c,ctx,page):
     g=ctx["principale"];focus=ctx.get("apertura") or {}
     _header(c,ctx,page,"ANALISI","Approfondimenti e strategie",scene_role="analysis")
+    # Paint the creature before the copy panels. Its silhouette can cross
+    # the composition, but never obscure the headline or the measured data.
+    _hero(c,ctx,3,160*mm,156*mm,145*mm)
     _rect(c,8*mm,65*mm,124*mm,68*mm,alpha=.92)
     _section(c,"CARTA / PRODOTTO PROTAGONISTA",10*mm,68*mm,116*mm,RED)
     title=focus.get("titolo","Analisi della settimana")
     _display(c,_short_title(title),12*mm,85*mm,113*mm,23,BLUE,3)
     _text(c,title if len(title)>54 else focus.get("sottotitolo",""),
           13*mm,112*mm,108*mm,17*mm,9)
-    # The protagonist crosses the central horizon while data remains in a
-    # measured safe zone on the left.
-    _hero(c,ctx,3,160*mm,156*mm,145*mm)
     _rect(c,8*mm,143*mm,113*mm,75*mm,alpha=.93)
     _section(c,"DATI PRINCIPALI",10*mm,145*mm,82*mm)
     rows=R._top_rows(g,"singola",4)

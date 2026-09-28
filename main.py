@@ -213,10 +213,18 @@ def settimanale(invia_telegram=True):
     # gallery use distinct assets, so an issue never repeats a Pokémon.
     piano = art_director.genera_piano(numero, "hoenn", assets_poke[:7], titoli_art)
     used_heroes = set()
+    # Visual anchors mandated by the magazine reference. Gemini directs the
+    # remaining roles, but the cover and analysis keep their iconic silhouettes.
+    reserved = {}
+    if assets_poke: reserved[1] = assets_poke[0]
+    rayquaza = next((name for name in assets_poke[:7] if name.startswith("pokemon_384_")), None)
+    if rayquaza: reserved[4] = rayquaza
+    reserved_names = set(reserved.values())
     for i, pagina in enumerate(piano.get("pages", [])):
-        chosen = pagina.get("hero_pokemon")
-        if chosen not in assets_poke[:7] or chosen in used_heroes:
-            chosen = next((name for name in assets_poke[:7] if name not in used_heroes), None)
+        chosen = reserved.get(i + 1, pagina.get("hero_pokemon"))
+        if chosen not in assets_poke[:7] or chosen in used_heroes or (i + 1 not in reserved and chosen in reserved_names):
+            chosen = next((name for name in assets_poke[:7]
+                           if name not in used_heroes and name not in reserved_names), None)
         pagina["hero_asset"] = chosen
         if chosen: used_heroes.add(chosen)
     ctx["art_direction"] = piano
