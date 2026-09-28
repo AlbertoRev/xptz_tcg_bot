@@ -34,7 +34,6 @@ jobs:
         run: |
           python -m src.archivio_match
           python -m src.archivio_check
-          fi
       - name: Genera PDF e verifica QA
         run: python -u main.py prova_rivista
       - name: Carica PDF e diagnostica di prova
