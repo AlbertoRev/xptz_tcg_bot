@@ -1,7 +1,7 @@
 """QA strutturale per POKEPUTZU WEEKLY."""
 from pathlib import Path
 
-def check(path, expected_pages=None):
+def check(path, expected_pages=None, image_audit=None):
     result={"ok":False,"pages":0,"errors":[]}
     p=Path(path)
     if not p.exists() or p.stat().st_size<10000:
@@ -21,6 +21,25 @@ def check(path, expected_pages=None):
                 x0,y0,x1,y1=block[:4]
                 if x0 < -2 or y0 < -2 or x1 > rect.width+2 or y1 > rect.height+2:
                     result["errors"].append(f"pagina {i+1}: testo fuori pagina"); break
+        if image_audit and len(doc) >= 5:
+            market = doc[1].get_text("text")
+            focus = doc[4].get_text("text").lower()
+            if image_audit.get("card_approximate") and "≈" not in market:
+                result["errors"].append("manca la didascalia delle scansioni inferite")
+            if image_audit.get("product_approximate") and focus.count("foto simile") < 2:
+                result["errors"].append("manca la didascalia delle foto di prodotto simili")
         doc.close()
     except Exception as e: result["errors"].append(f"lettura PDF: {e}")
     result["ok"]=not result["errors"]; return result
+
+
+def render_review(path, output_dir):
+    """Save the two pages containing real card and product imagery for QA."""
+    import fitz
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    with fitz.open(str(path)) as doc:
+        for index in (1, 4):
+            if index < len(doc):
+                doc[index].get_pixmap(matrix=fitz.Matrix(1.25, 1.25), alpha=False).save(
+                    str(output_dir / f"page_{index + 1}.png"))

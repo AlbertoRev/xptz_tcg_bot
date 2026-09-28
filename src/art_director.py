@@ -21,7 +21,9 @@ def genera_piano(issue_number,region="hoenn",available_pokemon=None,content_titl
  try:
   from google import genai
   from google.genai import types
-  client=genai.Client(api_key=key)
+  # The art direction is optional: an overloaded model must never stall the
+  # weekly PDF for the full GitHub Actions job timeout.
+  client=genai.Client(api_key=key,http_options=types.HttpOptions(timeout=20000))
   elenco=", ".join(available_pokemon or [])
   contenuti="; ".join(content_titles or [])
   notizie="\n".join(f"Gruppo {i}: " + " | ".join(f"{v.get('titolo','')} [{v.get('fonte','')}, {v.get('data','')}]" for v in group.get("voci",[]))

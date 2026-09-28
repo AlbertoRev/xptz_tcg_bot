@@ -15,6 +15,7 @@ from PIL import Image
 from src import rivista
 
 CATALOG = Path(__file__).resolve().parents[1] / "data/catalogo_pokemon/carte.jsonl.gz"
+MATCHES = CATALOG.with_name("carte_cardmarket_match.jsonl.gz")
 
 
 def normalize(value):
@@ -33,6 +34,8 @@ def query_parts(value):
 class CardIndex:
     def __init__(self, path=CATALOG):
         self.rows = []
+        self.by_id = {}
+        self.market_links = {}
         self.by_name = defaultdict(list)
         if not path.is_file():
             return
@@ -42,13 +45,23 @@ class CardIndex:
                 if not (row.get("image_it") or row.get("image_en")):
                     continue
                 self.rows.append(row)
+                self.by_id[row["tcgdex_id"]] = row
                 for lang in ("en", "it"):
                     name = normalize(row.get(f"name_{lang}"))
                     if name:
                         self.by_name[name].append(row)
+        match_path = path.with_name(MATCHES.name)
+        if match_path.is_file():
+            with gzip.open(match_path, "rt", encoding="utf-8") as stream:
+                for line in stream:
+                    match = json.loads(line)
+                    self.market_links[match["cardmarket_id"]] = match
 
-    def candidates(self, name, set_name=None):
+    def candidates(self, name, set_name=None, cardmarket_id=None):
         key, number = query_parts(name)
+        link = self.market_links.get(cardmarket_id) or {}
+        ids = [link["tcgdex_id"]] if link.get("tcgdex_id") else link.get("candidates", [])
+        selected = [self.by_id[cid] for cid in ids if cid in self.by_id]
         found = self.by_name.get(key, [])
         if not found:
             # Only candidates with the same first word are eligible. A broad
@@ -58,7 +71,7 @@ class CardIndex:
             keys.sort(key=lambda k: SequenceMatcher(None, key, k).ratio(), reverse=True)
             found = [r for k in keys[:6] for r in self.by_name[k]]
         if not found:
-            return []
+            return selected
         unique = {r["tcgdex_id"]: r for r in found}
         hint = normalize(set_name)
         def score(row):
@@ -67,7 +80,8 @@ class CardIndex:
             number_match = number is not None and number == str(row.get("local_id"))
             set_match = hint and hint in (normalize(row.get("set_name_en")), normalize(row.get("set_name_it")))
             return (bool(set_match), bool(number_match), similarity, bool(row.get("image_it")), row["tcgdex_id"])
-        return sorted(unique.values(), key=score, reverse=True)[:8]
+        ranked = sorted(unique.values(), key=score, reverse=True)[:8]
+        return selected + [r for r in ranked if r["tcgdex_id"] not in ids]
 
 
 def _save_image(url, target):
@@ -103,7 +117,8 @@ def prepara(rows):
     for item in rows:
         if not item.get("nome"):
             continue
-        for card in index.candidates(item["nome"], item.get("set_name")):
+        link = index.market_links.get(item.get("id")) or {}
+        for card in index.candidates(item["nome"], item.get("set_name"), item.get("id")):
             for lang in ("it", "en"):
                 base = card.get(f"image_{lang}")
                 if not base:
@@ -116,7 +131,8 @@ def prepara(rows):
                         "nome": card.get(f"name_{lang}") or card.get("name_en"),
                         "set": card.get(f"set_name_{lang}") or card.get("set_name_en") or card["set_id"],
                         "numero": card.get("local_id"), "tcgdex_id": card["tcgdex_id"],
-                        "incerto": True,
+                        "incerto": not (link.get("status") == "verified" and link.get("tcgdex_id") == card["tcgdex_id"]),
+                        "match_status": link.get("status", "name_only"),
                     }
                     loaded += 1
                     break

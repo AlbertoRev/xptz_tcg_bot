@@ -24,5 +24,19 @@
     "Le immagini delle carte sono URL di base; la disponibilità del file non è verificata per ogni carta.",
     "Cardmarket nonsingles include anche accessori; non equivale a soli prodotti sigillati.",
     "I nomi del catalogo non provano lingua, stato di uscita o corrispondenza della confezione."
-  ]
+  ],
+  "crosswalk": {
+    "set_status": {
+      "high_confidence_inferred": 333,
+      "review": 436,
+      "unmatched": 15
+    },
+    "card_status": {
+      "high_confidence_inferred": 24153,
+      "ambiguous": 13881,
+      "unmatched": 3992,
+      "review": 32447
+    },
+    "method": "unique name inside conservatively matched expansion; inferred mappings are not manual verifications"
+  }
 }

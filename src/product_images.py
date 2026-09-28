@@ -6,6 +6,7 @@ an exact-ID response from the optional price verifier covers further items.
 """
 from io import BytesIO
 from difflib import SequenceMatcher
+import gzip
 import json
 from pathlib import Path
 import re
@@ -29,7 +30,37 @@ def curated():
     return {int(cid): (entry["name"], entry["image_url"], entry["source"])
             for cid, entry in data.items()}
 ALLOWED_HOSTS = {"product-images.s3.cardmarket.com", "images.tcggo.com",
-                 "insogames.com", "rogerz.dk", "pokestorelb.com"}
+                 "insogames.com", "rogerz.dk", "pokestorelb.com", "assets.tcgdex.net"}
+
+
+def _booster_artwork(name):
+    """Find a pack from the exact named set, for loose booster listings only."""
+    title = name.casefold()
+    if "booster" not in title or any(x in title for x in ("booster box", "display", "bundle")):
+        return None
+    catalogue = PHOTO_FILE.with_name("carte.jsonl.gz")
+    if not catalogue.is_file():
+        return None
+    sets = {}
+    with gzip.open(catalogue, "rt", encoding="utf-8") as stream:
+        for line in stream:
+            card = json.loads(line)
+            sets[card["set_id"]] = (card.get("set_name_en"), card.get("set_name_it"))
+    exact = [(len(set_name), sid, set_name) for sid, labels in sets.items()
+             for set_name in labels if set_name and title.startswith(set_name.casefold() + " booster")]
+    if not exact:
+        return None
+    _, sid, set_name = max(exact)
+    try:
+        response = requests.get(f"https://api.tcgdex.net/v2/en/sets/{sid}", timeout=8)
+        response.raise_for_status()
+        for booster in response.json().get("boosters") or []:
+            url = booster.get("artwork_front")
+            if isinstance(url, str) and url.startswith("https://assets.tcgdex.net/"):
+                return set_name, url
+    except (requests.RequestException, ValueError):
+        return None
+    return None
 
 
 def _download(url, name):
@@ -42,7 +73,9 @@ def _download(url, name):
     if parsed.scheme != "https" or parsed.hostname not in ALLOWED_HOSTS:
         return None
     try:
-        with requests.get(url, timeout=15, stream=True) as response:
+        if parsed.hostname == "assets.tcgdex.net" and not re.search(r"\.(?:webp|png|jpg)$",parsed.path):
+            url += ".webp"
+        with requests.get(url, timeout=12, stream=True) as response:
             response.raise_for_status()
             if urlparse(response.url).hostname not in ALLOWED_HOSTS:
                 return None
@@ -96,6 +129,16 @@ def prepara(prodotti):
             prodotto["immagine_approssimata"] = False
             loaded += 1
             continue
+        pack = _booster_artwork(prodotto.get("nome", ""))
+        if pack:
+            pack_name, pack_url = pack
+            photo = _download(pack_url, f"booster_tcgdex_{int(prodotto['id'])}.jpg")
+            if photo:
+                prodotto.update(immagine_prodotto=photo, fonte_immagine="TCGdex",
+                                immagine_approssimata=True,
+                                immagine_riferimento=f"busta {pack_name}")
+                loaded += 1
+                continue
         for cid, candidate in known.items():
             if cid not in cache:
                 cache[cid] = _download(candidate[1], f"prodotto_cardmarket_{cid}.jpg")

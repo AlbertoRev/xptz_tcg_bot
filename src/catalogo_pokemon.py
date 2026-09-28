@@ -102,6 +102,14 @@ def build(dest=DEST):
     cards = card_rows(raw["carte_en"], raw["carte_it"], raw["set_en"], raw["set_it"])
     singles = market_rows(raw["cardmarket_singole"], "singles")
     others = market_rows(raw["cardmarket_altri"], "nonsingles")
+    curated_file = dest / "foto_prodotti.json"
+    if curated_file.is_file():
+        curated = json.loads(curated_file.read_text(encoding="utf-8"))
+        for row in others:
+            image = curated.get(str(row["cardmarket_id"]))
+            if image and image["name"] == row["name"]:
+                row.update(image_status="verified_title_and_id", image_url=image["image_url"],
+                           image_source=image["source"])
     # Guard against a transient empty response overwriting a usable archive.
     if len(cards) < 1000 or len(singles) < 1000 or len(others) < 100:
         raise ValueError(f"Catalogo sospettosamente incompleto: {len(cards)} / {len(singles)} / {len(others)}")
@@ -124,6 +132,7 @@ def build(dest=DEST):
                   "Cardmarket nonsingles include anche accessori; non equivale a soli prodotti sigillati.",
                   "I nomi del catalogo non provano lingua, stato di uscita o corrispondenza della confezione."],
     }
+    summary["counts"]["product_photos_curated"] = sum(r["image_status"] == "verified_title_and_id" for r in others)
     (dest / "manifest.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return summary
 

@@ -2,7 +2,8 @@ name: Giornaliero
 
 on:
   schedule:
-    - cron: "0 4 * * *"    # ogni giorno alle 06:00 ora italiana (05:00 d'inverno)
+    - cron: "0 6 * * *"
+      timezone: "Europe/Rome"
   workflow_dispatch:
 
 permissions:

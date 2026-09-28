@@ -231,6 +231,22 @@ def settimanale(invia_telegram=True):
     product_images.prepara(g.get("occasioni") or [])
     movements = editorial._signed_movements(g, 1) + editorial._signed_movements(g, -1)
     card_images.prepara([row[1] for row in movements])
+    cards_shown = [row[1] for row in movements]
+    products_shown = (g.get("occasioni") or [])[:4]
+    image_audit = {
+        "card_with_scan": sum(bool(r.get("immagine_carta")) for r in cards_shown),
+        "card_approximate": sum(bool(r.get("immagine_carta_riferimento", {}).get("incerto")) for r in cards_shown),
+        "card_thematic": sum(not r.get("immagine_carta") for r in cards_shown),
+        "product_exact": sum(bool(r.get("immagine_prodotto")) and not r.get("immagine_approssimata") for r in products_shown),
+        "product_approximate": sum(bool(r.get("immagine_approssimata")) for r in products_shown),
+        "product_thematic": sum(not r.get("immagine_prodotto") for r in products_shown),
+        "cards": [{"cardmarket_id": r.get("id"), "name": r.get("nome"),
+                   "scan": r.get("immagine_carta_riferimento")} for r in cards_shown],
+        "products": [{"cardmarket_id": r.get("id"), "name": r.get("nome"),
+                      "similar_photo": r.get("immagine_riferimento"),
+                      "source": r.get("fonte_immagine")} for r in products_shown],
+    }
+    ctx["image_audit"] = image_audit
     ctx["apertura"] = _apertura(g)
     ctx["cover_visual"] = _visual_copertina(ctx["apertura"]["titolo"],pokemon_mondo)
     ctx["kpi"] = [(f"{g['monitorati']:,}".replace(",", "."), "prodotti monitorati"),
@@ -278,14 +294,19 @@ def settimanale(invia_telegram=True):
     percorso_pdf = f"output/POKEPUTZU_WEEKLY_n{numero}_{oggi.isoformat()}.pdf"
     ctx["pokemon_mondo"] = pokemon_mondo
     rivista.crea(percorso_pdf, ctx, compact=False)
-    qa=pdf_qa.check(percorso_pdf)
+    qa=pdf_qa.check(percorso_pdf, image_audit=image_audit)
     if not qa["ok"]:
         print(f"[pdf_qa] layout standard non valido: {qa['errors']} — retry compatto")
         rivista.crea(percorso_pdf, ctx, compact=True)
-        qa=pdf_qa.check(percorso_pdf)
+        qa=pdf_qa.check(percorso_pdf, image_audit=image_audit)
     if not qa["ok"]:
         raise RuntimeError(f"PDF non supera il QA: {qa['errors']}")
     print(f"[pdf_qa] OK: {qa['pages']} pagine; profilo={ctx.get('_layout_profile',{}).get('mode')}; compact={ctx.get('_layout_profile',{}).get('compact')}")
+    Path(percorso_pdf.replace(".pdf", "_image_audit.json")).write_text(
+        json.dumps(image_audit, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    pdf_qa.render_review(percorso_pdf, "output/visual_review")
+    print(f"[image_audit] scansioni={image_audit['card_with_scan']}, foto esatte={image_audit['product_exact']}, "
+          f"foto simili={image_audit['product_approximate']}, illustrazioni={image_audit['product_thematic']}")
     storage.scrivi_json("riepilogo/ultimo.json", report.dati_per_claude(ctx))
     if invia_telegram:
         telegram.documento(percorso_pdf, f"POKEPUTZU WEEKLY n. {numero} - {ctx['data_lunga']}")

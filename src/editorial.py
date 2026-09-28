@@ -235,7 +235,8 @@ def _movement(c, row, x, top, w, color, rank, ctx=None):
     _text(c,name,x+17*mm,top+2.7*mm,w-42*mm,8*mm,9.2,R.TESTO_B)
     ref=data.get("immagine_carta_riferimento")
     if ref and image_path and image_path.is_file():
-        _text(c,f"≈ {ref['set']} · {ref['numero']} · TCGdex",x+17*mm,top+11*mm,w-21*mm,5*mm,
+        marker="≈ " if ref.get("incerto",True) else "✓ "
+        _text(c,f"{marker}{ref['set']} · {ref['numero']} · TCGdex",x+17*mm,top+11*mm,w-21*mm,5*mm,
               6.4,R.TESTO_B,BLUE,5.8)
     else:
         _text(c,"Illustrazione tematica",x+17*mm,top+11*mm,w-21*mm,5*mm,

@@ -12,7 +12,7 @@ permissions:
 jobs:
   genera:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 25
     env:
       TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -30,8 +30,10 @@ jobs:
         run: pip install -r requirements.txt PyMuPDF
       - name: Controllo del codice
         run: python -m py_compile main.py download_assets.py src/*.py
-      - name: Aggiorna archivio carte e prodotti Pokémon
-        run: python -m src.catalogo_pokemon
+      - name: Ricalcola abbinamenti dall'archivio locale
+        run: |
+          python -m src.archivio_match
+          python -m src.archivio_check
       - name: Carica archivio consultabile
         uses: actions/upload-artifact@v4
         with:
@@ -48,12 +50,15 @@ jobs:
             git push origin HEAD:pokeputzu_redesign
           fi
       - name: Genera PDF e verifica QA
-        run: python main.py prova_rivista
-      - name: Carica PDF di prova
+        run: python -u main.py prova_rivista
+      - name: Carica PDF e diagnostica di prova
         uses: actions/upload-artifact@v4
         with:
           name: POKEPUTZU-WEEKLY-PDF
-          path: output/*.pdf
+          path: |
+            output/*.pdf
+            output/*_image_audit.json
+            output/visual_review/*.png
           if-no-files-found: error
       - name: Invia l'anteprima su Telegram
         run: |
