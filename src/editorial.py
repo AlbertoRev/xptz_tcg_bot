@@ -419,6 +419,8 @@ def _collector(c,ctx,page):
         if item.get("immagine_prodotto") and path.is_file():
             c.drawImage(str(path),x+4*mm,H-y-46*mm,37*mm,42*mm,
                         preserveAspectRatio=True,anchor="c")
+            _text(c,item.get("fonte_immagine", ""),x+4*mm,y+44*mm,37*mm,3.5*mm,
+                  5.8,R.TESTO_B,BLUE,5.8)
         else:
             # A data card is honest about missing photography; decorative
             # Pokémon artwork here would imply the wrong sealed product.
@@ -437,7 +439,7 @@ def _collector(c,ctx,page):
             c.linkURL(url,(x,H-y-86*mm,x+45*mm,H-y),relative=0)
     _rect(c,9*mm,199*mm,139*mm,72*mm)
     _section(c,"PERCHÉ COLLEZIONARE",11*mm,201*mm,93*mm,RED)
-    _text(c,"Ogni scheda rimanda al prodotto preciso su Cardmarket. La fotografia appare solo se associata al suo ID; controlla le offerte prima di acquistare.",13*mm,215*mm,128*mm,40*mm,10)
+    _text(c,"Ogni scheda rimanda al prodotto preciso su Cardmarket. Le foto mostrano la confezione identificata; varianti e lingua dell'inserzione vanno controllate prima di acquistare.",13*mm,215*mm,128*mm,40*mm,10)
     _hero(c,ctx,4,173*mm,234*mm,76*mm)
     c.showPage()
 
