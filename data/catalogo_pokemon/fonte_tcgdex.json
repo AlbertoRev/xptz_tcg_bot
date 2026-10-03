@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/tcgdex/cards-database",
-  "revision": "309aab7060b165925fee48573e730275dfbd737c",
-  "cardmarket_ids": 32980,
+  "revision": "c5c0a8a63fe81746d05b9c95e8f51ed6931f7e78",
+  "cardmarket_ids": 32998,
   "cardmarket_expansion_ids": 201,
   "note": "ID di origine TCGdex, soggetti a errori e varianti: convalidare nome e set prima di usare una scansione."
 }
