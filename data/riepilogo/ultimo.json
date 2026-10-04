@@ -1,18 +1,130 @@
 {
-  "data": "2026-09-27",
+  "data": "2026-10-04",
   "nota": "Tutti i numeri sono calcolati dal codice. Variazioni in percentuale. Prezzi in euro, prezzo di tendenza Cardmarket (tutte le lingue).",
   "giochi": {
     "pokemon": {
       "nome": "Pokémon",
       "livello": "principale",
       "lingua_investimento": "italiano",
-      "giorni_storico": 2,
+      "giorni_storico": 8,
       "classifiche": {
         "sigillato": {
           "7": {
-            "fonte": "n.d.",
-            "rialzi": [],
-            "ribassi": []
+            "fonte": "storico",
+            "rialzi": [
+              {
+                "nome": "Plasma Blast: Red Genesect Collection",
+                "prezzo": 685.88,
+                "variazioni": {
+                  "7": 227.0,
+                  "30": null,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "media"
+              },
+              {
+                "nome": "EX Holon Phantoms: FloodRush Theme Deck",
+                "prezzo": 172.85,
+                "variazioni": {
+                  "7": 202.6,
+                  "30": null,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "media"
+              },
+              {
+                "nome": "Primal Kyogre Collection",
+                "prezzo": 680.55,
+                "variazioni": {
+                  "7": 183.6,
+                  "30": null,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "media"
+              },
+              {
+                "nome": "EX Legend Maker: Illustrated Booklet - Golem",
+                "prezzo": 110.2,
+                "variazioni": {
+                  "7": 182.6,
+                  "30": null,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "media"
+              },
+              {
+                "nome": "Plasma Blast: Mind Wipe Theme Deck",
+                "prezzo": 98.89,
+                "variazioni": {
+                  "7": 147.2,
+                  "30": null,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "media"
+              }
+            ],
+            "ribassi": [
+              {
+                "nome": "Phantasmal Flames Sleeved Booster",
+                "prezzo": 7.43,
+                "variazioni": {
+                  "7": -82.3,
+                  "30": null,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "media"
+              },
+              {
+                "nome": "McDonald's Collection 25th Anniversary Booster",
+                "prezzo": 11.03,
+                "variazioni": {
+                  "7": -53.1,
+                  "30": null,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "bassa"
+              },
+              {
+                "nome": "Chaos Rising Fun Pack (3 Cards)",
+                "prezzo": 11.03,
+                "variazioni": {
+                  "7": -46.4,
+                  "30": null,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "bassa"
+              },
+              {
+                "nome": "Mega Evolution: Main Set",
+                "prezzo": 14.01,
+                "variazioni": {
+                  "7": -40.7,
+                  "30": null,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "bassa"
+              },
+              {
+                "nome": "My First Battle: Bulbasaur & Pikachu",
+                "prezzo": 24.73,
+                "variazioni": {
+                  "7": -34.2,
+                  "30": null,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "bassa"
+              }
+            ]
           },
           "30": {
             "fonte": "n.d.",
@@ -32,119 +144,119 @@
         },
         "singola": {
           "7": {
-            "fonte": "stima",
+            "fonte": "storico",
             "rialzi": [
               {
-                "nome": "Maintenance",
-                "prezzo": 8.7,
+                "nome": "Mew V [Energy Mix | Psychic Leap]",
+                "prezzo": 15.66,
                 "variazioni": {
-                  "7": 299.2,
-                  "30": 127.2,
+                  "7": 299.5,
+                  "30": -52.7,
                   "90": null,
                   "180": null
                 },
-                "incertezza": "alta"
+                "incertezza": "media"
               },
               {
-                "nome": "Articuno [Aurora Veil | Ice Beam]",
-                "prezzo": 727.0,
+                "nome": "Meowscarada ex [Bouquet Magic | Scratching Nails]",
+                "prezzo": 5.5,
                 "variazioni": {
                   "7": 298.6,
-                  "30": 281.4,
+                  "30": -4.3,
                   "90": null,
                   "180": null
                 },
                 "incertezza": "alta"
               },
               {
-                "nome": "Ash's Pikachu [Agility | Thunder]",
-                "prezzo": 256.13,
+                "nome": "Yanmega Lv.47 [Sonic Wave | Pursue and Turn]",
+                "prezzo": 22.09,
                 "variazioni": {
-                  "7": 297.4,
-                  "30": 209.9,
+                  "7": 297.5,
+                  "30": 322.4,
                   "90": null,
                   "180": null
                 },
                 "incertezza": "alta"
               },
               {
-                "nome": "Jumpluff [Buffer | Energy Crush]",
-                "prezzo": 90.12,
+                "nome": "Rayquaza [C] Lv.73 [Trash Burst | Twister]",
+                "prezzo": 138.75,
                 "variazioni": {
-                  "7": 297.2,
-                  "30": 130.1,
+                  "7": 292.6,
+                  "30": 111.8,
                   "90": null,
                   "180": null
                 },
-                "incertezza": "alta"
+                "incertezza": "media"
               },
               {
-                "nome": "Sobble [Water Gun]",
-                "prezzo": 53.84,
+                "nome": "Pikachu EX [Iron Tail | Overspark]",
+                "prezzo": 739.98,
                 "variazioni": {
-                  "7": 293.1,
-                  "30": 395.8,
+                  "7": 289.9,
+                  "30": 108.5,
                   "90": null,
                   "180": null
                 },
-                "incertezza": "alta"
+                "incertezza": "media"
               }
             ],
             "ribassi": [
               {
-                "nome": "Torchic [Peck | Flare]",
-                "prezzo": 22.46,
+                "nome": "Charizard ex [Infernal Reign | Burning Darkness]",
+                "prezzo": 5.0,
                 "variazioni": {
-                  "7": -88.6,
-                  "30": 39.9,
+                  "7": -93.3,
+                  "30": -87.5,
                   "90": null,
                   "180": null
                 },
-                "incertezza": "alta"
+                "incertezza": "media"
+              },
+              {
+                "nome": "Pikachu [Scurry About]",
+                "prezzo": 4.0,
+                "variazioni": {
+                  "7": -84.0,
+                  "30": -72.4,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "media"
+              },
+              {
+                "nome": "Seeker",
+                "prezzo": 25.0,
+                "variazioni": {
+                  "7": -77.3,
+                  "30": -63.0,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "bassa"
+              },
+              {
+                "nome": "Roller Skater",
+                "prezzo": 4.99,
+                "variazioni": {
+                  "7": -75.1,
+                  "30": -60.1,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "media"
               },
               {
                 "nome": "Plusle [Pickup Power | Rear Spark]",
-                "prezzo": 80.21,
+                "prezzo": 24.0,
                 "variazioni": {
-                  "7": -85.3,
-                  "30": 72.9,
+                  "7": -70.1,
+                  "30": -45.2,
                   "90": null,
                   "180": null
                 },
-                "incertezza": "alta"
-              },
-              {
-                "nome": "Charmander δ Delta Species [Scratch | Bite]",
-                "prezzo": 28.53,
-                "variazioni": {
-                  "7": -83.1,
-                  "30": -0.1,
-                  "90": null,
-                  "180": null
-                },
-                "incertezza": "alta"
-              },
-              {
-                "nome": "Staryu [Slap]",
-                "prezzo": 9.51,
-                "variazioni": {
-                  "7": -82.1,
-                  "30": 209.8,
-                  "90": null,
-                  "180": null
-                },
-                "incertezza": "alta"
-              },
-              {
-                "nome": "Magneton [Overvolt Discharge | Electric Ball]",
-                "prezzo": 268.33,
-                "variazioni": {
-                  "7": -80.6,
-                  "30": -31.8,
-                  "90": null,
-                  "180": null
-                },
-                "incertezza": "alta"
+                "incertezza": "bassa"
               }
             ]
           },
@@ -152,33 +264,22 @@
             "fonte": "stima",
             "rialzi": [
               {
-                "nome": "Ruins of Alph",
-                "prezzo": 4.87,
+                "nome": "Feebas [Tackle | Ascension]",
+                "prezzo": 24.49,
                 "variazioni": {
-                  "7": 4.1,
-                  "30": 299.2,
+                  "7": 388.9,
+                  "30": 295.0,
                   "90": null,
                   "180": null
                 },
                 "incertezza": "alta"
               },
               {
-                "nome": "Ivysaur [Sleep Powder | Vine Whip]",
-                "prezzo": 10.24,
+                "nome": "Gengar VMAX [Fear and Panic | G-Max Swallow Up]",
+                "prezzo": 997.77,
                 "variazioni": {
-                  "7": 33.5,
-                  "30": 293.8,
-                  "90": null,
-                  "180": null
-                },
-                "incertezza": "alta"
-              },
-              {
-                "nome": "Machoke [Mega Kick | Steady Punch]",
-                "prezzo": 115.17,
-                "variazioni": {
-                  "7": 269.5,
-                  "30": 292.9,
+                  "7": -5.5,
+                  "30": 294.6,
                   "90": null,
                   "180": null
                 },
@@ -196,11 +297,22 @@
                 "incertezza": "alta"
               },
               {
-                "nome": "Piloswine Lv.34 [Rouse | Overrun]",
-                "prezzo": 42.2,
+                "nome": "Gengar [GL] Lv.65 [Confuse Ray | Attack and Hide]",
+                "prezzo": 36.22,
                 "variazioni": {
-                  "7": 37.6,
-                  "30": 291.5,
+                  "7": -24.3,
+                  "30": 291.1,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Shauna",
+                "prezzo": 34.48,
+                "variazioni": {
+                  "7": 0.0,
+                  "30": 290.9,
                   "90": null,
                   "180": null
                 },
@@ -208,28 +320,6 @@
               }
             ],
             "ribassi": [
-              {
-                "nome": "Nidorina [Share Happiness | Bite]",
-                "prezzo": 4.3,
-                "variazioni": {
-                  "7": 0.0,
-                  "30": -95.7,
-                  "90": null,
-                  "180": null
-                },
-                "incertezza": "alta"
-              },
-              {
-                "nome": "Misty's Tears",
-                "prezzo": 8.65,
-                "variazioni": {
-                  "7": -10.9,
-                  "30": -93.1,
-                  "90": null,
-                  "180": null
-                },
-                "incertezza": "alta"
-              },
               {
                 "nome": "Haunter [Gothic Fear | Poison Ring]",
                 "prezzo": 4.54,
@@ -242,22 +332,44 @@
                 "incertezza": "alta"
               },
               {
-                "nome": "Jolteon EX [Swift | Flash Ray]",
-                "prezzo": 6.45,
+                "nome": "Nidorina [Share Happiness | Bite]",
+                "prezzo": 4.3,
                 "variazioni": {
-                  "7": -39.6,
-                  "30": -92.2,
+                  "7": 0.0,
+                  "30": -91.8,
                   "90": null,
                   "180": null
                 },
                 "incertezza": "alta"
               },
               {
-                "nome": "Deoxys ex [Form Change | Energy Burst]",
-                "prezzo": 13.34,
+                "nome": "Beedrill [Triple Poison | Pin Missile]",
+                "prezzo": 4.98,
                 "variazioni": {
-                  "7": -52.0,
-                  "30": -90.3,
+                  "7": -49.3,
+                  "30": -89.5,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Charizard ex [Infernal Reign | Burning Darkness]",
+                "prezzo": 5.0,
+                "variazioni": {
+                  "7": -93.3,
+                  "30": -87.5,
+                  "90": null,
+                  "180": null
+                },
+                "incertezza": "alta"
+              },
+              {
+                "nome": "Glaceon GX [Freezing Gaze | Frost Bullet | Polar Spear GX]",
+                "prezzo": 4.99,
+                "variazioni": {
+                  "7": 0.0,
+                  "30": -83.9,
                   "90": null,
                   "180": null
                 },
@@ -286,32 +398,18 @@
           "sconto": 59.9
         },
         {
-          "nome": "Unbroken Bonds Booster",
+          "nome": "Vivid Voltage Build & Battle Box",
           "tipo": "sigillato",
-          "prezzo_minimo": 42.0,
-          "prezzo_tendenza": 104.48,
-          "sconto": 59.8
+          "prezzo_minimo": 64.0,
+          "prezzo_tendenza": 158.16,
+          "sconto": 59.5
         },
         {
           "nome": "Pokémon GO Pin Collection—Bulbasaur",
           "tipo": "sigillato",
           "prezzo_minimo": 29.99,
-          "prezzo_tendenza": 74.49,
-          "sconto": 59.7
-        },
-        {
-          "nome": "VMAX Rising Booster Box",
-          "tipo": "sigillato",
-          "prezzo_minimo": 110.0,
-          "prezzo_tendenza": 270.12,
-          "sconto": 59.3
-        },
-        {
-          "nome": "Ampharos ex Battle Deck",
-          "tipo": "sigillato",
-          "prezzo_minimo": 4.99,
-          "prezzo_tendenza": 12.25,
-          "sconto": 59.3
+          "prezzo_tendenza": 73.45,
+          "sconto": 59.2
         },
         {
           "nome": "EX Unseen Forces: Silvery Ocean Theme Deck",
@@ -347,9 +445,113 @@
           "prezzo_minimo": 38.99,
           "prezzo_tendenza": 94.67,
           "sconto": 58.8
+        },
+        {
+          "nome": "Twilight Masquerade 10 Elite Trainer Box Case",
+          "tipo": "sigillato",
+          "prezzo_minimo": 520.0,
+          "prezzo_tendenza": 1262.07,
+          "sconto": 58.8
+        },
+        {
+          "nome": "Perfect Order: Main Set",
+          "tipo": "sigillato",
+          "prezzo_minimo": 9.0,
+          "prezzo_tendenza": 21.82,
+          "sconto": 58.8
         }
       ],
       "previsioni": [
+        {
+          "nome": "30th Celebration Charizard Collector’s Figure Box",
+          "categoria": "Pokémon Box Set",
+          "aggiunto": "2026-08-19",
+          "prezzo": 295.16,
+          "variazione": 12.7,
+          "stato": "caldo",
+          "motivo": "prezzo +13% dal primo rilevamento, poche offerte sotto la tendenza"
+        },
+        {
+          "nome": "Delta Reign Elite Trainer Box",
+          "categoria": "Pokémon Elite Trainer Boxes",
+          "aggiunto": "2026-08-20",
+          "prezzo": 99.9,
+          "variazione": 2.2,
+          "stato": "caldo",
+          "motivo": "prezzo +2% dal primo rilevamento, poche offerte sotto la tendenza"
+        },
+        {
+          "nome": "Dream Painting Collection Pikachu Figure Set",
+          "categoria": "Pokémon Box Set",
+          "aggiunto": "2026-09-22",
+          "prezzo": 72.2,
+          "variazione": 140.7,
+          "stato": "caldo",
+          "motivo": "prezzo +141% dal primo rilevamento"
+        },
+        {
+          "nome": "Delta Reign 6 Booster Box Case",
+          "categoria": "Pokémon Display",
+          "aggiunto": "2026-08-20",
+          "prezzo": 1387.6,
+          "variazione": -4.0,
+          "stato": "tiepido",
+          "motivo": "prezzo -4% dal primo rilevamento, stabile"
+        },
+        {
+          "nome": "Delta Reign 10 Elite Trainer Box Case",
+          "categoria": "Pokémon Elite Trainer Boxes",
+          "aggiunto": "2026-08-20",
+          "prezzo": 975.7,
+          "variazione": -1.7,
+          "stato": "tiepido",
+          "motivo": "prezzo -2% dal primo rilevamento, stabile"
+        },
+        {
+          "nome": "World Championships 2026 Paradise Resort Full Set",
+          "categoria": "Pokémon Lot",
+          "aggiunto": "2026-08-28",
+          "prezzo": 574.21,
+          "variazione": 0.0,
+          "stato": "tiepido",
+          "motivo": "prezzo 0% dal primo rilevamento, stabile"
+        },
+        {
+          "nome": "Delta Reign Booster Box",
+          "categoria": "Pokémon Display",
+          "aggiunto": "2026-08-20",
+          "prezzo": 229.4,
+          "variazione": -0.0,
+          "stato": "tiepido",
+          "motivo": "prezzo -0% dal primo rilevamento, stabile"
+        },
+        {
+          "nome": "General Mills 2018 Sun & Moon Booster (3 Cards)",
+          "categoria": "Pokémon Booster",
+          "aggiunto": "2026-08-31",
+          "prezzo": 60.0,
+          "variazione": 0.0,
+          "stato": "tiepido",
+          "motivo": "prezzo 0% dal primo rilevamento, stabile"
+        },
+        {
+          "nome": "Delta Reign Booster Bundle",
+          "categoria": "Pokémon Display",
+          "aggiunto": "2026-08-20",
+          "prezzo": 47.08,
+          "variazione": 3.6,
+          "stato": "tiepido",
+          "motivo": "prezzo +4% dal primo rilevamento, stabile"
+        },
+        {
+          "nome": "Delta Reign: Seel 3-Pack Blister",
+          "categoria": "Pokémon Blisters",
+          "aggiunto": "2026-08-20",
+          "prezzo": 24.62,
+          "variazione": -9.8,
+          "stato": "tiepido",
+          "motivo": "prezzo -10% dal primo rilevamento, stabile"
+        },
         {
           "nome": "Magikarp Special Set",
           "categoria": "Pokémon Box Set",
@@ -361,15 +563,6 @@
         },
         {
           "nome": "30th Celebration: Full Set",
-          "categoria": "PCG Set",
-          "aggiunto": "2026-09-15",
-          "prezzo": null,
-          "variazione": null,
-          "stato": "in arrivo",
-          "motivo": "in prevendita o appena listato, nessuna vendita ancora"
-        },
-        {
-          "nome": "30th Celebration: Main Set",
           "categoria": "PCG Set",
           "aggiunto": "2026-09-15",
           "prezzo": null,
@@ -441,144 +634,119 @@
           "motivo": "in prevendita o appena listato, nessuna vendita ancora"
         },
         {
-          "nome": "30th Celebration 10 Elite Trainer Box Case",
-          "categoria": "Pokémon Elite Trainer Boxes",
-          "aggiunto": "2026-09-16",
-          "prezzo": 1448.31,
-          "variazione": 3.7,
-          "stato": "da valutare",
-          "motivo": "solo 1 giorni di prezzi"
-        },
-        {
-          "nome": "Delta Reign 6 Booster Box Case",
-          "categoria": "Pokémon Display",
-          "aggiunto": "2026-08-20",
-          "prezzo": 1437.45,
-          "variazione": -0.6,
-          "stato": "da valutare",
-          "motivo": "solo 1 giorni di prezzi"
-        },
-        {
-          "nome": "Delta Reign 10 Elite Trainer Box Case",
-          "categoria": "Pokémon Elite Trainer Boxes",
-          "aggiunto": "2026-08-20",
-          "prezzo": 988.29,
-          "variazione": -0.4,
-          "stato": "da valutare",
-          "motivo": "solo 1 giorni di prezzi"
-        },
-        {
-          "nome": "World Championships 2026 Paradise Resort Full Set",
-          "categoria": "Pokémon Lot",
-          "aggiunto": "2026-08-28",
-          "prezzo": 574.21,
-          "variazione": 0.0,
-          "stato": "da valutare",
-          "motivo": "solo 1 giorni di prezzi"
-        },
-        {
-          "nome": "Kanto Power Mini Tin Display",
-          "categoria": "Pokémon Tins",
-          "aggiunto": "2026-08-31",
-          "prezzo": 390.0,
-          "variazione": 0.0,
-          "stato": "da valutare",
-          "motivo": "solo 1 giorni di prezzi"
-        },
-        {
-          "nome": "30th Celebration Charizard Collector’s Figure Box",
-          "categoria": "Pokémon Box Set",
-          "aggiunto": "2026-08-19",
-          "prezzo": 279.56,
-          "variazione": 6.7,
-          "stato": "da valutare",
-          "motivo": "solo 1 giorni di prezzi"
-        },
-        {
-          "nome": "Delta Reign Booster Box",
-          "categoria": "Pokémon Display",
-          "aggiunto": "2026-08-20",
-          "prezzo": 229.35,
-          "variazione": -0.0,
-          "stato": "da valutare",
-          "motivo": "solo 1 giorni di prezzi"
-        },
-        {
-          "nome": "Delta Reign Booster Box (18 Boosters)",
-          "categoria": "Pokémon Display",
-          "aggiunto": "2026-08-20",
-          "prezzo": 150.0,
+          "nome": "Fossil: Zapdos 1-Pack Blister",
+          "categoria": "Pokémon Blisters",
+          "aggiunto": "2026-08-25",
+          "prezzo": null,
           "variazione": null,
-          "stato": "da valutare",
-          "motivo": "solo 0 giorni di prezzi"
-        },
-        {
-          "nome": "Delta Reign Elite Trainer Box",
-          "categoria": "Pokémon Elite Trainer Boxes",
-          "aggiunto": "2026-08-20",
-          "prezzo": 98.51,
-          "variazione": 0.8,
-          "stato": "da valutare",
-          "motivo": "solo 1 giorni di prezzi"
-        },
-        {
-          "nome": "30th Celebration: Pikachu Set",
-          "categoria": "PCG Set",
-          "aggiunto": "2026-09-15",
-          "prezzo": 96.73,
-          "variazione": 5.8,
-          "stato": "da valutare",
-          "motivo": "solo 1 giorni di prezzi"
+          "stato": "in arrivo",
+          "motivo": "in prevendita o appena listato, nessuna vendita ancora"
         }
       ],
       "notizie": [
         {
-          "titolo": "GCC Pokémon Pocket : Busta Deluxe Mega è in arrivo prossimamente - Pokemon.com",
-          "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxQQ19jTXh4X2lZZkFvQjZQRFRETEl1dlFCUTAwRGR3T2FpYU9FbnpvWlR3ZFhlR2VGWVppeTl4aHBrbDh3bkZVemxqTlVvQTdQT2c1aU1aSWd6LUYwbElsR3RkWkU4Q3pQbXNDUmZVTjZEU0xTUWR5M05STWdNTFE0X2pnUG5kQVZIcC1pQmlwZ01DRERRQXhLdmxjR2E?oc=5",
-          "fonte": "Pokemon.com",
-          "data": "22/09"
+          "titolo": "Bauletto GCC Pokémon al minimo storico",
+          "sommario": "Sei buste e tre promo in un'offerta imperdibile segnalata da SpazioGames a soli 45 euro.",
+          "voci": [
+            {
+              "titolo": "Bauletto GCC Pokémon a 45€, sei buste e tre promo al minimo storico - SpazioGames",
+              "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxQNDUxdWZNd3QyR3k5bEp6cThHd1R5ZjNUV0tBXzRCclVxWWtNN2FlNktncjZVcFc3azlXRmM2ZTMwR3o1YUFKbHZjMGRuejJUQUVzcFhtenNDY3dRa2FmenNNREZrNzg0OGNQSnh5cmRDNWY0TWxXRHhpQm9mOEhIbG9oTTJzeGUwbUxSNTdBeVVYajNhSS1WZFBqRWFMWUV1T1ZxZkpadw?oc=5",
+              "fonte": "SpazioGames",
+              "data": "01/10"
+            }
+          ],
+          "topic": "bauletto gcc pokemon a 45 sei buste e tre"
         },
         {
-          "titolo": "GCC Pokémon Pocket: annunciata la nuova espansione Busta Deluxe Mega - Pokémon Millennium",
-          "link": "https://news.google.com/rss/articles/CBMitwFBVV95cUxPZTFlai1pcE1SWHhGOFRBYW5XYjhIMVB0V2FPd0VuUlIwTVlXTkJrU0VmNkJ5RGUwRVBNY2dxVlZBTFVGRG1MRm5Db29QWlowdTFOT0R0cFlhQlViUnZra3BZQlk3YVdWTHFfNDg3eW5RcTJhdGhySmRqZTRWRzlzZXVCcVFPY3FKcFVBME9keURib0pwQmVuZm1yQXBrYV90Um1VdzhhUzJBVHFMeHFaclZibjhscHM?oc=5",
-          "fonte": "Pokémon Millennium",
-          "data": "24/09"
+          "titolo": "Pokémon 30° Anniversario in edicola",
+          "sommario": "In arrivo la collezione con adesivi e la confezione di buste dedicate al grande anniversario.",
+          "voci": [
+            {
+              "titolo": "Pokémon 30° Anniversario: quando arrivano in edicola la Collezione con adesivi e la Confezione di buste? - Everyeye.it",
+              "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQVjFucjNid1lOZDZnTDYtS01vVFRBSUlQTXFhVFhjYUxvUWJPN3I1enR2RUN2ZFlTTXl5SXpadW5QQnJJMktzQkxxX3V3X3pFY3pxbFJRd0syMkRmVWViZHN0dldycWdXZUE1Q1g0enYzOHlicHpKWTJ3SFJPT1VLYlp5QUdQWEZILU5ZT2tNV0phNHBXZ1hSTU9HOXJUS2E5MGR3WnlVYnNnd1dmeDZsaTQyWDBRUVpyLXE4RFhtNklfV01YcVpMNkxCSQ?oc=5",
+              "fonte": "Everyeye.it",
+              "data": "30/09"
+            }
+          ],
+          "topic": "pokemon 30 anniversario quando arrivano in edicola la collezione"
         },
         {
-          "titolo": "GCC Pokémon - Dominio Delta arriva il 6 novembre: vi sveliamo in anteprima esclusiva quattro carte della nuova espansione! - IGN Italia",
-          "link": "https://news.google.com/rss/articles/CBMi_gFBVV95cUxNQXN4TmFwdUVGdEJfbVl2V3l0NGNqWmFtQjBpQmVGTDA5ZlB1YnVxOWtodGVvRnRxRUhHX1BpSnp2VTBBS0VOZnpHaGRTVHgtMFpPZzJWNTR5UHVTY3N6UC1iVWFRWjJkaEE3Nmk1cWpObUVac3R1RHJ1aml0dmpldVd3cGMtNzFheWlyQ3BMUmQ2VW1wVVBmQmdobFZMcUd2Ym1WeEZBdmREUnROVktFaXdjQndodXZnTmdWOUZlVjk4cGRMcEI4VjBHQnlyZjlCT3ZRQk11SkV4X3VhN1lWNE5IdXVGWktVS0h4cnluY2JuRDViRm42ZHo3Zk9UUQ?oc=5",
-          "fonte": "IGN Italia",
-          "data": "22/09"
+          "titolo": "Riparte il tour Pokémon Gioca e Scambia!",
+          "sommario": "Switch Italia annuncia il ritorno degli eventi dedicati ai fan e ai collezionisti in tutta Italia.",
+          "voci": [
+            {
+              "titolo": "Riparte il tour Pokémon Gioca e Scambia! - Switch Italia",
+              "link": "https://news.google.com/rss/articles/CBMihgFBVV95cUxNT3JKZ0Vnd1hBWVRjcWV0MW1wY3Q5NUtGNkItWVJ2YTRuVWJtSXFCWGNJNkh1T0RmNWlPV1ROWWdQZXNrbHo1b3ByOG14cjRJTzJWUlBxQ3dEQmFSYmc3TDZIQWhMNC1qeHZKTWRXU05JS0JsRFFJQUUxaGpDLVM3bjU2bVp6QQ?oc=5",
+              "fonte": "Switch Italia",
+              "data": "29/09"
+            }
+          ],
+          "topic": "riparte il tour pokemon gioca e scambia"
         },
         {
-          "titolo": "GCC Pokémon Dominio Delta: quali sono i prodotti in arrivo? - Everyeye.it",
-          "link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxNZ25VWFc4akl4MVdzWDZNbDBCMm9FU0EtTHFVRTJvREVRVVdGSE1PSkFkSnNrbndDYXViSDY1TEF1VTB5T2NMVUVYUDQtX3l1cjhYb24yUW9XS2NRWVZ6eEhaaW1yWU4zLTBBM0VZa0d6MVRvZGRmVHMzd0ZJeWdHQVl3NUQyQ1BDRXlLTjBn?oc=5",
-          "fonte": "Everyeye.it",
-          "data": "22/09"
+          "titolo": "Guida all'acquisto dei pacchetti",
+          "sommario": "Salvatore Aranzulla firma la guida definitiva per scegliere i migliori pacchetti Pokémon nel 2026.",
+          "voci": [
+            {
+              "titolo": "Migliori pacchetti Pokémon: guida all’acquisto (2026) - Salvatore Aranzulla",
+              "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxOZ0NzcUlsMFBLbW5abzJKQlFFZG1Eb0EyVnU0VFlvd2RYc0JueTlzNHk3ZVlmSDQwUHZHU2t6YWZjY0hZc250LUszWlBYbG1yNVNqX1hTSkcxdkEtRFVHTVJTSEdacFdQbTJ3S3JuLXRmSlF6TFdyZTVXb3FTaVNXVlhQU0EtUUtVeVE?oc=5",
+              "fonte": "Salvatore Aranzulla",
+              "data": "01/10"
+            }
+          ],
+          "topic": "migliori pacchetti pokemon guida all acquisto 2026"
         },
         {
-          "titolo": "Megaevoluzione – Dominio Delta: ecco in anteprima le carte di Masquerain nel nuovo set del GCC Pokémon - Multiplayer",
-          "link": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxNd25xZ3Axc0hvN0I0VUFYcU9BZ0djTnQ0WlNFd2hSQ1FnT1I1UEZHRDJQQzNzMXZKWnVzeHNiUWtzOW8yMUs1RFJXRlZHM1U0dUVwTnVRN292VWNNanhTcFVjbE9wY201cFhXOEpZOVpwY2NQTkNia3Jzal9lZzdWa28xVHQxY3llNGNhNnhLQ2JLV2VQcWVtV1NFTmhYMFp2M2VfSUlheUNUVlVtc2JKSzlST1FnSUE1cElMZDUxSG40Wkt1TnZzU3g3OF9McE5t?oc=5",
-          "fonte": "Multiplayer",
-          "data": "22/09"
+          "titolo": "Pokémon torna da McDonald's",
+          "sommario": "Le nuove carte TCG tornano negli Happy Meal per celebrare il trentesimo anniversario.",
+          "voci": [
+            {
+              "titolo": "Pokémon torna da McDonald’s per il 30° anniversario: nuove carte TCG negli Happy Meal - CorriereNerd.it",
+              "link": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE5LWEhiRjBIaGVlREpzUUkyNmZoWExNR254YXRRYTBHdXRGLU5TQkpEdktqY01sazFGRkRkT1BKbG1rakc0NFNYWWEtUlR1MWhReUMyQ01sLWRFYUlH?oc=5",
+              "fonte": "CorriereNerd.it",
+              "data": "29/09"
+            }
+          ],
+          "topic": "pokemon torna da mcdonald s per il 30 anniversario"
         },
         {
-          "titolo": "Pokémon GCC Megaevoluzione - Dominio Delta, una carta in anteprima - Adnkronos",
-          "link": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxNaGRoZjh4Q1ZGTVU0ZHA5UE5hRE9CTl9MN3JaYVFZWkpJcmdOeVlGWURKdHJJbFJsbGhYTjNnYU9pX0taeVlPb3kyaEJCeE42dU1Hc0tad1JFVG5rcERyeGUxSzl0WHVxODhoSWItYW4zRmtEWDJUTjA1bXpzQl83X3dMcjU4Y2RGb0ZJR3BUaEZOLUpQZ3o4bGZaQ1k5MHBHS1VQT1R1YV9La0ROSVgtUjFNQjF1d3lQek5aU1FnY0E?oc=5",
-          "fonte": "Adnkronos",
-          "data": "22/09"
+          "titolo": "Carte da McDonald's e paura bagarinaggio",
+          "sommario": "Multiplayer analizza il ritorno delle carte negli Happy Meal tra entusiasmo e timori per le scorte.",
+          "voci": [
+            {
+              "titolo": "Pokémon e McDonald's: tornano le carte negli Happy Meal per il 30° anniversario, ma si teme il bagarinaggio - Multiplayer",
+              "link": "https://news.google.com/rss/articles/CBMi1gFBVV95cUxNR2cydjVpQThPVFNDWnBjazR5V3liMHFGd0FXVnRaVWVsM3piWlFOeHhyUjVJcVBtTWJ2d1JOTlBZQlVpWDhUM0xqOVQ3U191SHY4S2ZpbkNwY19XMnlLb3V3TmlETmZmRzVVRENtZ3ItdWxabktVS0NzalhCZlFKLVItMkNTMV9vekJjNkJ6dl9QVnpNN2xjMHdBVlN2VkhCYXdrTVU2U091LURETHY5OVl4SDNtTjdUdElTN2o1Sml0RGo1Q09PY2MzbGNpVkx4cEhtOFhB?oc=5",
+              "fonte": "Multiplayer",
+              "data": "28/09"
+            }
+          ],
+          "topic": "pokemon e mcdonald s tornano le carte negli happy"
         },
         {
-          "titolo": "Pokémon GCC Dominio Delta: le due carte di Pincurchin in anteprima - SpazioGames",
-          "link": "https://news.google.com/rss/articles/CBMiowFBVV95cUxOSFJ4THRSNzBRX3J0MU5SaV9VMXNORk5UZjRXSHJYRWdBS0FKLTIxVWU3bDVTUjZsdmZ1WlJwTmtUTnBuUVRSUXZOVy1lNXBZbzNXM3FCUXZIOVpfZjZCQzh0aU1pMmZpeG9qRjdCVXJ6LXU3a1dwMHdjTHFwMEk2NkhCU3JZdU5SWEpMQ09ZdnhMZTJUQnRTNGFVT0xHQVRRcVdV?oc=5",
-          "fonte": "SpazioGames",
-          "data": "22/09"
+          "titolo": "Torna il tour Pokémon Gioca e Scambia",
+          "sommario": "Megamodo racconta gli eventi e il divertimento del tour itinerante nel territorio italiano.",
+          "voci": [
+            {
+              "titolo": "Torna il tour Pokémon Gioca e Scambia: eventi e divertimento in tutta Italia - megamodo",
+              "link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxQTzd5cmw5ejdUNU1LNTFyeFdJbUs2aURDUVRVQktld2V0eHZPQmRlUzFQcWJYN0pBR0Z3dmFIcHJ5NjdwRWFXdHZNbnY5WXZYUHZPTGJKaGR3YkNldHFPQVR3MkdDN3lEMnV1dVlJWV9USjRZN0h1TVlCVWFUdXMwcDhTOC1oSzNPUF9LVGJR?oc=5",
+              "fonte": "megamodo",
+              "data": "29/09"
+            }
+          ],
+          "topic": "torna il tour pokemon gioca e scambia eventi e"
         },
         {
-          "titolo": "GCC Pokémon Pocket: in arrivo l’espansione Busta Deluxe Mega - akibagamers.it",
-          "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOYjNKMWlhVy1EV0V6bk1DaXhTbDkwSnl0U3Fua0w1eTc4NlcwT3VyRV9uR0g3cXRxZ3ZvQ2dhTzJkaEtaQ0R1S1ZqM1I3YzY3MUVwRGxPb2M3cVpYenNrZUpLeWVJWV9XaTJ2NWZRY0w4TmNSR3h2bDRWQ3J3TUJKYzJ0dGxBTnVzcTBIWHY3aDQzbEhmOWgwV1BfazY?oc=5",
-          "fonte": "akibagamers.it",
-          "data": "24/09"
+          "titolo": "Festeggiamenti per i 30 anni",
+          "sommario": "Quattro grandi eventi in Italia tra carte, videogiochi e Pikachu celebrano il trentesimo anniversario.",
+          "voci": [
+            {
+              "titolo": "Pokémon festeggia 30 anni con Gioca e Scambia: quattro grandi eventi in Italia tra carte, videogiochi e Pikachu - italiatopgames.it",
+              "link": "https://news.google.com/rss/articles/CBMi8wFBVV95cUxOcHFSc3ZHanlwaVBUWk5QVHZMT2tHZm5MWWhZRm8tRkpHTVI3OUgtMGRFXzhLVFJIUGtiVDI3SW82SFpGWUJWSlhaMENDRXNaZm4yVnhTWk9pWTVqRGUxNU41TDJINmowZlg1ZGZxdkIzWVYwODM1TXdTZlVYbDFwYkZ3Vlkyai1kTWt3S3lIRUZ4eEtDMlFObi1oYm9wRE51SlpweUprOE5jbUdvYW90bVlyMzU4aklRRnh4OElkNlpFem05WXlGanQ1Q2FWd3VOM1czQm5QdUZib2hFcGtlZ0pwSmwxbkZVT1pWbUQzdDh3enM?oc=5",
+              "fonte": "italiatopgames.it",
+              "data": "29/09"
+            }
+          ],
+          "topic": "pokemon festeggia 30 anni con gioca e scambia quattro"
         }
       ],
       "radar_uscite": [
@@ -605,11 +773,18 @@
             "prezzo": 15.99,
             "perche": "offerta a 15,99 € contro un prezzo di tendenza di 39,92 € (-60%)",
             "rischio": "l'offerta più bassa può essere in un'altra lingua o in condizioni peggiori"
+          },
+          {
+            "categoria": "Novità calda",
+            "nome": "Dream Painting Collection Pikachu Figure Set",
+            "prezzo": 72.2,
+            "perche": "prezzo +141% dal primo rilevamento",
+            "rischio": "i prodotti nuovi possono calare quando arrivano le ristampe"
           }
         ],
-        "speso": 15.99,
+        "speso": 88.19,
         "note": [
-          "Lo storico copre solo 2 giorni: prudenza, i segnali sono ancora deboli."
+          "Lo storico copre solo 8 giorni: prudenza, i segnali sono ancora deboli."
         ]
       }
     }
