@@ -1,9 +1,7 @@
 name: Giornaliero
 
+# Bot sospeso su richiesta del proprietario.
 on:
-  schedule:
-    - cron: "0 6 * * *"
-      timezone: "Europe/Rome"
   workflow_dispatch:
 
 permissions:
@@ -15,6 +13,7 @@ concurrency:
 
 jobs:
   esegui:
+    if: false # Riattivare solo su nuova richiesta.
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
