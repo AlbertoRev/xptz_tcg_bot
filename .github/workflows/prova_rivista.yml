@@ -1,16 +1,15 @@
 name: Prova rivista PDF
 
+# Bot sospeso su richiesta del proprietario.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - pokeputzu_redesign
 
 permissions:
   contents: read
 
 jobs:
   genera:
+    if: false # Riattivare solo su nuova richiesta.
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
