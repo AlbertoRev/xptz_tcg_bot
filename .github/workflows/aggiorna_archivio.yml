@@ -1,9 +1,7 @@
 name: Aggiorna archivio Pokémon
 
+# Bot sospeso su richiesta del proprietario.
 on:
-  schedule:
-    - cron: "15 3 * * 6"
-      timezone: "Europe/Rome"
   workflow_dispatch:
 
 permissions:
@@ -15,6 +13,7 @@ concurrency:
 
 jobs:
   aggiorna:
+    if: false # Riattivare solo su nuova richiesta.
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
