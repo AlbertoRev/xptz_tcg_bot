@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-10-03T01:26:33+00:00",
+  "updated_utc": "2026-10-10T01:30:14+00:00",
   "sources": {
     "carte_en": "https://api.tcgdex.net/v2/en/cards",
     "carte_it": "https://api.tcgdex.net/v2/it/cards",
@@ -21,8 +21,8 @@
     "tcgdex_set_name_en": 24045,
     "tcgdex_set_name_it": 22031,
     "tcgdex_set_name_ja": 13132,
-    "cardmarket_singles": 74620,
-    "cardmarket_nonsingles": 5068,
+    "cardmarket_singles": 74694,
+    "cardmarket_nonsingles": 5071,
     "product_photos_curated": 4
   },
   "notes": [
@@ -33,21 +33,21 @@
   ],
   "crosswalk": {
     "set_status": {
-      "source_id_linked": 146,
+      "source_id_linked": 147,
       "review": 409,
-      "high_confidence_inferred": 218,
+      "high_confidence_inferred": 217,
       "unmatched": 12
     },
     "card_status": {
-      "source_id_name_set": 17921,
-      "source_conflict": 14198,
-      "ambiguous": 4714,
-      "high_confidence_inferred": 7547,
-      "unmatched": 3092,
-      "review": 26480,
+      "source_id_name_set": 17792,
+      "source_conflict": 14333,
+      "ambiguous": 4718,
+      "high_confidence_inferred": 7545,
+      "unmatched": 3093,
+      "review": 26545,
       "source_id_name_only": 668
     },
     "method": "unique name inside conservatively matched expansion; inferred mappings are not manual verifications",
-    "source_revision": "c5c0a8a63fe81746d05b9c95e8f51ed6931f7e78"
+    "source_revision": "4199850a6af49665db0080fa2bb9ef751750a406"
   }
 }
